@@ -50,3 +50,14 @@ void lsb_modular_exponentiation(mpz_t out, const mpz_t A, const mpz_t B, const m
 
   mpz_set(out, multiple);
 }
+
+void rsa(mpz_t out, const mpz_t msg, const mpz_t key, const mpz_t N) {
+  mpz_t pack_value;
+  mpz_t packed_msg;
+  mpz_t crypto_msg;
+  mpz_inits(pack_value, packed_msg, crypto_msg, NULL);
+
+  two_power_mod(pack_value, 512, N);
+  montgomery_base2(packed_msg, msg, pack_value, N);
+  lsb_modular_exponentiation(out, packed_msg, key, N);
+}
