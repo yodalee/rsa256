@@ -5,23 +5,21 @@
 #include <cstring>
 
 TEST(RsaTest, test_two_power_mod) {
-  // using python to test generate
-  // hex(2 ** 256 mod IN1).upper()
-  const char IN1[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-  const char OUT1[] = "0X1F8EDD0D5B5617EEBE521AE75D328A8B23498F9F4FFA1DB99A10ACD1F3358C1F";
+  // using python to test generatation
+  // hex(2 ** 512 % IN1).upper()
+  const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
+  const char str_out[] = "0XAF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB";
 
   mpz_t N, out;
-  mpz_init_set_str(N, IN1, 0);
+  mpz_init_set_str(N, str_N, 0);
   mpz_init(out);
 
-  two_power_mod(N, out);
+  two_power_mod(512, N, out);
 
-  char buf[256];
-  size_t len = 0;
-  len = gmp_snprintf(buf, 256, "0x%Zx", N);
-  EXPECT_TRUE(strncmp(buf, IN1, len));
-  len = gmp_snprintf(buf, 256, "0x%Zx", out);
-  EXPECT_TRUE(strncmp(buf, OUT1, len));
+  // check output
+  mpz_t out_ans;
+  mpz_init_set_str(out_ans, str_out, 0);
+  EXPECT_EQ(0, mpz_cmp(out,out_ans));
 }
 
 int main(int argc, char **argv) {
