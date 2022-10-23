@@ -11,5 +11,6 @@ add_executable(unit_test test_rsa.cpp)
 target_link_libraries(unit_test
   rsa
   gmp
+  gtest
 )
 
