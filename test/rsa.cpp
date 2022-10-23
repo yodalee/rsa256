@@ -33,3 +33,20 @@ void montgomery_base2(mpz_t A, mpz_t B, mpz_t N, mpz_t out) {
   }
   mpz_set(out, round_result);
 }
+
+void lsb_modular_exponentiation(mpz_t A, mpz_t B, mpz_t N, mpz_t out) {
+  mpz_t square; // T in doc
+  mpz_t multiple; // S in doc
+  mpz_init_set(square, A);
+  mpz_init_set_ui(multiple, 1u);
+
+  for (int i = 0; i < 256; ++i) {
+    bool bit_i = mpz_tstbit(B, i);
+    if (bit_i) {
+      montgomery_base2(multiple, square, N, multiple);
+    }
+    montgomery_base2(square, square, N, square);
+  }
+
+  mpz_set(out, multiple);
+}
