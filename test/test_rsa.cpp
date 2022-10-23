@@ -59,6 +59,26 @@ TEST(RsaTest, test_montgomery) {
   EXPECT_EQ(0, mpz_cmp(out, ans));
 }
 
+TEST(RsaTest, test_lsb) {
+  // generate answer using RSA.py
+  const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
+  const char str_A[] = "0x412820616369726641206874756f53202c48544542415a494c452054524f50";
+  const char str_B[] = "0x10001";
+  const char str_ans[] = "0XC7F5B34038B0ED8E8B286C739B163BDDF7F4C60A7581A32F99C3F1FA99A474A5";
+
+  mpz_t A, B, N, out, ans;
+  mpz_init_set_str(A, str_A, 0);
+  mpz_init_set_str(B, str_B, 0);
+  mpz_init_set_str(N, str_N, 0);
+  mpz_init_set_str(ans, str_ans, 0);
+  mpz_init(out);
+
+  lsb_modular_exponentiation(A, B, N, out);
+
+  // check output
+  EXPECT_EQ(0, mpz_cmp(out, ans));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
