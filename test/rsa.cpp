@@ -1,6 +1,6 @@
 #include "rsa.h"
 
-void two_power_mod(unsigned power, mpz_t N, mpz_t out) {
+void two_power_mod( mpz_t out, const unsigned power, const mpz_t N) {
   mpz_t base;
   mpz_init_set_ui(base, 1u);
 
@@ -13,7 +13,7 @@ void two_power_mod(unsigned power, mpz_t N, mpz_t out) {
   mpz_set(out, base);
 }
 
-void montgomery_base2(mpz_t A, mpz_t B, mpz_t N, mpz_t out) {
+void montgomery_base2(mpz_t out, const mpz_t A, const mpz_t B, const mpz_t N) {
   mpz_t round_result; // S in doc
   mpz_init_set_ui(round_result, 0);
 
@@ -34,7 +34,7 @@ void montgomery_base2(mpz_t A, mpz_t B, mpz_t N, mpz_t out) {
   mpz_set(out, round_result);
 }
 
-void lsb_modular_exponentiation(mpz_t A, mpz_t B, mpz_t N, mpz_t out) {
+void lsb_modular_exponentiation(mpz_t out, const mpz_t A, const mpz_t B, const mpz_t N) {
   mpz_t square; // T in doc
   mpz_t multiple; // S in doc
   mpz_init_set(square, A);
@@ -43,9 +43,9 @@ void lsb_modular_exponentiation(mpz_t A, mpz_t B, mpz_t N, mpz_t out) {
   for (int i = 0; i < 256; ++i) {
     bool bit_i = mpz_tstbit(B, i);
     if (bit_i) {
-      montgomery_base2(multiple, square, N, multiple);
+      montgomery_base2(multiple, multiple, square, N);
     }
-    montgomery_base2(square, square, N, square);
+    montgomery_base2(square, square, square, N);
   }
 
   mpz_set(out, multiple);

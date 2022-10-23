@@ -14,7 +14,7 @@ TEST(RsaTest, test_two_power_mod) {
   mpz_init_set_str(N, str_N, 0);
   mpz_init(out);
 
-  two_power_mod(512, N, out);
+  two_power_mod(out, 512, N);
 
   // check output
   mpz_t out_ans;
@@ -32,8 +32,8 @@ TEST(RsaTest, test_montgomery_to_self) {
   mpz_init_set_str(N, str_N, 0);
   mpz_inits(B, out, NULL);
 
-  two_power_mod(256, N, B);
-  montgomery_base2(A, B, N, out);
+  two_power_mod(B, 256, N);
+  montgomery_base2(out, A, B, N);
 
   // check output
   EXPECT_EQ(0, mpz_cmp(out, A));
@@ -53,7 +53,7 @@ TEST(RsaTest, test_montgomery) {
   mpz_init_set_str(ans, str_ans, 0);
   mpz_init(out);
 
-  montgomery_base2(A, B, N, out);
+  montgomery_base2(out, A, B, N);
 
   // check output
   EXPECT_EQ(0, mpz_cmp(out, ans));
@@ -73,7 +73,7 @@ TEST(RsaTest, test_lsb) {
   mpz_init_set_str(ans, str_ans, 0);
   mpz_init(out);
 
-  lsb_modular_exponentiation(A, B, N, out);
+  lsb_modular_exponentiation(out, A, B, N);
 
   // check output
   EXPECT_EQ(0, mpz_cmp(out, ans));
