@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+project(cmodel)
+
 set(SRCS
   rsa.cpp
 )
@@ -14,3 +16,6 @@ target_link_libraries(unit_test
   gtest
 )
 
+# Expose cmodel public includes
+set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
