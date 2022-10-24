@@ -9,5 +9,6 @@ include_directories(${cmodel_INCLUDE_DIRS})
 target_link_libraries(model_RSA
   rsa
   systemc
+  gmp
 )
 
