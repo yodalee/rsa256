@@ -1,5 +1,18 @@
 #include <gtest/gtest.h>
 
-TEST(TestVerilogInt, DummyTest) {
-  EXPECT_EQ(7 * 6, 42);
+#include "verilog_int.h"
+
+TEST(TestVerilogInt, FromHex) {
+	verilog::vint<false, 8> v8;
+	from_hex(v8, "2A");
+	EXPECT_EQ(v8.v[0], 0x2A);
+
+	verilog::vint<false, 12> v12;
+	from_hex(v12, "2A2A");
+	EXPECT_EQ(v12.v[0], 0xA2A);
+
+	verilog::vint<false, 128> v128;
+	from_hex(v128, "2A2A");
+	EXPECT_EQ(v128.v[0], 0x2A2A);
+	EXPECT_EQ(v128.v[1], 0);
 }

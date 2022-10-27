@@ -78,6 +78,24 @@ struct vint {
 	}
 
 	friend void from_hex(vint &v, const ::std::string &s) {
+		int step = sizeof(dtype) * 2;
+		::std::string padded = s;
+		if ((num_bit + 3) / 4 > s.size()) {
+			padded.insert(0, (num_bit + 3) / 4 - s.size(), '0');
+		}
+		int len = padded.size();
+
+		if constexpr (matched) {
+			v.v[0] = stoull(padded.substr(len - step, step), 0, 16);
+		} else if constexpr (num_word == 1) {
+			v.v[0] = stoull(padded.substr(len - step, step), 0, 16);
+			v.v[0] <<= ununsed_bit;
+			v.v[0] >>= ununsed_bit;
+		} else {
+			for (int i = 0; i < num_word; i++) {
+				v.v[num_word - i - 1] = stoull(padded.substr(step * i, step), 0, 16);
+			}
+		}
 	}
 
 	friend ::std::string to_hex(const vint &v) {
