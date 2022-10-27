@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <immintrin.h>
 #include <ostream>
+#include <sstream>
+#include <iomanip>
 #include <string>
 
 namespace verilog {
@@ -99,12 +101,14 @@ struct vint {
 	}
 
 	friend ::std::string to_hex(const vint &v) {
-		std::stringstream stream;
-		stream << setfill('0') << std::setw((num_bit + 3) / 4);
-		for(int i = num_work; i >= 0; i--) {
-			stream << v[i];
+		int len = (num_bit + 3) / 4;
+		::std::stringstream stream;
+		stream << ::std::hex << ::std::setfill('0') << ::std::setw(sizeof(dtype) * 2);
+		for(int i = num_word-1; i >= 0; i--) {
+			stream << static_cast<uint64_t>(v.v[i]);
 		}
-		return stream.str();
+		auto str = stream.str();
+		return str.substr(str.size() - len); // remove the leading 0
 	}
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {

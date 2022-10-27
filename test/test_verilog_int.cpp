@@ -16,3 +16,13 @@ TEST(TestVerilogInt, FromHex) {
 	EXPECT_EQ(v128.v[0], 0x2A2A);
 	EXPECT_EQ(v128.v[1], 0);
 }
+
+TEST(TestVerilogInt, ToHex) {
+	verilog::vint<false, 8> v8;
+	v8.v[0] = 0x2A;
+	EXPECT_EQ(to_hex(v8), "2a");
+
+	verilog::vint<false, 12> v12;
+	v12.v[0] = 0xA2A;
+	EXPECT_EQ(to_hex(v12), "a2a");
+}
