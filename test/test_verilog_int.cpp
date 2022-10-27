@@ -26,3 +26,10 @@ TEST(TestVerilogInt, ToHex) {
 	v12.v[0] = 0xA2A;
 	EXPECT_EQ(to_hex(v12), "a2a");
 }
+
+TEST(TestVerilogInt, FromToHex) {
+	const char *str_N = "e07122f2a4a9e81141ade518a2cd7574dcb67060b005e24665ef532e0cca73e1";
+	verilog::vint<false, 256> N;
+	from_hex(N, str_N);
+	EXPECT_EQ(to_hex(N), str_N);
+}
