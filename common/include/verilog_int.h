@@ -81,8 +81,12 @@ struct vint {
 	}
 
 	friend ::std::string to_hex(const vint &v) {
-		::std::string ret = "Hello";
-		return ret;
+		std::stringstream stream;
+		stream << setfill('0') << std::setw((num_bit + 3) / 4);
+		for(int i = num_work; i >= 0; i--) {
+			stream << v[i];
+		}
+		return stream.str();
 	}
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {
