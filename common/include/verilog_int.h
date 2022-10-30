@@ -11,28 +11,43 @@ namespace verilog {
 
 namespace detail {
 
-template<bool is_signed, int num_bit> struct dtype_dict;
-template<> struct dtype_dict<true, 0> { typedef int8_t dtype; };
-template<> struct dtype_dict<true, 1> { typedef int16_t dtype; };
-template<> struct dtype_dict<true, 2> { typedef int32_t dtype; };
-template<> struct dtype_dict<true, 3> { typedef int64_t dtype; };
-template<> struct dtype_dict<false, 0> { typedef uint8_t dtype; };
-template<> struct dtype_dict<false, 1> { typedef uint16_t dtype; };
-template<> struct dtype_dict<false, 2> { typedef uint32_t dtype; };
-template<> struct dtype_dict<false, 3> { typedef uint64_t dtype; };
-constexpr int num_bit2dict_key(int num_bit) {
+template<bool is_signed, unsigned num_bit> struct dtype_dict;
+template<> struct dtype_dict<true, 0u> { typedef int8_t dtype; };
+template<> struct dtype_dict<true, 1u> { typedef int16_t dtype; };
+template<> struct dtype_dict<true, 2u> { typedef int32_t dtype; };
+template<> struct dtype_dict<true, 3u> { typedef int64_t dtype; };
+template<> struct dtype_dict<false, 0u> { typedef uint8_t dtype; };
+template<> struct dtype_dict<false, 1u> { typedef uint16_t dtype; };
+template<> struct dtype_dict<false, 2u> { typedef uint32_t dtype; };
+template<> struct dtype_dict<false, 3u> { typedef uint64_t dtype; };
+constexpr unsigned num_bit2dict_key(unsigned num_bit) {
 	return (
-		int(num_bit > 8) +
-		int(num_bit > 16) +
-		int(num_bit > 32)
+		unsigned(num_bit > 8) +
+		unsigned(num_bit > 16) +
+		unsigned(num_bit > 32)
 	);
 }
 
-// Shift Right Logical Integer 64-bit
-// ^     ^     ^       ^       ^^
-inline int64_t srli64(int64_t x, unsigned n) {
+// Shift Right Logical 64-bit
+// ^     ^     ^       ^^
+inline int64_t srl64(int64_t x, unsigned n) {
 	// Note: Impelemtnation-defined, modify me when necessary
 	return int64_t(uint64_t(x)>>n);
+}
+
+inline uint64_t srl64(uint64_t x, unsigned n) {
+	return x>>n;
+}
+
+// Shift Right Arithmetic 64-bit
+// ^     ^     ^          ^^
+inline int64_t sra64(int64_t x, unsigned n) {
+	return x>>n;
+}
+
+inline uint64_t sra64(uint64_t x, unsigned n) {
+	// Note: Impelemtnation-defined, modify me when necessary
+	return uint64_t(int64_t(x)>>n);
 }
 
 inline unsigned char addcarry64(uint64_t &out, uint64_t x, uint64_t y, unsigned char carry_in) {
@@ -342,7 +357,7 @@ struct vint {
 		static_assert(not is_signed, "Not supported yet (cannot handle sign extenstion properly)");
 		::std::fill_n(::std::begin(val.v), num_word, 0);
 		size_t pos = s.size()-1;
-		// size_t(-1) is safe
+		// pos == size_t(-1) is safe according to the standard
 		for (unsigned i = 0; i < 4*max_len and pos != -1; --pos) {
 			char c = s[pos];
 			int to_put;
@@ -363,22 +378,21 @@ struct vint {
 
 	friend ::std::string to_hex(const vint &val) {
 		::std::string ret;
-		constexpr unsigned max_len = (num_bit + 3) / 4;
-		constexpr dtype msb_mask = (1 << (num_bit % 4)) - 1;
+		constexpr unsigned max_len = (num_bit+3) / 4;
+		constexpr unsigned msb_hex_pos = 4 * (max_len-1);
+		constexpr int num_bit_msb_hex = ((num_bit-1) % 4) + 1;
+		constexpr int msb_mask = (1<<num_bit_msb_hex) - 1;
 		ret.reserve(max_len);
 
-		// unsigned(-4) is safe
-		unsigned i = 4 * (max_len-1);
-		for (; i != -4; i -= 4) {
-			const int cur_hex = val.GetDtypeAtBitPos(i) & 0xf;
-			if (cur_hex != 0) {
-				break;
+		bool met_nonzero = false;
+		for (unsigned i = 0; i < 4*max_len; i += 4) {
+			const int cur_mask = i == 0 ? msb_mask : 0xf;
+			const int cur_hex = val.GetDtypeAtBitPos(msb_hex_pos - i) & cur_mask;
+			// Set met_nonzero if not yet and meet a nonzero
+			// After met_nonzero, we start add characters.
+			if (not met_nonzero or cur_hex != 0) {
+				met_nonzero = true;
 			}
-		}
-		size_t pos = 0;
-		for (; i != -4; i -= 4, ++pos) {
-			const int cur_mask = pos == 0 ? msb_mask : 0xf;
-			const int cur_hex = val.GetDtypeAtBitPos(i) & cur_mask;
 			ret.push_back(
 				cur_hex >= 10 ?
 				(cur_hex + 'A' - 10) :
@@ -395,5 +409,7 @@ struct vint {
 
 };
 
+template<unsigned num_bit> using vsint = vint<true, num_bit>;
+template<unsigned num_bit> using vuint = vint<false, num_bit>;
 
 }
