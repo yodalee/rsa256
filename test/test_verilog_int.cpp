@@ -1,35 +1,118 @@
 #include <gtest/gtest.h>
-
+#include <string>
+using namespace std;
 #include "verilog_int.h"
 
 TEST(TestVerilogInt, FromHex) {
 	verilog::vint<false, 8> v8;
 	from_hex(v8, "2A");
-	EXPECT_EQ(v8.v[0], 0x2A);
+	EXPECT_EQ(v8, 0x2A);
 
-	verilog::vint<false, 12> v12;
-	from_hex(v12, "2A2A");
-	EXPECT_EQ(v12.v[0], 0xA2A);
+	verilog::vint<false, 13> v13;
+	from_hex(v13, "1aC");
+	EXPECT_EQ(v13, 0x1ac);
+	from_hex(v13, "");
+	EXPECT_EQ(v13, 0);
+	from_hex(v13, "1..2..3..4");
+	EXPECT_EQ(v13, 0x1234);
+	from_hex(v13, "ffff");
+	EXPECT_EQ(v13, 0x1fff);
+	from_hex(v13, "00000f");
+	EXPECT_EQ(v13, 0xf);
 
-	verilog::vint<false, 128> v128;
-	from_hex(v128, "2A2A");
-	EXPECT_EQ(v128.v[0], 0x2A2A);
-	EXPECT_EQ(v128.v[1], 0);
+	verilog::vint<false, 127> a127, b127;
+	from_hex(a127, "8123_4567_acac_acac_89AB_cdef_0000_5555");
+	from_hex(b127, "00000000 8123 4567 acac acac 89AB cdef 0000 5555");
+	EXPECT_EQ(a127.v[1], 0x01234567acacacacllu);
+	EXPECT_EQ(a127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(b127.v[1], 0x01234567acacacacllu);
+	EXPECT_EQ(b127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(a127, b127);
 }
 
 TEST(TestVerilogInt, ToHex) {
 	verilog::vint<false, 8> v8;
 	v8.v[0] = 0x2A;
-	EXPECT_EQ(to_hex(v8), "2a");
+	EXPECT_EQ(to_hex(v8), "2A");
 
 	verilog::vint<false, 12> v12;
 	v12.v[0] = 0xA2A;
-	EXPECT_EQ(to_hex(v12), "a2a");
+	EXPECT_EQ(to_hex(v12), "A2A");
+
+	verilog::vint<false, 66> v66;
+	v66.v[1] = 0x2;
+	v66.v[0] = 0x01234567890abcdefllu;
+	EXPECT_EQ(to_hex(v12), "A2A");
+
 }
 
-TEST(TestVerilogInt, FromToHex) {
-	const char *str_N = "e07122f2a4a9e81141ade518a2cd7574dcb67060b005e24665ef532e0cca73e1";
-	verilog::vint<false, 256> N;
-	from_hex(N, str_N);
-	EXPECT_EQ(to_hex(N), str_N);
+TEST(TestVerilogInt, AddSubMulDiv) {
+	verilog::vint<false, 10> a10, b10;
+	a10.v[0] = 1000;
+	b10.v[0] = 124;
+	EXPECT_EQ((a10+b10), 100);
+
+	verilog::vint<false, 127> a127, b127;
+	a127.v[1] = 1;
+	a127.v[0] = -1;
+	b127.v[1] = 2;
+	b127.v[0] = 1;
+	a127 += b127;
+	EXPECT_EQ(a127.v[1], 4);
+	EXPECT_EQ(a127.v[0], 0);
+
+	verilog::vint<false, 127> c127;
+	c127.v[1] = 99;
+	c127.v[0] = 40;
+	c127 -= 100;
+	EXPECT_EQ(c127.v[1], 98);
+	EXPECT_EQ(c127.v[0], -60);
+}
+
+TEST(TestVerilogInt, Bit) {
+	verilog::vint<false, 13> v13;
+	verilog::vint<false, 127> v127;
+	v13.v[0] = 0x123;
+	v127.v[1] = 0xa;
+	v127.v[0] = 0x5;
+	EXPECT_TRUE(v13.Bit(0));
+	EXPECT_FALSE(v13.Bit(2));
+	EXPECT_FALSE(v13.Bit(12));
+	EXPECT_TRUE(v127.Bit(2));
+	EXPECT_FALSE(v127.Bit(3));
+	EXPECT_FALSE(v127.Bit(64));
+	EXPECT_TRUE(v127.Bit(65));
+}
+
+TEST(TestVerilogInt, Shift) {
+	verilog::vint<false, 10> v10;
+	v10.v[0] = 0x3ff;
+	v10 >>= 0;
+	EXPECT_EQ(v10.v[0], 0x3ff);
+	v10.v[0] = 0x3ff;
+	v10 >>= 1;
+	EXPECT_EQ(v10.v[0], 0x1ff);
+	v10.v[0] = 0x3ff;
+	v10 >>= 9;
+	EXPECT_EQ(v10.v[0], 0x1);
+
+	struct Pattern {
+		string from_str, to_str;
+		unsigned shamt;
+	};
+	Pattern patterns127[] {
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "ffff_0f0f_0f0f_0f0f_0f0f", 0},
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "7fff_0787_8787_8787_8787", 1},
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "fff_f0f0_f0f0_f0f0", 20},
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "1fffe", 63},
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "ffff", 64},
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "7fff", 65}
+	};
+	for (auto &p: patterns127) {
+		verilog::vint<false, 127> from_v127, to_v127;
+		from_hex(from_v127, p.from_str);
+		from_v127 >>= p.shamt;
+		from_hex(to_v127, p.to_str);
+		EXPECT_EQ(p.from_str, p.to_str);
+	}
 }
