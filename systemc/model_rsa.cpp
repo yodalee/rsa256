@@ -1,7 +1,10 @@
 #include <memory>
 #include <iostream>
 #include <systemc>
+#include <gmp.h>
+
 #include "verilog_int.h"
+#include "rsa.h"
 
 using namespace std;
 using namespace sc_core;
@@ -23,12 +26,24 @@ SC_MODULE(RSA256SysC) {
 	}
 
 	void Thread() {
+		char str[256];
 		while (true) {
 			KeyType message = i_message.read();
 			KeyType key = i_key.read();
 			KeyType modular = i_module.read();
 			KeyType crypto;
+			mpz_t mpz_message, mpz_key, mpz_modular, mpz_crypto;
 
+			mpz_init_set_str(mpz_message, to_hex(message).c_str(), 16);
+			mpz_init_set_str(mpz_key, to_hex(key).c_str(), 16);
+			mpz_init_set_str(mpz_modular, to_hex(modular).c_str(), 16);
+			mpz_init(mpz_crypto);
+
+			rsa(mpz_crypto, mpz_message, mpz_key, mpz_modular);
+
+			gmp_snprintf(str, 256, "0x%Zx", mpz_crypto);
+
+			from_hex(crypto, str);
 			o_crypto.write(crypto);
 		}
 	}
@@ -37,7 +52,7 @@ SC_MODULE(RSA256SysC) {
 const char str_msg[] =  "412820616369726641206874756F53202C48544542415A494C452054524F50";
 const char str_key[] = "10001";
 const char str_module[] = "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-const char str_ans[] = "D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
+const char str_ans[] = "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
 SC_MODULE(Testbench) {
 	sc_clock clk;
 	sc_fifo<KeyType> i_message;
