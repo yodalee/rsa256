@@ -18,7 +18,7 @@ SC_MODULE(RSA256SysC) {
 	sc_in_clk clk;
 	sc_fifo_in<KeyType> i_message;
 	sc_fifo_in<KeyType> i_key;
-	sc_fifo_in<KeyType> i_module;
+	sc_fifo_in<KeyType> i_modulus;
 	sc_fifo_out<KeyType> o_crypto;
 
 	SC_CTOR(RSA256SysC) {
@@ -30,16 +30,16 @@ SC_MODULE(RSA256SysC) {
 		while (true) {
 			KeyType message = i_message.read();
 			KeyType key = i_key.read();
-			KeyType modular = i_module.read();
+			KeyType modulus = i_modulus.read();
 			KeyType crypto;
-			mpz_t mpz_message, mpz_key, mpz_modular, mpz_crypto;
+			mpz_t mpz_message, mpz_key, mpz_modulus, mpz_crypto;
 
 			mpz_init_set_str(mpz_message, to_hex(message).c_str(), 16);
 			mpz_init_set_str(mpz_key, to_hex(key).c_str(), 16);
-			mpz_init_set_str(mpz_modular, to_hex(modular).c_str(), 16);
+			mpz_init_set_str(mpz_modulus, to_hex(modulus).c_str(), 16);
 			mpz_init(mpz_crypto);
 
-			rsa(mpz_crypto, mpz_message, mpz_key, mpz_modular);
+			rsa(mpz_crypto, mpz_message, mpz_key, mpz_modulus);
 
 			gmp_snprintf(str, 256, "0x%Zx", mpz_crypto);
 
@@ -51,13 +51,13 @@ SC_MODULE(RSA256SysC) {
 
 const char str_msg[] =  "412820616369726641206874756F53202C48544542415A494C452054524F50";
 const char str_key[] = "10001";
-const char str_module[] = "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
+const char str_modulus[] = "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
 const char str_ans[] = "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
 SC_MODULE(Testbench) {
 	sc_clock clk;
 	sc_fifo<KeyType> i_message;
 	sc_fifo<KeyType> i_key;
-	sc_fifo<KeyType> i_module;
+	sc_fifo<KeyType> i_modulus;
 	sc_fifo<KeyType> o_crypto;
 	RSA256SysC rsa;
 	bool timeout, pass;
@@ -68,21 +68,21 @@ SC_MODULE(Testbench) {
 		rsa.clk(clk);
 		rsa.i_message(i_message);
 		rsa.i_key(i_key);
-		rsa.i_module(i_module);
+		rsa.i_modulus(i_modulus);
 		rsa.o_crypto(o_crypto);
 	}
 
 	void Driver() {
 		cout << "Message: " << str_msg << endl;
 		cout << "Key: " << str_key << endl;
-		cout << "module: " << str_module << endl;
-		KeyType message, key, modular;
+		cout << "modulus: " << str_modulus << endl;
+		KeyType message, key, modulus;
 		from_hex(message, str_msg);
 		from_hex(key, str_key);
-		from_hex(modular, str_module);
+		from_hex(modulus, str_modulus);
 		i_message.write(message);
 		i_key.write(key);
-		i_module.write(modular);
+		i_modulus.write(modulus);
 	}
 
 	void Monitor() {
