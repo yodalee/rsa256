@@ -31,20 +31,31 @@ TEST(TestVerilogUnsigned, FromHex) {
 	EXPECT_EQ(a127, b127);
 }
 
+TEST(TestVerilogUnsigned, Constructor) {
+	vuint<8> v8{0x2a};
+	EXPECT_EQ(v8.v[0], 0x2a);
+
+	vuint<13> v13{0xffff};
+	EXPECT_EQ(v13.v[0], 0x1fff);
+
+	vuint<99> v99{30};
+	EXPECT_EQ(v99.v[1], 0);
+	EXPECT_EQ(v99.v[0], 30);
+}
+
 TEST(TestVerilogUnsigned, ToHex) {
 	vuint<8> v8;
-	v8.v[0] = 0x2A;
+	v8.v[0] = 0x2a;
 	EXPECT_EQ(to_hex(v8), "2A");
 
-	vuint<12> v12;
-	v12.v[0] = 0xA2A;
-	EXPECT_EQ(to_hex(v12), "A2A");
+	vuint<13> v13;
+	v13.v[0] = 0x1a2a;
+	EXPECT_EQ(to_hex(v13), "1A2A");
 
 	vuint<66> v66;
 	v66.v[1] = 0x2;
-	v66.v[0] = 0x01234567890abcdefllu;
-	EXPECT_EQ(to_hex(v12), "A2A");
-
+	v66.v[0] = 0x0123456789abcdefllu;
+	EXPECT_EQ(to_hex(v66), "20123456789ABCDEF");
 }
 
 TEST(TestVerilogUnsigned, AddSubMulDiv) {
@@ -114,9 +125,28 @@ TEST(TestVerilogUnsigned, Shift) {
 		from_hex(from_v127, p.from_str);
 		from_v127 >>= p.shamt;
 		from_hex(to_v127, p.to_str);
-		EXPECT_EQ(p.from_str, p.to_str);
+		EXPECT_EQ(from_v127, to_v127);
+	}
+
+	const string pattern256("123abcde_123abcde_123abcde_123abcde_123abcde_123abcde_123abcde_123abcde");
+	for (int i = 0; i < 64; i += 6) {
+		vuint<256> from_v256, to_v256;
+		from_hex(from_v256, pattern256);
+		from_v256 >>= i*4;
+		from_hex(to_v256, string(pattern256, 0, 64-i));
+		EXPECT_EQ(from_v256, to_v256);
+	}
+	for (int i = 0; i < 64; i += 6) {
+		vuint<256> from_v256, to_v256;
+		from_hex(from_v256, pattern256);
+		from_v256 <<= i*4;
+		from_hex(to_v256, string(pattern256, i) + string("0", i));
+		EXPECT_EQ(from_v256, to_v256);
 	}
 }
 
 TEST(TestVerilogUnsigned, Unary) {
+}
+
+TEST(TestVerilogUnsigned, Compare) {
 }

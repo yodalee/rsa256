@@ -50,6 +50,16 @@ inline uint64_t sra64(uint64_t x, unsigned n) {
 	return uint64_t(int64_t(x)>>n);
 }
 
+// Rotate Right Two 64-bit
+// ^      ^     ^   ^^
+template<typename T>
+inline T interleave64(T h2l, T l2h, unsigned n) {
+	// 0 < n < 64
+	// Put the n-bit LSB of l2h to MSB
+	// Put the (64-n)-bit MSB of h2l to LSB
+	return srl64(h2l, n) | (l2h << (64-n));
+}
+
 inline unsigned char addcarry64(uint64_t &out, uint64_t x, uint64_t y, unsigned char carry_in) {
 	// Note: Impelemtnation-defined, modify me when necessary
 	return _addcarry_u64(carry_in, x, y, reinterpret_cast<unsigned long long*>(&out));
@@ -81,7 +91,38 @@ struct vint {
 	static constexpr unsigned ununsed_bit = num_word * bw_word - num_bit;
 	// dtype == vint<is_signed, num_bit>
 	static constexpr bool matched = num_bit == bw_word;
+	// the ununsed bits must be kept zero (unsigned) or sign extended (signed)
 	dtype v[num_word];
+
+	// rule-of-five related
+	explicit vint(dtype rhs) {
+		*this = rhs;
+	}
+
+	vint& operator=(dtype rhs) {
+		v[0] = rhs;
+		if constexpr (num_word > 1) {
+			::std::fill_n(
+				::std::begin(v)+1, num_word,
+				((rhs < 0) ? -1 : 0)
+			);
+		} else {
+			ClampBits();
+		}
+		return *this;
+	}
+
+	explicit vint(::std::string s, int base=16) {
+#ifndef NDEBUG
+		assert(base == 2 or base == 8 or base = 16);
+#endif
+	}
+
+	vint() = default;
+	vint(const vint&) = default;
+	vint(vint&&) = default;
+	vint& operator=(const vint &) = default;
+	vint& operator=(vint &&) = default;
 
 	void ClampBits() {
 		if constexpr (!matched) {
@@ -222,7 +263,7 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] &= rhs[i];
 		}
-		ClampBits();
+		// ClampBits();
 		return *this;
 	}
 
@@ -230,7 +271,7 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] |= rhs[i];
 		}
-		ClampBits();
+		// ClampBits();
 		return *this;
 	}
 
@@ -238,7 +279,7 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] ^= rhs[i];
 		}
-		ClampBits();
+		// ClampBits();
 		return *this;
 	}
 
@@ -263,20 +304,55 @@ struct vint {
 	//////////////////////
 	// unary
 	//////////////////////
-	// TODO: and/or/xor reduction, not, bit invert
+	// TODO: and/or/xor reduction
+	vint operator~() {
+		vint ret;
+		for (unsigned i = 0; i < num_word; ++i) {
+			ret.v[i] = ~v[i];
+		}
+		if constexpr (not is_signed) {
+			ClampBits();
+		}
+		return ret;
+	}
+
+	operator bool() {
+		for (auto &x: v) {
+			if (x) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	//////////////////////
 	// shift assignment
 	//////////////////////
 	vint& operator>>=(const unsigned rhs) {
+		// rhs >= num_bit is UB in C, but not sure in Verilog
+		if (rhs == 0 or rhs >= num_bit) {
+			// do nothing
+			return *this;
+		}
+
 		if constexpr (num_word == 1) {
 			v[0] >>= rhs;
 		} else {
-			unsigned word_shift = rhs / 64;
-			unsigned bit_shift = rhs % 64;
-			for (unsigned i = word_shift; i < num_word; ++i) {
-				v[i-word_shift] = 0;
+			const dtype sign_ext = v[num_word-1] >> 63;
+			const unsigned word_shift = rhs / 64;
+			const unsigned bit_shift = rhs % 64;
+			if (bit_shift == 0) {
+				for (unsigned i = word_shift; i < num_word; ++i) {
+					v[i-word_shift] = v[i];
+				}
+			} else {
+				const unsigned interleave_bit = 64 - bit_shift;
+				for (unsigned i = word_shift; i < num_word-1; ++i) {
+					v[i-word_shift] = detail::interleave64(v[i], v[i+1], interleave_bit);
+				}
+				v[word_shift-1] = detail::interleave64(v[num_word-1], sign_ext, interleave_bit);
 			}
+			::std::fill_n(::std::end(v) - word_shift, word_shift, sign_ext);
 		}
 		// Not necessary for right shift
 		// ClampBits();
@@ -284,19 +360,32 @@ struct vint {
 	}
 
 	vint& operator<<=(const unsigned rhs) {
+		// rhs >= num_bit is UB in C, but not sure in Verilog
+		if (rhs == 0 or rhs >= num_bit) {
+			// do nothing
+			return *this;
+		}
+
 		if constexpr (num_word == 1) {
 			v[0] <<= rhs;
-		} else if (rhs >= num_bit) {
-			::std::fill_n(::std::begin(v), num_word, 0);
 		} else {
+			const dtype sign_ext = v[num_word-1] >> 63;
 			unsigned word_shift = rhs / 64;
 			unsigned bit_shift = rhs % 64;
-			for (unsigned i = num_word-1; i >= word_shift; --i) {
-				v[i] = v[i-word_shift];
+			if (bit_shift == 0) {
+				for (unsigned i = num_word; i > word_shift;) {
+					--i;
+					v[i] = v[i-word_shift];
+				}
+			} else {
+				const unsigned interleave_bit = bit_shift;
+				for (unsigned i = num_word; i > word_shift+1;) {
+					--i;
+					v[i] = detail::interleave64(v[i+1], v[i], interleave_bit);
+				}
+				v[word_shift] = detail::interleave64(dtype(0), v[0], interleave_bit);
 			}
-			for (unsigned i = 0; i < word_shift; ++i) {
-				v[i] = 0;
-			}
+			::std::fill_n(::std::begin(v), word_shift, 0);
 		}
 		ClampBits();
 		return *this;
@@ -321,6 +410,7 @@ struct vint {
 	vint operator/(const vint& rhs) { vint ret = *this; ret /= rhs; return ret; }
 	vint operator&(const vint& rhs) { vint ret = *this; ret += rhs; return ret; }
 	vint operator|(const vint& rhs) { vint ret = *this; ret -= rhs; return ret; }
+	vint operator^(const vint& rhs) { vint ret = *this; ret ^= rhs; return ret; }
 	vint operator>>(const vint& rhs) { vint ret = *this; ret >>= rhs; return ret; }
 	vint operator<<(const vint& rhs) { vint ret = *this; ret <<= rhs; return ret; }
 
@@ -330,6 +420,7 @@ struct vint {
 	vint operator/(const dtype rhs) { vint ret = *this; ret /= rhs; return ret; }
 	vint operator&(const dtype rhs) { vint ret = *this; ret &= rhs; return ret; }
 	vint operator|(const dtype rhs) { vint ret = *this; ret |= rhs; return ret; }
+	vint operator^(const dtype rhs) { vint ret = *this; ret ^= rhs; return ret; }
 	vint operator>>(const dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
 	vint operator<<(const dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
 
@@ -403,7 +494,11 @@ struct vint {
 	}
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {
-		os << v.value();
+		if constexpr (num_word == 1) {
+			os << v.value();
+		} else {
+			os << to_hex(v);
+		}
 		return os;
 	}
 
