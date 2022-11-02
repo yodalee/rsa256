@@ -114,7 +114,7 @@ TEST(TestVerilogUnsigned, Shift) {
 	};
 	Pattern patterns127[] {
 		{"ffff_0f0f_0f0f_0f0f_0f0f", "ffff_0f0f_0f0f_0f0f_0f0f", 0},
-		{"ffff_0f0f_0f0f_0f0f_0f0f", "7fff_0787_8787_8787_8787", 1},
+		{"ffff_0f0f_0f0f_0f0f_0f0f", "7fff_8787_8787_8787_8787", 1},
 		{"ffff_0f0f_0f0f_0f0f_0f0f", "fff_f0f0_f0f0_f0f0", 20},
 		{"ffff_0f0f_0f0f_0f0f_0f0f", "1fffe", 63},
 		{"ffff_0f0f_0f0f_0f0f_0f0f", "ffff", 64},
@@ -128,7 +128,7 @@ TEST(TestVerilogUnsigned, Shift) {
 		EXPECT_EQ(from_v127, to_v127);
 	}
 
-	const string pattern256("123abcde_123abcde_123abcde_123abcde_123abcde_123abcde_123abcde_123abcde");
+	const string pattern256("123abcde123abcde5566556655665566123abcde123abcde5566556655665566");
 	for (int i = 0; i < 64; i += 6) {
 		vuint<256> from_v256, to_v256;
 		from_hex(from_v256, pattern256);
@@ -140,7 +140,7 @@ TEST(TestVerilogUnsigned, Shift) {
 		vuint<256> from_v256, to_v256;
 		from_hex(from_v256, pattern256);
 		from_v256 <<= i*4;
-		from_hex(to_v256, string(pattern256, i) + string("0", i));
+		from_hex(to_v256, string(pattern256, i) + string(i, '0'));
 		EXPECT_EQ(from_v256, to_v256);
 	}
 }

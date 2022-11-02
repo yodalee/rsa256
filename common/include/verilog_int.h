@@ -50,13 +50,11 @@ inline uint64_t sra64(uint64_t x, unsigned n) {
 	return uint64_t(int64_t(x)>>n);
 }
 
-// Rotate Right Two 64-bit
-// ^      ^     ^   ^^
+// Put the n-bit LSB of l2h to MSB
+// Put the (64-n)-bit MSB of h2l to LSB
+// 0 < n < 64
 template<typename T>
 inline T interleave64(T h2l, T l2h, unsigned n) {
-	// 0 < n < 64
-	// Put the n-bit LSB of l2h to MSB
-	// Put the (64-n)-bit MSB of h2l to LSB
 	return srl64(h2l, n) | (l2h << (64-n));
 }
 
@@ -346,11 +344,11 @@ struct vint {
 					v[i-word_shift] = v[i];
 				}
 			} else {
-				const unsigned interleave_bit = 64 - bit_shift;
+				const unsigned interleave_bit = bit_shift;
 				for (unsigned i = word_shift; i < num_word-1; ++i) {
 					v[i-word_shift] = detail::interleave64(v[i], v[i+1], interleave_bit);
 				}
-				v[word_shift-1] = detail::interleave64(v[num_word-1], sign_ext, interleave_bit);
+				v[num_word-word_shift-1] = detail::interleave64(v[num_word-1], sign_ext, interleave_bit);
 			}
 			::std::fill_n(::std::end(v) - word_shift, word_shift, sign_ext);
 		}
@@ -378,10 +376,10 @@ struct vint {
 					v[i] = v[i-word_shift];
 				}
 			} else {
-				const unsigned interleave_bit = bit_shift;
+				const unsigned interleave_bit = 64 - bit_shift;
 				for (unsigned i = num_word; i > word_shift+1;) {
 					--i;
-					v[i] = detail::interleave64(v[i+1], v[i], interleave_bit);
+					v[i] = detail::interleave64(v[i-word_shift-1], v[i-word_shift], interleave_bit);
 				}
 				v[word_shift] = detail::interleave64(dtype(0), v[0], interleave_bit);
 			}
