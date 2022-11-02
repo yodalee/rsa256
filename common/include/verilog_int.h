@@ -114,7 +114,7 @@ struct vint {
 
 	explicit vint(::std::string s, int base=16) {
 #ifndef NDEBUG
-		assert(base == 2 or base == 8 or base = 16);
+		assert(base == 2 or base == 8 or base == 16);
 #endif
 	}
 
