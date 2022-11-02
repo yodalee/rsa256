@@ -144,31 +144,68 @@ struct vint {
 	//////////////////////
 	// comparison
 	//////////////////////
-	// TODO > < >= <= !=
-	bool operator==(const vint& rhs) const {
-		return ::std::equal(::std::begin(v), ::std::end(v), ::std::begin(rhs.v));
-	}
 
-	bool operator==(const dtype rhs) const {
-		bool sign_ok = true;
+	// compare() will return:
+	// 1: larger
+	// 0: must check further
+	// -1: smaller
+	int compare(const vint& rhs) const {
 		if constexpr (num_word > 1) {
-			const dtype expected_sign = (is_signed and rhs < 0) ? -1 : 0;
-			for (unsigned i = 1; i < num_word; ++i) {
-				if (v[i] != expected_sign) {
-					sign_ok = false;
-					break;
+			for (unsigned i = num_word; i > 0;) {
+				--i;
+				if (v[i] > rhs.v[i]) {
+					return -1;
+				} else if (v[i] < rhs.v[i]) {
+					return 1;
 				}
 			}
 		}
-		return v[0] == rhs and sign_ok;
+		return 0;
 	}
 
-	bool operator!=(const vint& rhs) const {
-		return not (*this == rhs);
+	int compare(const dtype rhs) const {
+		if constexpr (num_word > 1) {
+			const dtype expected_sign = (is_signed and rhs < 0) ? -1 : 0;
+			for (unsigned i = num_word; i > 1;) {
+				--i;
+				if (v[i] > expected_sign) {
+					return -1;
+				} else if (v[i] < expected_sign) {
+					return 1;
+				}
+			}
+		}
+		return 0;
 	}
 
-	bool operator!=(const dtype rhs) const {
-		return not (*this == rhs);
+	bool operator==(const vint& rhs) const { return compare(rhs) == 0; }
+	bool operator>(const vint& rhs) const { return compare(rhs) > 0; }
+	bool operator<(const vint& rhs) const { return compare(rhs) < 0; }
+	bool operator>=(const vint& rhs) const { return compare(rhs) >= 0; }
+	bool operator<=(const vint& rhs) const { return compare(rhs) <= 0; }
+
+	bool operator==(const dtype rhs) const {
+		return compare(rhs) == 0 and v[0] == rhs;
+	}
+
+	bool operator>(const dtype rhs) const {
+		const int cmp = compare(rhs);
+		return cmp > 0 or cmp == 0 and v[0] > rhs;
+	}
+
+	bool operator<(const dtype rhs) const {
+		const int cmp = compare(rhs);
+		return cmp < 0 or cmp == 0 and v[0] < rhs;
+	}
+
+	bool operator>=(const dtype rhs) const {
+		const int cmp = compare(rhs);
+		return cmp > 0 or cmp == 0 and v[0] >= rhs;
+	}
+
+	bool operator<=(const dtype rhs) const {
+		const int cmp = compare(rhs);
+		return cmp < 0 or cmp == 0 and v[0] <= rhs;
 	}
 
 	//////////////////////
@@ -316,6 +353,23 @@ struct vint {
 		return ret;
 	}
 
+	vint operator-() {
+		vint ret;
+		if (num_word == 1) {
+			ret.v[0] = -v[0];
+		} else {
+			unsigned char carry = 0;
+			carry = detail::addcarry64(v[0], ~v[0], dtype(1), carry);
+			for (unsigned i = 1; i < num_word; ++i) {
+				carry = detail::addcarry64(v[i], ~v[i], 0, carry);
+			}
+		}
+		if constexpr (not is_signed) {
+			ClampBits();
+		}
+		return ret;
+	}
+
 	operator bool() {
 		for (auto &x: v) {
 			if (x) {
@@ -402,7 +456,7 @@ struct vint {
 	}
 
 	//////////////////////
-	// binary operators
+	// derived operators
 	//////////////////////
 	vint operator+(const vint& rhs) { vint ret = *this; ret += rhs; return ret; }
 	vint operator-(const vint& rhs) { vint ret = *this; ret -= rhs; return ret; }
@@ -413,6 +467,7 @@ struct vint {
 	vint operator^(const vint& rhs) { vint ret = *this; ret ^= rhs; return ret; }
 	vint operator>>(const vint& rhs) { vint ret = *this; ret >>= rhs; return ret; }
 	vint operator<<(const vint& rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	bool operator!=(const vint& rhs) const { return not (*this == rhs); }
 
 	vint operator+(const dtype rhs) { vint ret = *this; ret += rhs; return ret; }
 	vint operator-(const dtype rhs) { vint ret = *this; ret -= rhs; return ret; }
@@ -423,6 +478,7 @@ struct vint {
 	vint operator^(const dtype rhs) { vint ret = *this; ret ^= rhs; return ret; }
 	vint operator>>(const dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
 	vint operator<<(const dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	bool operator!=(const dtype rhs) const { return not (*this == rhs); }
 
 	//////////////////////
 	// slice
