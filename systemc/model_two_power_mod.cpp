@@ -12,7 +12,7 @@ using namespace sc_dt;
 using namespace verilog;
 
 constexpr int kBW = 256;
-typedef vint<false, 256> KeyType;
+typedef vint<false, 257> KeyType;
 
 SC_MODULE(RSATwoPowerMod)
 {
@@ -28,27 +28,28 @@ SC_MODULE(RSATwoPowerMod)
 
 	void Thread()
 	{
-		mpz_t modulus, out;
-		mpz_inits(modulus, out);
-		char str[256];
-
+		KeyType round_result;
 		while (true)
 		{
 			int power = i_power.read();
-			KeyType data = i_modulus.read();
-			mpz_set_str(modulus, to_hex(data).c_str(), 16);
+			KeyType modulus = i_modulus.read();
 
-			two_power_mod(out, power, modulus);
-
-			gmp_snprintf(str, 256, "0x%ZX", out);
-			from_hex(data, str);
-			o_out.write(data);
+			from_hex(round_result, "1");
+			for (size_t i = 0; i < power; i++)
+			{
+				round_result <<= 1;
+				if (round_result > modulus)
+				{
+					round_result -= modulus;
+				}
+			}
+			o_out.write(round_result);
 		}
 	}
 };
 
 const char str_modulus[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-const char str_ans[] = "AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB";
+const char str_ans[] = "0AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB";
 const int power = 512;
 SC_MODULE(Testbench)
 {
