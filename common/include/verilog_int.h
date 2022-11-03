@@ -152,9 +152,9 @@ struct vint {
 			for (unsigned i = num_word; i > 0;) {
 				--i;
 				if (v[i] > rhs.v[i]) {
-					return -1;
-				} else if (v[i] < rhs.v[i]) {
 					return 1;
+				} else if (v[i] < rhs.v[i]) {
+					return -1;
 				}
 			}
 		}
