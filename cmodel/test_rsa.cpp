@@ -1,25 +1,20 @@
+#include "verilog_int.h"
 #include "rsa.h"
 #include <gtest/gtest.h>
-
 #include <cassert>
-#include <cstring>
+#include <string>
+using namespace std;
 
 TEST(RsaTest, test_two_power_mod) {
   // using python to test generatation
-  // hex(2 ** 512 % IN1).upper()
-  const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-  const char str_out[] = "0XAF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB";
-
-  mpz_t N, out;
-  mpz_init_set_str(N, str_N, 0);
-  mpz_init(out);
-
-  two_power_mod(out, 512, N);
-
-  // check output
-  mpz_t out_ans;
-  mpz_init_set_str(out_ans, str_out, 0);
-  EXPECT_EQ(0, mpz_cmp(out,out_ans));
+  // gold = out = 2 ** 512 % in1, these are their hex values
+  string str_in1 ("E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
+  string str_gold("AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB");
+  rsa_key_t in1, out, gold;
+  from_hex(in1, str_in1);
+  from_hex(gold, str_gold);
+  two_power_mod(out, 512, in1);
+  EXPECT_EQ(out, gold);
 }
 
 TEST(RsaTest, test_montgomery_to_self) {

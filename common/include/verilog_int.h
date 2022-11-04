@@ -368,7 +368,7 @@ struct vint {
 		return ret;
 	}
 
-	operator bool() {
+	explicit operator bool() {
 		for (auto &x: v) {
 			if (x) {
 				return true;

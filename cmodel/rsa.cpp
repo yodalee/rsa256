@@ -1,6 +1,7 @@
+#include "verilog_int.h"
 #include "rsa.h"
 
-void two_power_mod( mpz_t out, const unsigned power, const mpz_t N) {
+void two_power_mod(mpz_t out, const unsigned power, const mpz_t N) {
   mpz_t base;
   mpz_init_set_ui(base, 1u);
 
@@ -11,6 +12,16 @@ void two_power_mod( mpz_t out, const unsigned power, const mpz_t N) {
     }
   }
   mpz_set(out, base);
+}
+
+void two_power_mod(rsa_key_t &out, const unsigned power, const rsa_key_t &N) {
+  out = 1;
+  for (unsigned i = 0; i < power; ++i) {
+    out <<= 1;
+    if (out >= N) {
+      out -= N;
+    }
+  }
 }
 
 void montgomery_base2(mpz_t out, const mpz_t A, const mpz_t B, const mpz_t N) {
@@ -34,6 +45,9 @@ void montgomery_base2(mpz_t out, const mpz_t A, const mpz_t B, const mpz_t N) {
   mpz_set(out, round_result);
 }
 
+void montgomery_base2(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B, const rsa_key_t &N) {
+}
+
 void lsb_modular_exponentiation(mpz_t out, const mpz_t A, const mpz_t B, const mpz_t N) {
   mpz_t square; // T in doc
   mpz_t multiple; // S in doc
@@ -51,6 +65,9 @@ void lsb_modular_exponentiation(mpz_t out, const mpz_t A, const mpz_t B, const m
   mpz_set(out, multiple);
 }
 
+void lsb_modular_exponentiation(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B, const rsa_key_t &N) {
+}
+
 void rsa(mpz_t out, const mpz_t msg, const mpz_t key, const mpz_t N) {
   mpz_t pack_value;
   mpz_t packed_msg;
@@ -60,4 +77,7 @@ void rsa(mpz_t out, const mpz_t msg, const mpz_t key, const mpz_t N) {
   two_power_mod(pack_value, 512, N);
   montgomery_base2(packed_msg, msg, pack_value, N);
   lsb_modular_exponentiation(out, packed_msg, key, N);
+}
+
+void rsa(rsa_key_t &crypto, const rsa_key_t &msg, const rsa_key_t &key, const rsa_key_t &N) {
 }
