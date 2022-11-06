@@ -101,7 +101,7 @@ struct vint {
 		v[0] = rhs;
 		if constexpr (num_word > 1) {
 			::std::fill_n(
-				::std::begin(v)+1, num_word,
+				::std::begin(v)+1, num_word-1,
 				((rhs < 0) ? -1 : 0)
 			);
 		} else {
@@ -368,7 +368,7 @@ struct vint {
 		return ret;
 	}
 
-	operator bool() {
+	explicit operator bool() {
 		for (auto &x: v) {
 			if (x) {
 				return true;

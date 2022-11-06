@@ -31,16 +31,22 @@ TEST(TestVerilogUnsigned, FromHex) {
 	EXPECT_EQ(a127, b127);
 }
 
-TEST(TestVerilogUnsigned, Constructor) {
+TEST(TestVerilogUnsigned, RuleOfThree) {
 	vuint<8> v8{0x2a};
 	EXPECT_EQ(v8.v[0], 0x2a);
+	v8 = 0x99;
+	EXPECT_EQ(v8.v[0], 0x99);
 
 	vuint<13> v13{0xffff};
 	EXPECT_EQ(v13.v[0], 0x1fff);
+	v13 = 0x9999;
+	EXPECT_EQ(v13.v[0], 0x1999);
 
 	vuint<99> v99{30};
 	EXPECT_EQ(v99.v[1], 0);
 	EXPECT_EQ(v99.v[0], 30);
+	v99 = 0x3;
+	EXPECT_EQ(v99.v[0], 0x3);
 }
 
 TEST(TestVerilogUnsigned, ToHex) {
