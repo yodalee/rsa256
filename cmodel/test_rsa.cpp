@@ -74,27 +74,6 @@ TEST(RsaTest, test_lsb) {
   EXPECT_EQ(out, ans);
 }
 
-TEST(RsaTest, test_rsa_orig) {
-  // example from tech document
-  // or using python hex(m0 ** key % N)
-  const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-  const char str_key[] = "0x10001";
-  const char str_m0[] = "0x412820616369726641206874756F53202C48544542415A494C452054524F50";
-  const char str_c0[] = "0xD41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
-
-  mpz_t N, key, m0, c0, out;
-  mpz_init_set_str(N, str_N, 0);
-  mpz_init_set_str(key, str_key, 0);
-  mpz_init_set_str(m0, str_m0, 0);
-  mpz_init_set_str(c0, str_c0, 0);
-  mpz_init(out);
-
-  rsa(out, m0, key, N);
-
-  // run and check
-  EXPECT_EQ(0, mpz_cmp(out, c0));
-}
-
 TEST(RsaTest, test_rsa) {
   // example from tech document
   // or using python hex(m0 ** key % N)

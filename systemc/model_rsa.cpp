@@ -1,8 +1,6 @@
 #include <memory>
 #include <iostream>
 #include <systemc>
-#include <gmp.h>
-
 #include "verilog_int.h"
 #include "rsa.h"
 
@@ -11,15 +9,12 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-constexpr int kBW = 256;
-typedef vint<false, 256> KeyType;
-
 SC_MODULE(RSA256SysC) {
 	sc_in_clk clk;
-	sc_fifo_in<KeyType> i_message;
-	sc_fifo_in<KeyType> i_key;
-	sc_fifo_in<KeyType> i_modulus;
-	sc_fifo_out<KeyType> o_crypto;
+	sc_fifo_in<rsa_key_t> i_message;
+	sc_fifo_in<rsa_key_t> i_key;
+	sc_fifo_in<rsa_key_t> i_modulus;
+	sc_fifo_out<rsa_key_t> o_crypto;
 
 	SC_CTOR(RSA256SysC) {
 		SC_THREAD(Thread);
@@ -28,22 +23,12 @@ SC_MODULE(RSA256SysC) {
 	void Thread() {
 		char str[256];
 		while (true) {
-			KeyType message = i_message.read();
-			KeyType key = i_key.read();
-			KeyType modulus = i_modulus.read();
-			KeyType crypto;
-			mpz_t mpz_message, mpz_key, mpz_modulus, mpz_crypto;
-
-			mpz_init_set_str(mpz_message, to_hex(message).c_str(), 16);
-			mpz_init_set_str(mpz_key, to_hex(key).c_str(), 16);
-			mpz_init_set_str(mpz_modulus, to_hex(modulus).c_str(), 16);
-			mpz_init(mpz_crypto);
-
-			rsa(mpz_crypto, mpz_message, mpz_key, mpz_modulus);
-
-			gmp_snprintf(str, 256, "0x%Zx", mpz_crypto);
-
-			from_hex(crypto, str);
+			rsa_key_t message = i_message.read();
+			rsa_key_t key = i_key.read();
+			rsa_key_t modulus = i_modulus.read();
+			rsa_key_t crypto;
+			rsa(crypto, message, key, modulus);
+			cout << crypto << endl;
 			o_crypto.write(crypto);
 		}
 	}
@@ -55,10 +40,10 @@ const char str_modulus[] = "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF
 const char str_ans[] = "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
 SC_MODULE(Testbench) {
 	sc_clock clk;
-	sc_fifo<KeyType> i_message;
-	sc_fifo<KeyType> i_key;
-	sc_fifo<KeyType> i_modulus;
-	sc_fifo<KeyType> o_crypto;
+	sc_fifo<rsa_key_t> i_message;
+	sc_fifo<rsa_key_t> i_key;
+	sc_fifo<rsa_key_t> i_modulus;
+	sc_fifo<rsa_key_t> o_crypto;
 	RSA256SysC rsa;
 	bool timeout, pass;
 
@@ -76,7 +61,7 @@ SC_MODULE(Testbench) {
 		cout << "Message: " << str_msg << endl;
 		cout << "Key: " << str_key << endl;
 		cout << "modulus: " << str_modulus << endl;
-		KeyType message, key, modulus;
+		rsa_key_t message, key, modulus;
 		from_hex(message, str_msg);
 		from_hex(key, str_key);
 		from_hex(modulus, str_modulus);
@@ -86,11 +71,13 @@ SC_MODULE(Testbench) {
 	}
 
 	void Monitor() {
-		string gotten = to_hex(o_crypto.read());
-		if (gotten == str_ans) {
+		rsa_key_t gotten = o_crypto.read();
+		rsa_key_t ans;
+		from_hex(ans, str_ans);
+		if (gotten == ans) {
 			cout << "OK" << endl;
 		} else {
-			cout << "Golden != systemC: " << gotten << " vs " << str_ans << endl;
+			cout << "Golden != systemC: " << ans << " vs " << gotten << endl;
 			pass = false;
 		}
 		timeout = false;
