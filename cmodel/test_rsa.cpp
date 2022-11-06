@@ -33,29 +33,6 @@ TEST(RsaTest, test_montgomery_to_self) {
   EXPECT_EQ(out, A);
 }
 
-TEST(RsaTest, test_montgomery_orig) {
-  const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-  const char str_A[] = "0x412820616369726641206874756f53202c48544542415a494c452054524f50";
-  const char str_B[] = "0x10001";
-  const char str_ans[] = "0x314f8acb18e57c4b2fa37adefa7964711b8dcdb7aac7514c78d97cf4d4121426";
-  mpz_t A, B, N, out, ans;
-  mpz_init_set_str(A, str_A, 0);
-  mpz_init_set_str(B, str_B, 0);
-  mpz_init_set_str(N, str_N, 0);
-  mpz_init_set_str(ans, str_ans, 0);
-  mpz_init(out);
-  montgomery_base2(out, A, B, N);
-  EXPECT_EQ(0, mpz_cmp(out, ans));
-
-  mpz_t sq, ans2;
-  const char str_sq[] = "0xbf5ecf932790b9c808118ad16e41045d881920f60b031743c84d51b9246778a4";
-  const char str_ans2[] = "0x6356aa97d0e04b2c4c9147e036a9439501f9a2c3e17c086be640372186ed94ae";
-  mpz_init_set_str(sq, str_sq, 0);
-  mpz_init_set_str(ans2, str_ans2, 0);
-  montgomery_base2(out, sq, sq, N);
-  EXPECT_EQ(0, mpz_cmp(out, ans2));
-}
-
 TEST(RsaTest, test_montgomery) {
   // generate answer using RSA.py
   string str_N("E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
@@ -80,24 +57,6 @@ TEST(RsaTest, test_montgomery) {
   EXPECT_EQ(out, ans);
 }
 
-TEST(RsaTest, test_lsb_orig) {
-  const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-  const char str_A[] = "0x412820616369726641206874756f53202c48544542415a494c452054524f50";
-  const char str_B[] = "0x10001";
-  const char str_ans[] = "0XC7F5B34038B0ED8E8B286C739B163BDDF7F4C60A7581A32F99C3F1FA99A474A5";
-
-  mpz_t A, B, N, out, ans;
-  mpz_init_set_str(A, str_A, 0);
-  mpz_init_set_str(B, str_B, 0);
-  mpz_init_set_str(N, str_N, 0);
-  mpz_init_set_str(ans, str_ans, 0);
-  mpz_init(out);
-
-  lsb_modular_exponentiation(out, A, B, N);
-  // check output
-  EXPECT_EQ(0, mpz_cmp(out, ans));
-}
-
 TEST(RsaTest, test_lsb) {
   // generate answer using RSA.py
   string str_N("E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
@@ -115,7 +74,7 @@ TEST(RsaTest, test_lsb) {
   EXPECT_EQ(out, ans);
 }
 
-TEST(RsaTest, test_rsa) {
+TEST(RsaTest, test_rsa_orig) {
   // example from tech document
   // or using python hex(m0 ** key % N)
   const char str_N[] = "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
@@ -132,10 +91,27 @@ TEST(RsaTest, test_rsa) {
 
   rsa(out, m0, key, N);
 
-  // check output
+  // run and check
   EXPECT_EQ(0, mpz_cmp(out, c0));
 }
 
+TEST(RsaTest, test_rsa) {
+  // example from tech document
+  // or using python hex(m0 ** key % N)
+  string str_N("E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
+  string str_key("10001");
+  string str_m0("412820616369726641206874756F53202C48544542415A494C452054524F50");
+  string str_c0("D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31");
+  rsa_key_t N, key, m0, c0, out;
+  from_hex(N, str_N);
+  from_hex(key, str_key);
+  from_hex(m0, str_m0);
+  from_hex(c0, str_c0);
+
+  // check output
+  rsa(out, m0, key, N);
+  EXPECT_EQ(out, c0);
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -2,7 +2,7 @@
 #include <gmp.h>
 
 constexpr unsigned kBW_RSA = 256;
-typedef verilog::vuint<kBW_RSA+1> rsa_key_t;
+typedef verilog::vuint<kBW_RSA+2> rsa_key_t;
 
 // calculate ((2 ** power) mod n)
 void two_power_mod(mpz_t out, const unsigned power, const mpz_t N);
