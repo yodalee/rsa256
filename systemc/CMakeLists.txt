@@ -6,7 +6,7 @@ include_directories(${cmodel_INCLUDE_DIRS})
 
 add_executable(model_RSA model_rsa.cpp)
 
-set(SYSTEMC_LIBRARY rsa systemc gmp)
+set(SYSTEMC_LIBRARY rsa systemc)
 
 target_link_libraries(model_RSA ${SYSTEMC_LIBRARY})
 
