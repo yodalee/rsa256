@@ -485,16 +485,16 @@ struct vint {
 	vint operator<<(const vint& rhs) { vint ret = *this; ret <<= rhs; return ret; }
 	bool operator!=(const vint& rhs) const { return not (*this == rhs); }
 
-	vint operator+(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret += rhs; return ret; }
-	vint operator-(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret -= rhs; return ret; }
-	vint operator*(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret *= rhs; return ret; }
-	vint operator/(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret /= rhs; return ret; }
-	vint operator&(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret &= rhs; return ret; }
-	vint operator|(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret |= rhs; return ret; }
-	vint operator^(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret ^= rhs; return ret; }
-	vint operator>>(dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
-	vint operator<<(dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
-	bool operator!=(dtype rhs) const { return not (*this == rhs); }
+	vint operator+(const dtype rhs) { vint ret = *this; ret += rhs; return ret; }
+	vint operator-(const dtype rhs) { vint ret = *this; ret -= rhs; return ret; }
+	vint operator*(const dtype rhs) { vint ret = *this; ret *= rhs; return ret; }
+	vint operator/(const dtype rhs) { vint ret = *this; ret /= rhs; return ret; }
+	vint operator&(const dtype rhs) { vint ret = *this; ret &= rhs; return ret; }
+	vint operator|(const dtype rhs) { vint ret = *this; ret |= rhs; return ret; }
+	vint operator^(const dtype rhs) { vint ret = *this; ret ^= rhs; return ret; }
+	vint operator>>(const dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
+	vint operator<<(const dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	bool operator!=(const dtype rhs) const { return not (*this == rhs); }
 
 	//////////////////////
 	// slice
