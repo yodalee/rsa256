@@ -130,12 +130,12 @@ struct vint {
 	}
 
 	dtype GetDtypeAtBitPos(unsigned pos) const {
-		// This formula also for num_bit < 64
+		// This formula also for works num_bit < 64
 		return v[pos/64] >> (pos%64);
 	}
 
 	void PutDtypeAtBitPosClean(unsigned pos, dtype to_put) {
-		// This formula also for num_bit < 64
+		// This formula also for works num_bit < 64
 		v[pos/64] |= to_put << (pos%64);
 	}
 
@@ -340,32 +340,40 @@ struct vint {
 	// unary
 	//////////////////////
 	// TODO: and/or/xor reduction
-	vint operator~() {
-		vint ret;
+	vint& Flip() {
 		for (unsigned i = 0; i < num_word; ++i) {
-			ret.v[i] = ~v[i];
+			v[i] = ~v[i];
 		}
 		if constexpr (not is_signed) {
 			ClampBits();
 		}
-		return ret;
+		return *this;
 	}
 
-	vint operator-() {
-		vint ret;
-		if (num_word == 1) {
-			ret.v[0] = -v[0];
+	vint operator~() const {
+		vint ret = *this;
+		return ret.Flip();
+	}
+
+	vint& Negate() {
+		if constexpr (num_word == 1) {
+			v[0] = -v[0];
 		} else {
 			unsigned char carry = 0;
-			carry = detail::addcarry64(v[0], ~v[0], dtype(1), carry);
+			carry = detail::addcarry64(v[0], dtype(~v[0]), dtype(1), carry);
 			for (unsigned i = 1; i < num_word; ++i) {
-				carry = detail::addcarry64(v[i], ~v[i], 0, carry);
+				carry = detail::addcarry64(v[i], dtype(~v[i]), dtype(0), carry);
 			}
 		}
 		if constexpr (not is_signed) {
 			ClampBits();
 		}
-		return ret;
+		return *this;
+	}
+
+	vint operator-() const {
+		vint ret = *this;
+		return ret.Negate();
 	}
 
 	explicit operator bool() {
@@ -499,12 +507,13 @@ struct vint {
 	friend void from_hex(vint &val, const ::std::string &s) {
 		constexpr unsigned max_len = (num_bit + 3) / 4;
 		constexpr dtype msb_mask = (1 << (num_bit % 4)) - 1;
-		static_assert(not is_signed, "Not supported yet (cannot handle sign extenstion properly)");
 		::std::fill_n(::std::begin(val.v), num_word, 0);
-		size_t pos = s.size()-1;
+		unsigned str_pos = s.size()-1;
+		unsigned put_pos = 0;
+		int last_put = 0;
 		// pos == size_t(-1) is safe according to the standard
-		for (unsigned i = 0; i < 4*max_len and pos != -1; --pos) {
-			char c = s[pos];
+		for (put_pos = 0; put_pos < 4*max_len and str_pos != -1; --str_pos) {
+			const char c = s[str_pos];
 			int to_put;
 			if ('0' <= c and c <= '9') {
 				to_put = c - '0';
@@ -515,8 +524,31 @@ struct vint {
 			} else {
 				continue;
 			}
-			val.PutDtypeAtBitPosClean(i, to_put);
-			i += 4;
+			val.PutDtypeAtBitPosClean(put_pos, to_put);
+			if (to_put != 0) {
+				last_put = to_put;
+			}
+			put_pos += 4;
+		}
+		if constexpr (is_signed) {
+			if (s.empty()) {
+				// pass
+			} else if (s[0] == '\'' and last_put != 0) {
+				// Sign extend something like '1, 'ff, 'abc...
+				// '0000, ' is ok but ignored
+				const unsigned filled_bit =
+					+ put_pos
+					- unsigned(last_put < 8)
+					- unsigned(last_put < 4)
+					- unsigned(last_put < 2);
+				if (filled_bit < num_bit) {
+					const unsigned unfilled_bit = num_bit - unfilled_bit;
+					val <<= unfilled_bit;
+					val >>= unfilled_bit;
+				}
+			} else if (s[0] == '-') {
+				val.Negate();
+			}
 		}
 		val.ClampBits();
 	}
