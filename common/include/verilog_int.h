@@ -122,11 +122,16 @@ struct vint {
 	vint& operator=(const vint &) = default;
 	vint& operator=(vint &&) = default;
 
-	void ClampBits() {
+	dtype SafeForOperation(dtype x) const {
 		if constexpr (!matched) {
-			v[num_word-1] <<= ununsed_bit;
-			v[num_word-1] >>= ununsed_bit;
+			x <<= ununsed_bit;
+			x >>= ununsed_bit;
 		}
+		return x;
+	}
+
+	void ClampBits() {
+		v[num_word-1] = SafeForOperation(v[num_word-1]);
 	}
 
 	dtype GetDtypeAtBitPos(unsigned pos) const {
@@ -182,26 +187,31 @@ struct vint {
 	bool operator>=(const vint& rhs) const { return compare(rhs) >= 0; }
 	bool operator<=(const vint& rhs) const { return compare(rhs) <= 0; }
 
-	bool operator==(const dtype rhs) const {
+	bool operator==(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		return compare(rhs) == 0 and v[0] == rhs;
 	}
 
-	bool operator>(const dtype rhs) const {
+	bool operator>(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp > 0 or cmp == 0 and v[0] > rhs;
 	}
 
-	bool operator<(const dtype rhs) const {
+	bool operator<(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp < 0 or cmp == 0 and v[0] < rhs;
 	}
 
-	bool operator>=(const dtype rhs) const {
+	bool operator>=(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp > 0 or cmp == 0 and v[0] >= rhs;
 	}
 
-	bool operator<=(const dtype rhs) const {
+	bool operator<=(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp < 0 or cmp == 0 and v[0] <= rhs;
 	}
@@ -475,16 +485,16 @@ struct vint {
 	vint operator<<(const vint& rhs) { vint ret = *this; ret <<= rhs; return ret; }
 	bool operator!=(const vint& rhs) const { return not (*this == rhs); }
 
-	vint operator+(const dtype rhs) { vint ret = *this; ret += rhs; return ret; }
-	vint operator-(const dtype rhs) { vint ret = *this; ret -= rhs; return ret; }
-	vint operator*(const dtype rhs) { vint ret = *this; ret *= rhs; return ret; }
-	vint operator/(const dtype rhs) { vint ret = *this; ret /= rhs; return ret; }
-	vint operator&(const dtype rhs) { vint ret = *this; ret &= rhs; return ret; }
-	vint operator|(const dtype rhs) { vint ret = *this; ret |= rhs; return ret; }
-	vint operator^(const dtype rhs) { vint ret = *this; ret ^= rhs; return ret; }
-	vint operator>>(const dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
-	vint operator<<(const dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
-	bool operator!=(const dtype rhs) const { return not (*this == rhs); }
+	vint operator+(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret += rhs; return ret; }
+	vint operator-(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret -= rhs; return ret; }
+	vint operator*(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret *= rhs; return ret; }
+	vint operator/(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret /= rhs; return ret; }
+	vint operator&(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret &= rhs; return ret; }
+	vint operator|(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret |= rhs; return ret; }
+	vint operator^(dtype rhs) { rhs = SafeForOperation(rhs); vint ret = *this; ret ^= rhs; return ret; }
+	vint operator>>(dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
+	vint operator<<(dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	bool operator!=(dtype rhs) const { return not (*this == rhs); }
 
 	//////////////////////
 	// slice
@@ -530,27 +540,34 @@ struct vint {
 			}
 			put_pos += 4;
 		}
-		if constexpr (is_signed) {
-			if (s.empty()) {
-				// pass
-			} else if (s[0] == '\'' and last_put != 0) {
-				// Sign extend something like '1, 'ff, 'abc...
-				// '0000, ' is ok but ignored
-				const unsigned filled_bit =
-					+ put_pos
-					- unsigned(last_put < 8)
-					- unsigned(last_put < 4)
-					- unsigned(last_put < 2);
-				if (filled_bit < num_bit) {
-					const unsigned unfilled_bit = num_bit - unfilled_bit;
-					val <<= unfilled_bit;
-					val >>= unfilled_bit;
-				}
-			} else if (s[0] == '-') {
-				val.Negate();
+		val.ClampBits();
+
+		// Handle negative & sign extension for strings started with -, ', -'
+		str_pos = 0;
+		bool do_negate = false;
+		if (s.size() > str_pos and s[str_pos] == '-') {
+			do_negate = true;
+			++str_pos;
+		}
+		// only support sign extension for signed now
+		if constexpr (is_signed)
+		if (last_put != 0)
+		if (s.size() > str_pos and s[str_pos] == '\'') {
+			const unsigned filled_bit =
+				+ put_pos
+				- unsigned(last_put < 8)
+				- unsigned(last_put < 4)
+				- unsigned(last_put < 2);
+			if (filled_bit < num_bit) {
+				const unsigned unfilled_bit = num_bit - filled_bit;
+				val <<= unfilled_bit;
+				val.ClampBits();
+				val >>= unfilled_bit;
 			}
 		}
-		val.ClampBits();
+		if (do_negate) {
+			val.Negate();
+		}
 	}
 
 	friend ::std::string to_hex(const vint &val) {

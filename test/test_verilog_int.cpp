@@ -10,6 +10,8 @@ TEST(TestVerilogUnsigned, FromHex) {
 	vuint<8> v8;
 	from_hex(v8, "2A");
 	EXPECT_EQ(v8, 0x2A);
+	from_hex(v8, "-1");
+	EXPECT_EQ(v8, 0xff);
 
 	vuint<13> v13;
 	from_hex(v13, "1aC");
@@ -22,6 +24,8 @@ TEST(TestVerilogUnsigned, FromHex) {
 	EXPECT_EQ(v13, 0x1fff);
 	from_hex(v13, "00000f");
 	EXPECT_EQ(v13, 0xf);
+	from_hex(v13, "-1");
+	EXPECT_EQ(v13, 0x1fff);
 
 	vuint<127> a127, b127;
 	from_hex(a127, "8123_4567_acac_acac_89AB_cdef_0000_5555");
@@ -39,6 +43,8 @@ TEST(TestVerilogSigned, FromHex) {
 	EXPECT_EQ(v8, 0x2A);
 	from_hex(v8, "'2A");
 	EXPECT_EQ(v8, 0xEA);
+	from_hex(v8, "-1");
+	EXPECT_EQ(v8, 0xff);
 
 	vsint<13> v13;
 	from_hex(v13, "1aC");
@@ -48,7 +54,11 @@ TEST(TestVerilogSigned, FromHex) {
 	from_hex(v13, "'05");
 	EXPECT_EQ(v13, 0x5);
 	from_hex(v13, "'5");
-	EXPECT_EQ(v13, 0x1fd);
+	EXPECT_EQ(v13, 0x1ffd);
+	from_hex(v13, "-1");
+	EXPECT_EQ(v13, 0x1fff);
+	from_hex(v13, "-'1");
+	EXPECT_EQ(v13, 0x1);
 
 	vsint<127> a127, b127;
 	from_hex(a127, "'123_4567_acac_acac_89AB_cdef_0000_5555");
