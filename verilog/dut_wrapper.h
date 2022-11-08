@@ -4,6 +4,8 @@
 #include <systemc>
 #include <vector>
 
+#include "verilated_vcd_c.h"
+
 using namespace std;
 using namespace sc_core;
 
@@ -57,10 +59,10 @@ public:
         callback(this->dut.get());
       }
       dut->clk = true;
+      dut->eval();
       for (auto callback : this->callback_afterclk) {
         callback(this->dut.get());
       }
-      dut->eval();
       wait(1.0, SC_NS);
       dut->clk = false;
       dut->eval();
