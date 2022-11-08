@@ -122,20 +122,25 @@ struct vint {
 	vint& operator=(const vint &) = default;
 	vint& operator=(vint &&) = default;
 
-	void ClampBits() {
+	dtype SafeForOperation(dtype x) const {
 		if constexpr (!matched) {
-			v[num_word-1] <<= ununsed_bit;
-			v[num_word-1] >>= ununsed_bit;
+			x <<= ununsed_bit;
+			x >>= ununsed_bit;
 		}
+		return x;
+	}
+
+	void ClampBits() {
+		v[num_word-1] = SafeForOperation(v[num_word-1]);
 	}
 
 	dtype GetDtypeAtBitPos(unsigned pos) const {
-		// This formula also for num_bit < 64
+		// This formula also for works num_bit < 64
 		return v[pos/64] >> (pos%64);
 	}
 
 	void PutDtypeAtBitPosClean(unsigned pos, dtype to_put) {
-		// This formula also for num_bit < 64
+		// This formula also for works num_bit < 64
 		v[pos/64] |= to_put << (pos%64);
 	}
 
@@ -182,26 +187,31 @@ struct vint {
 	bool operator>=(const vint& rhs) const { return compare(rhs) >= 0; }
 	bool operator<=(const vint& rhs) const { return compare(rhs) <= 0; }
 
-	bool operator==(const dtype rhs) const {
+	bool operator==(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		return compare(rhs) == 0 and v[0] == rhs;
 	}
 
-	bool operator>(const dtype rhs) const {
+	bool operator>(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp > 0 or cmp == 0 and v[0] > rhs;
 	}
 
-	bool operator<(const dtype rhs) const {
+	bool operator<(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp < 0 or cmp == 0 and v[0] < rhs;
 	}
 
-	bool operator>=(const dtype rhs) const {
+	bool operator>=(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp > 0 or cmp == 0 and v[0] >= rhs;
 	}
 
-	bool operator<=(const dtype rhs) const {
+	bool operator<=(dtype rhs) const {
+		rhs = SafeForOperation(rhs);
 		const int cmp = compare(rhs);
 		return cmp < 0 or cmp == 0 and v[0] <= rhs;
 	}
@@ -340,32 +350,40 @@ struct vint {
 	// unary
 	//////////////////////
 	// TODO: and/or/xor reduction
-	vint operator~() {
-		vint ret;
+	vint& Flip() {
 		for (unsigned i = 0; i < num_word; ++i) {
-			ret.v[i] = ~v[i];
+			v[i] = ~v[i];
 		}
 		if constexpr (not is_signed) {
 			ClampBits();
 		}
-		return ret;
+		return *this;
 	}
 
-	vint operator-() {
-		vint ret;
-		if (num_word == 1) {
-			ret.v[0] = -v[0];
+	vint operator~() const {
+		vint ret = *this;
+		return ret.Flip();
+	}
+
+	vint& Negate() {
+		if constexpr (num_word == 1) {
+			v[0] = -v[0];
 		} else {
 			unsigned char carry = 0;
-			carry = detail::addcarry64(v[0], ~v[0], dtype(1), carry);
+			carry = detail::addcarry64(v[0], dtype(~v[0]), dtype(1), carry);
 			for (unsigned i = 1; i < num_word; ++i) {
-				carry = detail::addcarry64(v[i], ~v[i], 0, carry);
+				carry = detail::addcarry64(v[i], dtype(~v[i]), dtype(0), carry);
 			}
 		}
 		if constexpr (not is_signed) {
 			ClampBits();
 		}
-		return ret;
+		return *this;
+	}
+
+	vint operator-() const {
+		vint ret = *this;
+		return ret.Negate();
 	}
 
 	explicit operator bool() {
@@ -499,12 +517,13 @@ struct vint {
 	friend void from_hex(vint &val, const ::std::string &s) {
 		constexpr unsigned max_len = (num_bit + 3) / 4;
 		constexpr dtype msb_mask = (1 << (num_bit % 4)) - 1;
-		static_assert(not is_signed, "Not supported yet (cannot handle sign extenstion properly)");
 		::std::fill_n(::std::begin(val.v), num_word, 0);
-		size_t pos = s.size()-1;
+		unsigned str_pos = s.size()-1;
+		unsigned put_pos = 0;
+		int last_put = 0;
 		// pos == size_t(-1) is safe according to the standard
-		for (unsigned i = 0; i < 4*max_len and pos != -1; --pos) {
-			char c = s[pos];
+		for (put_pos = 0; put_pos < 4*max_len and str_pos != -1; --str_pos) {
+			const char c = s[str_pos];
 			int to_put;
 			if ('0' <= c and c <= '9') {
 				to_put = c - '0';
@@ -515,10 +534,40 @@ struct vint {
 			} else {
 				continue;
 			}
-			val.PutDtypeAtBitPosClean(i, to_put);
-			i += 4;
+			val.PutDtypeAtBitPosClean(put_pos, to_put);
+			if (to_put != 0) {
+				last_put = to_put;
+			}
+			put_pos += 4;
 		}
 		val.ClampBits();
+
+		// Handle negative & sign extension for strings started with -, ', -'
+		str_pos = 0;
+		bool do_negate = false;
+		if (s.size() > str_pos and s[str_pos] == '-') {
+			do_negate = true;
+			++str_pos;
+		}
+		// only support sign extension for signed now
+		if constexpr (is_signed)
+		if (last_put != 0)
+		if (s.size() > str_pos and s[str_pos] == '\'') {
+			const unsigned filled_bit =
+				+ put_pos
+				- unsigned(last_put < 8)
+				- unsigned(last_put < 4)
+				- unsigned(last_put < 2);
+			if (filled_bit < num_bit) {
+				const unsigned unfilled_bit = num_bit - filled_bit;
+				val <<= unfilled_bit;
+				val.ClampBits();
+				val >>= unfilled_bit;
+			}
+		}
+		if (do_negate) {
+			val.Negate();
+		}
 	}
 
 	friend ::std::string to_hex(const vint &val) {
