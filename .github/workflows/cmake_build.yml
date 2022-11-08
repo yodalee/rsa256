@@ -1,9 +1,6 @@
 name: RSA256_build
 
-on:
-  pull_request:
-    branches:
-      - main
+on: push
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -30,4 +27,10 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}    
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Running vint unittests
+      run: ${{github.workspace}}/build/test/test_verilog_int
+
+    - name: Running RSA unittests
+      run: ${{github.workspace}}/build/cmodel/unit_test
