@@ -15,7 +15,7 @@ public:
   SC_HAS_PROCESS(Testbench);
   Testbench(const sc_module_name &name)
       : sc_module(name), clk("clk", 1.0, SC_NS),
-        dut_wrapper("dut_wrapper", new Vdummy) {
+        dut_wrapper("dut_wrapper") {
     dut_wrapper.clk(clk);
     dut_wrapper.register_callback(CallbackPhase::Init,
                                   [](Vdummy *dut) { cout << "Init" << endl; });
