@@ -544,3 +544,7 @@ TEST(TestVerilogUnsigned, DISABLED_Compare) {
 
 TEST(TestVerilogSigned, DISABLED_Compare) {
 }
+
+TEST(TestverilogUnsigned, breakup) {
+	FAIL() << "Fail intensionally";
+}
