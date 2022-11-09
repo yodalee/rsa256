@@ -1,0 +1,2 @@
+
+echo ${THE_PREFIX}
