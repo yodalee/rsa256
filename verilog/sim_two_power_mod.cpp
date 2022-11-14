@@ -1,5 +1,6 @@
 
 #include "Vtwo_power_mod.h"
+#include "callback.h"
 #include "dut_wrapper.h"
 #include "verilog_int.h"
 #include <iostream>
@@ -9,7 +10,18 @@ using namespace std;
 using namespace sc_core;
 
 using DUT = Vtwo_power_mod;
-using KeyType = verilog::vint<false, 256>;
+using KeyType = verilog::vuint<256>;
+struct RSATwoPowerModIn {
+  friend ::std::ostream &operator<<(::std::ostream &os,
+                                    const RSATwoPowerModIn &v) {
+    os << "{" << v.power << ", " << v.modulus << "}" << std::endl;
+    return os;
+  }
+
+  verilog::vuint<32> power;
+  KeyType modulus;
+};
+using RSATwoPowerModOut = KeyType;
 
 const char str_modulus[] =
     "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
@@ -26,19 +38,18 @@ public:
   Testbench(const sc_module_name &name)
       : sc_module(name), clk("clk", 1.0, SC_NS), dut_wrapper("dut_wrapper") {
     dut_wrapper.clk(clk);
-    SC_THREAD(Driver);
-    SC_THREAD(Monitor);
+    Driver<RSATwoPowerModIn> driver(
+        dut_wrapper.dut->i_valid, dut_wrapper.dut->i_ready,
+        [this](const RSATwoPowerModIn &in) { this->writer(in); });
+    Monitor<RSATwoPowerModOut> monitor(dut_wrapper.dut->o_valid,
+                                       dut_wrapper.dut->o_ready,
+                                       [this]() { return this->reader(); });
+    dut_wrapper.register_callback(driver);
+    dut_wrapper.register_callback(monitor);
   }
+  void writer(const RSATwoPowerModIn &in) {}
 
-  void Driver() {
-    sc_dt::sc_uint<32> power = 512;
-    KeyType modulus;
-    cout << "calculate 2^: " << power << endl;
-    cout << "modulus: " << str_modulus << endl;
-    from_hex(modulus, str_modulus);
-  }
-
-  void Monitor() {}
+  RSATwoPowerModOut reader() {}
 };
 
 int sc_main(int, char **) {
