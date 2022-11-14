@@ -6,8 +6,10 @@ include_directories(${cmodel_INCLUDE_DIRS})
 
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 
-add_executable(Vdummy dummy.cpp)
+set(SIM_TWO_POWER_MOD Vtwo_power_mod)
 
-target_link_libraries(Vdummy PUBLIC rsa systemc gmp)
+add_executable(${SIM_TWO_POWER_MOD} sim_two_power_mod.cpp)
 
-verilate(Vdummy TRACE_FST SOURCES dummy.sv)
+target_link_libraries(${SIM_TWO_POWER_MOD} PUBLIC rsa systemc gmp)
+
+verilate(${SIM_TWO_POWER_MOD} TRACE_FST SOURCES two_power_mod.sv)
