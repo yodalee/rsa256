@@ -28,6 +28,8 @@ public:
     dut->trace(tfp.get(), 99); // Trace 99 levels of hierarchy (or see below)
     std::string filename = std::string((const char *)name) + "_dump.fst";
     tfp->open(filename.c_str());
+
+    Init();
     SC_THREAD(Executor);
   }
 
@@ -37,6 +39,23 @@ public:
   unique_ptr<VerilatedContext> ctx;
   unique_ptr<DUT> dut;
   unique_ptr<VerilatedFstC> tfp;
+
+  void Init() {
+    dut->clk = 0;
+    dut->rst = 1;
+    dut->eval();
+    tfp->dump(ctx->time());
+
+    dut->rst = 0;
+    ctx->timeInc(1);
+    dut->eval();
+    tfp->dump(ctx->time());
+
+    dut->rst = 1;
+    ctx->timeInc(1);
+    dut->eval();
+    tfp->dump(ctx->time());
+  }
 
   void Executor() {
     while (true) {
