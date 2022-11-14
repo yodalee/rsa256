@@ -13,9 +13,9 @@ using namespace sc_core;
 
 template <typename DUT> SC_MODULE(DUTWrapper) {
 public:
-  vector<Callback> callbacks;
+  vector<shared_ptr<Callback>> callbacks;
 
-  void register_callback(Callback callback) {
+  void register_callback(shared_ptr<Callback> callback) {
     this->callbacks.push_back(callback);
   }
 
@@ -60,8 +60,8 @@ public:
   void Executor() {
     while (true) {
       wait(this->clk.posedge_event());
-      for (auto callback : this->callbacks) {
-        callback.before_clk();
+      for (auto &callback : this->callbacks) {
+        callback->before_clk();
       }
       ctx->timeInc(1);
       dut->clk = true;
@@ -69,8 +69,8 @@ public:
       dut->eval();
 
       bool update = false;
-      for (auto callback : this->callbacks) {
-        update |= callback.after_clk();
+      for (auto &callback : this->callbacks) {
+        update |= callback->after_clk();
       }
       if (update) {
         dut->eval();

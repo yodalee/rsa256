@@ -32,28 +32,43 @@ const int power = 512;
 SC_MODULE(Testbench) {
   sc_clock clk;
   DUTWrapper<DUT> dut_wrapper;
+  shared_ptr<Driver<RSATwoPowerModIn>> driver;
+  shared_ptr<Monitor<RSATwoPowerModOut>> monitor;
 
 public:
   SC_HAS_PROCESS(Testbench);
   Testbench(const sc_module_name &name)
       : sc_module(name), clk("clk", 1.0, SC_NS), dut_wrapper("dut_wrapper") {
     dut_wrapper.clk(clk);
-    Driver<RSATwoPowerModIn> driver(
+    driver = make_shared<Driver<RSATwoPowerModIn>>(
         dut_wrapper.dut->i_valid, dut_wrapper.dut->i_ready,
         [this](const RSATwoPowerModIn &in) { this->writer(in); });
-    Monitor<RSATwoPowerModOut> monitor(dut_wrapper.dut->o_valid,
-                                       dut_wrapper.dut->o_ready,
-                                       [this]() { return this->reader(); });
+    monitor = make_shared<Monitor<RSATwoPowerModOut>>(
+        dut_wrapper.dut->o_valid, dut_wrapper.dut->o_ready,
+        [this]() { return this->reader(); });
     dut_wrapper.register_callback(driver);
     dut_wrapper.register_callback(monitor);
-  }
-  void writer(const RSATwoPowerModIn &in) {}
 
-  RSATwoPowerModOut reader() {}
+    driver->push_back(
+        {.power = verilog::vuint<32>(512), .modulus = KeyType(7)});
+  }
+  void writer(const RSATwoPowerModIn &in) {
+    auto power = in.power;
+    auto modulus = in.modulus;
+    // POC here, replace with port assignment in the future;
+    dut_wrapper.dut->i_power = power.v[0];
+    dut_wrapper.dut->i_modulus[0] = modulus.v[0];
+  }
+
+  RSATwoPowerModOut reader() {
+    RSATwoPowerModOut out;
+    out.v[0] = dut_wrapper.dut->o_out[0];
+    return out;
+  }
 };
 
 int sc_main(int, char **) {
   unique_ptr<Testbench> testbench(new Testbench("testbench"));
-  sc_start(10.0, SC_NS);
+  sc_start(1200.0, SC_NS);
   return 0;
 }
