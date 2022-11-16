@@ -1,5 +1,6 @@
 #pragma once
 
+#include "abstract_random.h"
 #include <functional>
 #include <iostream>
 

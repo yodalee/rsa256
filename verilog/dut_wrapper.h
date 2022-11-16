@@ -4,6 +4,7 @@
 #include <functional>
 #include <systemc>
 #include <vector>
+#include <memory>
 #if VM_TRACE
 #include <verilated_fst_c.h>
 #endif
@@ -23,12 +24,6 @@ public:
   DUTWrapper(const sc_module_name &name)
       : sc_module(name), ctx(new VerilatedContext), dut(new DUT(ctx.get())),
         tfp(new VerilatedFstC) {
-    Verilated::traceEverOn(true);
-    ctx->traceEverOn(true);
-    dut->trace(tfp.get(), 99); // Trace 99 levels of hierarchy (or see below)
-    std::string filename = std::string((const char *)name) + "_dump.fst";
-    tfp->open(filename.c_str());
-
     Init();
     SC_THREAD(Executor);
   }
@@ -41,6 +36,12 @@ public:
   unique_ptr<VerilatedFstC> tfp;
 
   void Init() {
+    Verilated::traceEverOn(true);
+    ctx->traceEverOn(true);
+    dut->trace(tfp.get(), 99); // Trace 99 levels of hierarchy (or see below)
+    std::string filename = std::string((const char *)name) + "_dump.fst";
+    tfp->open(filename.c_str());
+
     dut->clk = 0;
     dut->rst = 1;
     dut->eval();
