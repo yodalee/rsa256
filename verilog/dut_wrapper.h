@@ -1,5 +1,6 @@
 #pragma once
 
+#include "callback.h"
 #include <functional>
 #include <systemc>
 #include <vector>
@@ -10,79 +11,75 @@
 using namespace std;
 using namespace sc_core;
 
-enum CallbackPhase {
-  Init,
-  BeforeClk,
-  AfterClk,
-};
-
 template <typename DUT> SC_MODULE(DUTWrapper) {
 public:
-  typedef function<void(DUT *)> Callback;
-  vector<Callback> callback_init;
-  vector<Callback> callback_beforeclk;
-  vector<Callback> callback_afterclk;
+  vector<shared_ptr<Callback>> callbacks;
 
-  void register_callback(CallbackPhase phase, Callback callback) {
-    switch (phase) {
-    case CallbackPhase::Init:
-      this->callback_init.push_back(callback);
-      break;
-    case CallbackPhase::BeforeClk:
-      this->callback_beforeclk.push_back(callback);
-      break;
-    case CallbackPhase::AfterClk:
-      this->callback_afterclk.push_back(callback);
-      break;
-    default:
-      assert(false);
-    }
+  void register_callback(shared_ptr<Callback> callback) {
+    this->callbacks.push_back(callback);
   }
 
   SC_HAS_PROCESS(DUTWrapper);
   DUTWrapper(const sc_module_name &name)
-      : sc_module(name), ctx(new VerilatedContext),
-       dut(new DUT(ctx.get())), tfp(new VerilatedFstC) {
+      : sc_module(name), ctx(new VerilatedContext), dut(new DUT(ctx.get())),
+        tfp(new VerilatedFstC) {
     Verilated::traceEverOn(true);
     ctx->traceEverOn(true);
-    dut->trace(tfp.get(), 99);  // Trace 99 levels of hierarchy (or see below)
+    dut->trace(tfp.get(), 99); // Trace 99 levels of hierarchy (or see below)
     std::string filename = std::string((const char *)name) + "_dump.fst";
     tfp->open(filename.c_str());
+
+    Init();
     SC_THREAD(Executor);
   }
 
- 	~DUTWrapper() {
-		tfp->close();
-	}
+  ~DUTWrapper() { tfp->close(); }
 
   sc_in_clk clk;
   unique_ptr<VerilatedContext> ctx;
   unique_ptr<DUT> dut;
   unique_ptr<VerilatedFstC> tfp;
 
-  void Executor() {
-    for (auto callback : this->callback_init) {
-      callback(this->dut.get());
-    }
+  void Init() {
+    dut->clk = 0;
+    dut->rst = 1;
+    dut->eval();
+    tfp->dump(ctx->time());
 
+    dut->rst = 0;
+    ctx->timeInc(1);
+    dut->eval();
+    tfp->dump(ctx->time());
+
+    dut->rst = 1;
+    ctx->timeInc(1);
+    dut->eval();
+    tfp->dump(ctx->time());
+  }
+
+  void Executor() {
     while (true) {
       wait(this->clk.posedge_event());
-      for (auto callback : this->callback_beforeclk) {
-        callback(this->dut.get());
+      for (auto &callback : this->callbacks) {
+        callback->before_clk();
       }
       ctx->timeInc(1);
       dut->clk = true;
       tfp->dump(ctx->time());
       dut->eval();
-      for (auto callback : this->callback_afterclk) {
-        callback(this->dut.get());
+
+      bool update = false;
+      for (auto &callback : this->callbacks) {
+        update |= callback->after_clk();
       }
-      wait(1.0, SC_NS);
+      if (update) {
+        dut->eval();
+      }
+
       ctx->timeInc(1);
       dut->clk = false;
       tfp->dump(ctx->time());
       dut->eval();
-      wait(1.0, SC_NS);
     }
   }
 };
