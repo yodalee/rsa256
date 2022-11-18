@@ -1,9 +1,9 @@
-name: RSA256_build
+name: Build_Docker
 
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - docker/**
 
