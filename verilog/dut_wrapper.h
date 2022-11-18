@@ -39,7 +39,7 @@ public:
     Verilated::traceEverOn(true);
     ctx->traceEverOn(true);
     dut->trace(tfp.get(), 99); // Trace 99 levels of hierarchy (or see below)
-    std::string filename = std::string((const char *)name) + "_dump.fst";
+    std::string filename = std::string(name()) + "_dump.fst";
     tfp->open(filename.c_str());
 
     dut->clk = 0;

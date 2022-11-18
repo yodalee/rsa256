@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <memory>
+#include <random>
 
 struct BoolPattern {
 	virtual bool operator()() = 0;
@@ -37,7 +38,7 @@ struct RepeatBool: public BoolPattern {
 		return false;
 	}
 	void seed(unsigned s) override {
-		current_ = s % ::std::max(ratio0_, ratio1_);
+		current_ = s % ::std::max(ratio0_, ratio1_+1u);
 	}
 private:
 	const unsigned ratio1_, ratio0_;
@@ -48,7 +49,7 @@ namespace random_factory {
 
 // Note: you shall store them by unique_ptr
 BoolPattern* AlwaysOne() {
-	return new RandomBool(1, 0);
+	return new RepeatBool(1, 0);
 }
 
 BoolPattern* AlwaysZero() {
@@ -61,7 +62,7 @@ BoolPattern* OneEvery(unsigned x) {
 }
 
 BoolPattern* Bernoulli(float p) {
-	return RandomBool(p);
+	return new RandomBool(p);
 }
 
 }
