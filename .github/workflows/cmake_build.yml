@@ -35,5 +35,8 @@ jobs:
     - name: Running vint unittests
       run: ${{github.workspace}}/build/test/test_verilog_int
 
+    - name: Running random generator unittests
+      run: ${{github.workspace}}/build/test/test_abstract_random
+
     - name: Running RSA unittests
       run: ${{github.workspace}}/build/cmodel/unit_test

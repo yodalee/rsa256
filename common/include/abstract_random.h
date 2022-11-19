@@ -57,7 +57,7 @@ BoolPattern* AlwaysZero() {
 }
 
 BoolPattern* OneEvery(unsigned x) {
-	x = std::min(1u, x);
+	x = std::max(1u, x);
 	return new RepeatBool(1, x-1);
 }
 
