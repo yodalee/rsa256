@@ -369,9 +369,8 @@ struct vint {
 		if constexpr (num_word == 1) {
 			v[0] = -v[0];
 		} else {
-			unsigned char carry = 0;
-			carry = detail::addcarry64(v[0], dtype(~v[0]), dtype(1), carry);
-			for (unsigned i = 1; i < num_word; ++i) {
+			unsigned char carry = dtype(1);
+			for (unsigned i = 0; i < num_word; ++i) {
 				carry = detail::addcarry64(v[i], dtype(~v[i]), dtype(0), carry);
 			}
 		}

@@ -5,6 +5,7 @@ ENV HOME=/workspace/
 ENV THE_PREFIX=/usr/
 RUN apt update
 RUN apt install -y libgtest-dev libgmp-dev build-essential cmake libsystemc-dev libgtest-dev \
-    python3 wget autoconf perl flex bison zlib1g-dev
+    python3 wget autoconf perl flex bison zlib1g-dev \
+    libgflags-dev libgoogle-glog-dev libprotobuf-dev
 COPY . .
 RUN ./install_verilator.sh
