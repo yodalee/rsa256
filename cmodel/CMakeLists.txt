@@ -8,9 +8,9 @@ set(SRCS
 
 add_library(rsa ${SRCS})
 
-add_executable(unit_test test_rsa.cpp)
+add_executable(test_rsa_cmodel test_rsa.cpp)
 
-target_link_libraries(unit_test
+target_link_libraries(test_rsa_cmodel
   rsa
   pthread
   gtest

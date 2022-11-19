@@ -33,10 +33,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Running vint unittests
-      run: ${{github.workspace}}/build/test/test_verilog_int
-
-    - name: Running random generator unittests
-      run: ${{github.workspace}}/build/test/test_abstract_random
+      run: ${{github.workspace}}/build/test/unit_test
 
     - name: Running RSA unittests
-      run: ${{github.workspace}}/build/cmodel/unit_test
+      run: ${{github.workspace}}/build/cmodel/test_rsa_cmodel
