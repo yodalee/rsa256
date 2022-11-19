@@ -1,22 +1,34 @@
 #pragma once
-
+#include "abstract_random.h"
+#include <verilated.h>
 #include <functional>
-#include <iostream>
 
 class Callback {
 public:
   virtual ~Callback() = default;
-  virtual void before_clk(){};
-  virtual bool after_clk() { return false; };
+  virtual void before_clk() {}
+  virtual bool after_clk() { return false; }
 };
 
 template <typename SC_TYPE> class Driver : public Callback {
-  using Writer = std::function<void(const SC_TYPE &)>;
-
 public:
-  Driver(CData &valid_, const CData &ready_, Writer write_func_)
-      : valid(valid_), ready(ready_), write_func(write_func_) {
+  // Write to DUT
+  using WriterFunc = ::std::function<void(const SC_TYPE&)>;
+  Driver(
+    CData &valid_,
+    const CData &ready_,
+    WriterFunc write_func_,
+    BoolPattern *new_random_policy_ = nullptr
+  )
+    : valid(valid_),
+      ready(ready_),
+      write_func(write_func_) {
+    SetRandomValidPolicy(new_random_policy_);
     valid = 0;
+  }
+
+  void SetRandomValidPolicy(BoolPattern *new_random_policy_) {
+    random_policy.reset(new_random_policy_);
   }
 
   void before_clk() override {
@@ -44,16 +56,33 @@ public:
 private:
   CData &valid;
   const CData &ready;
-  std::deque<SC_TYPE> q_source;
-  Writer write_func;
+  ::std::deque<SC_TYPE> q_source;
+  ::std::unique_ptr<BoolPattern> random_policy;
+  WriterFunc write_func;
+  bool GetRandom() {
+    return not random_policy or random_policy->operator()();
+  }
 };
 
 template <typename SC_TYPE> class Monitor : public Callback {
 public:
-  using Reader = std::function<SC_TYPE()>;
-  Monitor(const CData &valid_, CData &ready_, Reader read_func_)
-      : valid(valid_), ready(ready_), read_func(read_func_) {
+  // Read from DUT
+  using ReaderFunc = ::std::function<SC_TYPE(void)>;
+  Monitor(
+    const CData &valid_,
+    CData &ready_,
+    ReaderFunc read_func_,
+    BoolPattern *new_random_policy_ = nullptr
+  )
+    : valid(valid_),
+      ready(ready_),
+      read_func(read_func_) {
+    SetRandomReadyPolicy(new_random_policy_);
     ready = 1;
+  }
+
+  void SetRandomReadyPolicy(BoolPattern *new_random_policy_) {
+    random_policy.reset(new_random_policy_);
   }
 
   void before_clk() {
@@ -61,13 +90,16 @@ public:
     if (valid == 1 && ready == 1) {
       SC_TYPE out = read_func();
       q_destination.push_back(out);
-      std::cout << "Receive answer: " << out << std::endl;
     }
   }
 
 private:
   const CData &valid;
   CData &ready;
-  std::deque<SC_TYPE> q_destination;
-  Reader read_func;
+  ::std::deque<SC_TYPE> q_destination;
+  ::std::unique_ptr<BoolPattern> random_policy;
+  ReaderFunc read_func;
+  bool GetRandom() {
+    return not random_policy or random_policy->operator()();
+  }
 };

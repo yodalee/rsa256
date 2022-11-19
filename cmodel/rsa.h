@@ -1,3 +1,4 @@
+#pragma once
 #include "verilog_int.h"
 
 constexpr unsigned kBW_RSA = 256;
