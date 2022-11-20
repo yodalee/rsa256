@@ -104,3 +104,105 @@ TEST_F(TestAssignPort, WriteUnsignedVint) {
   EXPECT_EQ(data256[1], 0x65EF532E);
   EXPECT_EQ(data256[0], 0x0CCA73E1);
 }
+
+TEST_F(TestAssignPort, ReadToUnsignedVint) {
+  vuint<80> u80;
+
+  qdata = 0x1234567890abcdef;
+  read_verilator_port(u80, qdata);
+  EXPECT_EQ(u80.v[0], 0x1234567890abcdef);
+  EXPECT_EQ(u80.v[1], 0);
+
+  idata = 0x12345678;
+  read_verilator_port(u80, idata);
+  EXPECT_EQ(u80.v[0], 0x12345678);
+  EXPECT_EQ(u80.v[1], 0);
+
+  sdata = 0x1234;
+  read_verilator_port(u80, sdata);
+  EXPECT_EQ(u80.v[0], 0x1234);
+  EXPECT_EQ(u80.v[1], 0);
+
+  cdata = 0x5a;
+  read_verilator_port(u80, cdata);
+  EXPECT_EQ(u80.v[0], 0x5a);
+  EXPECT_EQ(u80.v[1], 0);
+}
+
+TEST_F(TestAssignPort, ReadPrimitiveToUnsignedVint) {
+  vuint<80> vu80;
+
+  qdata = 0x1234567890abcdef;
+  read_verilator_port(vu80, qdata);
+  EXPECT_EQ(vu80.v[0], 0x1234567890abcdef);
+  EXPECT_EQ(vu80.v[1], 0);
+
+  idata = 0x12345678;
+  read_verilator_port(vu80, idata);
+  EXPECT_EQ(vu80.v[0], 0x12345678);
+  EXPECT_EQ(vu80.v[1], 0);
+
+  sdata = 0x1234;
+  read_verilator_port(vu80, sdata);
+  EXPECT_EQ(vu80.v[0], 0x1234);
+  EXPECT_EQ(vu80.v[1], 0);
+
+  cdata = 0x5a;
+  read_verilator_port(vu80, cdata);
+  EXPECT_EQ(vu80.v[0], 0x5a);
+  EXPECT_EQ(vu80.v[1], 0);
+}
+
+TEST_F(TestAssignPort, ReadArrayToShorterUnsignedVint) {
+  VlWide<4> data128;
+  vuint<80> vu80;
+
+  data128[0] = 0xc527a16c;
+  data128[1] = 0x6c7a4347;
+  data128[2] = 0x89a0ddf1;
+  data128[3] = 0x5f5c116a;
+
+  read_verilator_port(vu80, data128);
+
+  EXPECT_EQ(vu80.v[0], 0x6c7a4347c527a16c);
+  EXPECT_EQ(vu80.v[1], 0xddf1);
+
+  data128[0] = 0x60f0dc98;
+  data128[1] = 0xf95bd86c;
+  data128[2] = 0x9d77e4a6;
+  data128[3] = 0xbac71422;
+
+  read_verilator_port(vu80, data128);
+
+  EXPECT_EQ(vu80.v[0], 0xf95bd86c60f0dc98);
+  EXPECT_EQ(vu80.v[1], 0xe4a6);
+}
+
+TEST_F(TestAssignPort, ReadArrayToLongerUnsignedVint) {
+  VlWide<4> data128;
+  vuint<256> vu256;
+
+  data128[0] = 0x31035200;
+  data128[1] = 0x30cf606d;
+  data128[2] = 0x1fe8917c;
+  data128[3] = 0x0331f6bf;
+
+  read_verilator_port(vu256, data128);
+
+  EXPECT_EQ(vu256.v[0], 0x30cf606d31035200);
+  EXPECT_EQ(vu256.v[1], 0x0331f6bf1fe8917c);
+  EXPECT_EQ(vu256.v[2], 0);
+  EXPECT_EQ(vu256.v[3], 0);
+
+  data128[0] = 0xff5f012c;
+  data128[1] = 0xbe53eefd;
+  data128[2] = 0xe3a6e5f6;
+  data128[3] = 0x4e6dba01;
+
+  read_verilator_port(vu256, data128);
+
+  EXPECT_EQ(vu256.v[0], 0xbe53eefdff5f012c);
+  EXPECT_EQ(vu256.v[1], 0x4e6dba01e3a6e5f6);
+  EXPECT_EQ(vu256.v[2], 0);
+  EXPECT_EQ(vu256.v[3], 0);
+}
