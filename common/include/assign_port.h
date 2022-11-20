@@ -43,7 +43,6 @@ void write_verilator_port(QData &dest,
 
 template <std::size_t Vlword>
 void write_verilator_port(VlWide<Vlword> &dest, const uint64_t src) {
-  static_assert(Vlword > 0);
   if constexpr (Vlword == 1) {
     write_verilator_port(dest.m_storage[0], src);
   } else {
@@ -58,7 +57,6 @@ void write_verilator_port(VlWide<Vlword> &dest, const uint64_t src) {
 template <std::size_t Vlword, unsigned num_bit>
 void write_verilator_port(VlWide<Vlword> &dest,
                           const verilog::vuint<num_bit> &src) {
-  static_assert(Vlword > 0);
   if constexpr (Vlword == 1) {
     write_verilator_port(dest.m_storage[0], src);
   } else if (src.num_word == 1) {
@@ -78,4 +76,71 @@ void write_verilator_port(VlWide<Vlword> &dest,
     }
   }
 }
+
+// read port to primitive
+void read_verilator_port(uint64_t &dest, const CData &src) { dest = src; }
+void read_verilator_port(uint64_t &dest, const SData &src) { dest = src; }
+void read_verilator_port(uint64_t &dest, const IData &src) { dest = src; }
+void read_verilator_port(uint64_t &dest, const QData &src) { dest = src; }
+
+template <std::size_t Vlword>
+void read_verilator_port(uint64_t &dest, const VlWide<Vlword> &src) {
+  if constexpr (Vlword == 1) {
+    read_verilator_port(dest, src.m_storage[0]);
+  } else {
+    dest = src.m_storage[0] | src.m_storage[1] << 32;
+  }
+}
+
+template <unsigned num_bit>
+void read_verilator_port(vuint<num_bit> &dest, CData &src) {
+  dest = src;
+}
+
+template <unsigned num_bit>
+void read_verilator_port(vuint<num_bit> &dest, SData &src) {
+  dest = src;
+}
+
+template <unsigned num_bit>
+void read_verilator_port(vuint<num_bit> &dest, IData &src) {
+  dest = src;
+}
+
+template <unsigned num_bit>
+void read_verilator_port(vuint<num_bit> &dest, QData &src) {
+  dest = src;
+}
+
+template <unsigned num_bit, std::size_t Vlword>
+void read_verilator_port(verilog::vuint<num_bit> &dest, VlWide<Vlword> &src) {
+  constexpr size_t num_32b = (num_bit + 31) / 32;
+  size_t src_word = 0;
+  size_t dest_word = 0;
+
+  for (dest_word = 0; dest_word < num_32b and src_word < Vlword;
+       ++src_word, ++dest_word) {
+    const uint64_t val = src[src_word];
+    const size_t put_pos = dest_word / 2;
+
+    if (dest_word % 2 == 0) {
+      dest.v[put_pos] &= 0xffffffff00000000;
+      dest.v[put_pos] |= val;
+    } else {
+      dest.v[put_pos] &= 0x00000000ffffffff;
+      dest.v[put_pos] |= val << 32;
+    }
+  }
+  // clear data longer than VlWide range
+  for (; dest_word < num_32b; ++dest_word) {
+    const size_t put_pos = dest_word / 2;
+    if (dest_word % 2 == 0) {
+      dest.v[put_pos] &= 0xffffffff00000000;
+    } else {
+      dest.v[put_pos] &= 0x00000000ffffffff;
+    }
+  }
+  dest.ClampBits();
+}
+
 } // namespace verilog
