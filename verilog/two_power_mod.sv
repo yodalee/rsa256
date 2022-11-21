@@ -18,8 +18,8 @@ module two_power_mod #(
 	output [MOD_WIDTH-1:0] o_out
 );
 
-logic [MOD_WIDTH-1:0] data_modulus;
-logic [MOD_WIDTH-1:0] data_round_result;
+logic [MOD_WIDTH:0] data_modulus;
+logic [MOD_WIDTH:0] data_round_result;
 logic [POWER_WIDTH-1:0] data_power;
 logic [POWER_WIDTH-1:0] round_counter;
 logic [1:0] state, state_next;
@@ -32,7 +32,7 @@ enum logic [1:0] {
 
 assign i_ready = state == STATE_IDLE;
 assign o_valid = state == STATE_WAITDONE;
-assign o_out = data_round_result;
+assign o_out = data_round_result[MOD_WIDTH-1:0];
 
 // update state logic
 always_ff @(posedge clk or negedge rst) begin
@@ -77,7 +77,7 @@ always_ff @( posedge clk or negedge rst ) begin
   else begin
 	if (i_ready && i_valid) begin
 		data_power <= i_power;
-		data_modulus <= i_modulus;
+		data_modulus <= {1'b0, i_modulus};
 	end else begin
 		data_power <= data_power;
 		data_modulus <= data_modulus;

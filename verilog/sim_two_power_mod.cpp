@@ -1,5 +1,6 @@
 
 #include "Vtwo_power_mod.h"
+#include "assign_port.h"
 #include "callback.h"
 #include "dut_wrapper.h"
 #include "verilog_int.h"
@@ -49,20 +50,24 @@ public:
     dut_wrapper.register_callback(driver);
     dut_wrapper.register_callback(monitor);
 
-    driver->push_back(
-        {.power = verilog::vuint<32>(512), .modulus = KeyType(7)});
+    KeyType modulus;
+    from_hex(
+        modulus,
+        "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
+    driver->push_back({.power = verilog::vuint<32>(512), .modulus = modulus});
   }
   void writer(const RSATwoPowerModIn &in) {
     auto power = in.power;
     auto modulus = in.modulus;
-    // POC here, replace with port assignment in the future;
-    dut_wrapper.dut->i_power = power.v[0];
-    dut_wrapper.dut->i_modulus[0] = modulus.v[0];
+    std::cout << to_hex(modulus) << std::endl;
+    write_verilator_port(dut_wrapper.dut->i_power, power);
+    write_verilator_port(dut_wrapper.dut->i_modulus, modulus);
   }
 
   RSATwoPowerModOut reader() {
     RSATwoPowerModOut out;
-    out.v[0] = dut_wrapper.dut->o_out[0];
+    read_verilator_port(out, dut_wrapper.dut->o_out);
+    std::cout << "Received: " << out << std::endl;
     return out;
   }
 };
