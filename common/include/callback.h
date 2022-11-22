@@ -1,7 +1,7 @@
 #pragma once
 #include "abstract_random.h"
-#include <verilated.h>
 #include <functional>
+#include <verilated.h>
 
 class Callback {
 public:
@@ -13,22 +13,16 @@ public:
 template <typename SC_TYPE> class Driver : public Callback {
 public:
   // Write to DUT
-  using WriterFunc = ::std::function<void(const SC_TYPE&)>;
-  Driver(
-    CData &valid_,
-    const CData &ready_,
-    WriterFunc write_func_,
-    BoolPattern *new_random_policy_ = nullptr
-  )
-    : valid(valid_),
-      ready(ready_),
-      write_func(write_func_) {
-    SetRandomValidPolicy(new_random_policy_);
+  using WriterFunc = ::std::function<void(const SC_TYPE &)>;
+  Driver(CData &valid_, const CData &ready_, WriterFunc write_func_,
+         BoolPattern *random_policy_)
+      : valid(valid_), ready(ready_), write_func(write_func_),
+        random_policy(random_policy_) {
     valid = 0;
   }
 
-  void SetRandomValidPolicy(BoolPattern *new_random_policy_) {
-    random_policy.reset(new_random_policy_);
+  void SetRandomValidPolicy(BoolPattern *new_random_policy) {
+    random_policy.reset(new_random_policy);
   }
 
   void before_clk() override {
@@ -59,30 +53,22 @@ private:
   ::std::deque<SC_TYPE> q_source;
   ::std::unique_ptr<BoolPattern> random_policy;
   WriterFunc write_func;
-  bool GetRandom() {
-    return not random_policy or random_policy->operator()();
-  }
+  bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };
 
 template <typename SC_TYPE> class Monitor : public Callback {
 public:
   // Read from DUT
   using ReaderFunc = ::std::function<SC_TYPE(void)>;
-  Monitor(
-    const CData &valid_,
-    CData &ready_,
-    ReaderFunc read_func_,
-    BoolPattern *new_random_policy_ = nullptr
-  )
-    : valid(valid_),
-      ready(ready_),
-      read_func(read_func_) {
-    SetRandomReadyPolicy(new_random_policy_);
+  Monitor(const CData &valid_, CData &ready_, ReaderFunc read_func_,
+          BoolPattern *random_policy_)
+      : valid(valid_), ready(ready_), read_func(read_func_),
+        random_policy(random_policy_) {
     ready = 1;
   }
 
-  void SetRandomReadyPolicy(BoolPattern *new_random_policy_) {
-    random_policy.reset(new_random_policy_);
+  void SetRandomReadyPolicy(BoolPattern *new_random_policy) {
+    random_policy.reset(new_random_policy);
   }
 
   void before_clk() {
@@ -99,7 +85,5 @@ private:
   ::std::deque<SC_TYPE> q_destination;
   ::std::unique_ptr<BoolPattern> random_policy;
   ReaderFunc read_func;
-  bool GetRandom() {
-    return not random_policy or random_policy->operator()();
-  }
+  bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };

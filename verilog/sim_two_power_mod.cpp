@@ -1,5 +1,6 @@
 
 #include "Vtwo_power_mod.h"
+#include "abstract_random.h"
 #include "assign_port.h"
 #include "callback.h"
 #include "dut_wrapper.h"
@@ -43,10 +44,11 @@ public:
     dut_wrapper.clk(clk);
     driver = make_shared<Driver<RSATwoPowerModIn>>(
         dut_wrapper.dut->i_valid, dut_wrapper.dut->i_ready,
-        [this](const RSATwoPowerModIn &in) { this->writer(in); });
+        [this](const RSATwoPowerModIn &in) { this->writer(in); },
+        random_factory::AlwaysOne());
     monitor = make_shared<Monitor<RSATwoPowerModOut>>(
         dut_wrapper.dut->o_valid, dut_wrapper.dut->o_ready,
-        [this]() { return this->reader(); });
+        [this]() { return this->reader(); }, random_factory::AlwaysOne());
     dut_wrapper.register_callback(driver);
     dut_wrapper.register_callback(monitor);
 
