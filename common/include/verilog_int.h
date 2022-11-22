@@ -583,14 +583,16 @@ struct vint {
 			const int cur_hex = val.GetDtypeAtBitPos(msb_hex_pos - i) & cur_mask;
 			// Set met_nonzero if not yet and meet a nonzero
 			// After met_nonzero, we start add characters.
-			if (not met_nonzero or cur_hex != 0) {
+			if (met_nonzero or cur_hex != 0) {
 				met_nonzero = true;
 			}
-			ret.push_back(
-				cur_hex >= 10 ?
-				(cur_hex + 'A' - 10) :
-				(cur_hex + '0')
-			);
+			if (met_nonzero) {
+				ret.push_back(
+					cur_hex >= 10 ?
+					(cur_hex + 'A' - 10) :
+					(cur_hex + '0')
+				);
+			}
 		}
 		return ret;
 	}
