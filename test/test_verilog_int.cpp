@@ -106,6 +106,11 @@ TEST(TestVerilogUnsigned, ToHex) {
 	v66.v[1] = 0x2;
 	v66.v[0] = 0x0123456789abcdefllu;
 	EXPECT_EQ(to_hex(v66), "20123456789ABCDEF");
+
+	vuint<90> v90;
+	v90.v[1] = 0xfllu;
+	v90.v[0] = 0x5566556612345678llu;
+	EXPECT_EQ(to_hex(v90), "F5566556612345678");
 }
 
 TEST(TestVerilogSigned, DISABLED_ToHex) {
