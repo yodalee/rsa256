@@ -9,23 +9,14 @@ env:
 jobs:
   build_cmake:
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/yodalee/rsa256
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - name: Install Required Package
-      run: sudo apt update &&
-        sudo apt install -y libunwind-dev &&
-        sudo apt install -y libgtest-dev libgmp-dev build-essential cmake libsystemc-dev libgtest-dev
-        python3 wget autoconf perl flex bison zlib1g-dev libfl-dev
-        libgflags-dev libgoogle-glog-dev libprotobuf-dev
-
     - uses: actions/checkout@v3
-
-    - name: Run install_verilator.sh
-      run: mkdir custom_package && cd custom_package && ${{github.workspace}}/docker/install_verilator.sh
-      shell: bash
-      env:
-        THE_PREFIX: /usr/
-        SUDO: sudo
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
