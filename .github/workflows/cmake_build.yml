@@ -13,8 +13,10 @@ jobs:
     steps:
     - name: Install Required Package
       run: sudo apt update &&
+        sudo apt install -y libunwind-dev &&
         sudo apt install -y libgtest-dev libgmp-dev build-essential cmake libsystemc-dev libgtest-dev
         python3 wget autoconf perl flex bison zlib1g-dev libfl-dev
+        libgflags-dev libgoogle-glog-dev libprotobuf-dev
 
     - uses: actions/checkout@v3
 
