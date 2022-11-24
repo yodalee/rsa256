@@ -10,6 +10,6 @@ set(SIM_TWO_POWER_MOD Vtwo_power_mod)
 
 add_executable(${SIM_TWO_POWER_MOD} sim_two_power_mod.cpp)
 
-target_link_libraries(${SIM_TWO_POWER_MOD} PUBLIC rsa systemc gmp)
+target_link_libraries(${SIM_TWO_POWER_MOD} PUBLIC rsa systemc glog)
 
 verilate(${SIM_TWO_POWER_MOD} TRACE_FST SOURCES two_power_mod.sv)
