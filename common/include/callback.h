@@ -1,7 +1,7 @@
 #pragma once
 #include "abstract_random.h"
-#include <verilated.h>
 #include <functional>
+#include <verilated.h>
 
 class Callback {
 public:
@@ -13,16 +13,10 @@ public:
 template <typename SC_TYPE> class Driver : public Callback {
 public:
   // Write to DUT
-  using WriterFunc = ::std::function<void(const SC_TYPE&)>;
-  Driver(
-    CData &valid_,
-    const CData &ready_,
-    WriterFunc write_func_,
-    BoolPattern *new_random_policy_ = nullptr
-  )
-    : valid(valid_),
-      ready(ready_),
-      write_func(write_func_) {
+  using WriterFunc = ::std::function<void(const SC_TYPE &)>;
+  Driver(CData &valid_, const CData &ready_, WriterFunc write_func_,
+         BoolPattern *new_random_policy_ = nullptr)
+      : valid(valid_), ready(ready_), write_func(write_func_) {
     SetRandomValidPolicy(new_random_policy_);
     valid = 0;
   }
@@ -59,24 +53,18 @@ private:
   ::std::deque<SC_TYPE> q_source;
   ::std::unique_ptr<BoolPattern> random_policy;
   WriterFunc write_func;
-  bool GetRandom() {
-    return not random_policy or random_policy->operator()();
-  }
+  bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };
 
 template <typename SC_TYPE> class Monitor : public Callback {
 public:
   // Read from DUT
   using ReaderFunc = ::std::function<SC_TYPE(void)>;
-  Monitor(
-    const CData &valid_,
-    CData &ready_,
-    ReaderFunc read_func_,
-    BoolPattern *new_random_policy_ = nullptr
-  )
-    : valid(valid_),
-      ready(ready_),
-      read_func(read_func_) {
+  using NotifyFunc = ::std::function<void(const SC_TYPE &)>;
+  Monitor(const CData &valid_, CData &ready_, ReaderFunc read_func_,
+          NotifyFunc notify_func_, BoolPattern *new_random_policy_ = nullptr)
+      : valid(valid_), ready(ready_), read_func(read_func_),
+        notify_func(notify_func_) {
     SetRandomReadyPolicy(new_random_policy_);
     ready = 1;
   }
@@ -88,18 +76,16 @@ public:
   void before_clk() {
     // Always received monitor
     if (valid == 1 && ready == 1) {
-      SC_TYPE out = read_func();
-      q_destination.push_back(out);
+      const SC_TYPE out = read_func();
+      notify_func(out);
     }
   }
 
 private:
   const CData &valid;
   CData &ready;
-  ::std::deque<SC_TYPE> q_destination;
   ::std::unique_ptr<BoolPattern> random_policy;
   ReaderFunc read_func;
-  bool GetRandom() {
-    return not random_policy or random_policy->operator()();
-  }
+  NotifyFunc notify_func;
+  bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };
