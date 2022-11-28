@@ -32,11 +32,11 @@ public:
     }
     if (!q_source.empty()) {
       const SC_TYPE &data = q_source.front();
-      // TODO: probability to present data to DUT
-      // This is a always send Driver
       if (valid == 0) {
-        valid = 1;
-        write_func(data);
+        if (GetRandom()) {
+          valid = 1;
+          write_func(data);
+        }
       }
     } else {
       // no data to send.
@@ -66,7 +66,7 @@ public:
       : valid(valid_), ready(ready_), read_func(read_func_),
         notify_func(notify_func_) {
     SetRandomReadyPolicy(new_random_policy_);
-    ready = 1;
+    ready = 0;
   }
 
   void SetRandomReadyPolicy(BoolPattern *new_random_policy_) {
@@ -74,10 +74,14 @@ public:
   }
 
   void before_clk() {
-    // Always received monitor
-    if (valid == 1 && ready == 1) {
-      const SC_TYPE out = read_func();
+    if (ready == 0) {
+      ready = GetRandom();
+    } else if (valid == 1) {
+      SC_TYPE out = read_func();
       notify_func(out);
+      if (GetRandom()) {
+        ready = 0;
+      }
     }
   }
 
