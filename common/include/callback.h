@@ -1,6 +1,7 @@
 #pragma once
 #include "abstract_random.h"
 #include <functional>
+#include <optional>
 #include <verilated.h>
 
 class Callback {
@@ -62,11 +63,14 @@ public:
   using ReaderFunc = ::std::function<SC_TYPE(void)>;
   using NotifyFunc = ::std::function<void(const SC_TYPE &)>;
   Monitor(const CData &valid_, CData &ready_, ReaderFunc read_func_,
-          NotifyFunc notify_func_, BoolPattern *new_random_policy_ = nullptr)
+          NotifyFunc notify_func_, ::std::function<void()> RaiseFailure_,
+          BoolPattern *new_random_policy_ = nullptr)
       : valid(valid_), ready(ready_), read_func(read_func_),
-        notify_func(notify_func_) {
+        notify_func(notify_func_), RaiseFailure(RaiseFailure_) {
     SetRandomReadyPolicy(new_random_policy_);
+    assert(RaiseFailure);
     ready = 0;
+    last_data = std::nullopt;
   }
 
   void SetRandomReadyPolicy(BoolPattern *new_random_policy_) {
@@ -74,22 +78,42 @@ public:
   }
 
   void before_clk() {
-    if (ready == 0) {
-      ready = GetRandom();
-    } else if (valid == 1) {
-      SC_TYPE out = read_func();
-      notify_func(out);
-      if (GetRandom()) {
-        ready = 0;
+    if (valid == 1) {
+      const SC_TYPE &out = read_func();
+
+      // check output not changed in valid high
+      if (!last_data) {
+        *last_data = out;
+      } else {
+        if (out != *last_data) {
+          RaiseFailure();
+        }
       }
+
+      if (ready == 1) {
+        SC_TYPE out = read_func();
+        notify_func(out);
+        ready = !GetRandom();
+        last_data.reset();
+      } else {
+        ready = GetRandom();
+      }
+    } else {
+      // last_data will have value if valid has been true
+      if (last_data) {
+        RaiseFailure();
+      }
+      last_data.reset();
     }
   }
 
 private:
   const CData &valid;
   CData &ready;
+  ::std::optional<SC_TYPE> last_data;
   ::std::unique_ptr<BoolPattern> random_policy;
   ReaderFunc read_func;
   NotifyFunc notify_func;
+  ::std::function<void()> RaiseFailure;
   bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };
