@@ -549,3 +549,48 @@ TEST(TestVerilogUnsigned, DISABLED_Compare) {
 
 TEST(TestVerilogSigned, DISABLED_Compare) {
 }
+
+TEST(TestVerilogUnsigned, ExplicitCast) {
+	{
+		vuint<5> v5;
+		vuint<100> v100;
+		v5 = 12;
+		v100 = vuint<100>{v5};
+		EXPECT_EQ(v100.v[0], 12);
+		EXPECT_EQ(v100.v[1], 0);
+	}
+
+	{
+		vuint<5> v5;
+		vuint<100> v100;
+		v100.v[0] = 0xff;
+		v100.v[1] = 0x99;
+		v5 = vuint<5>{v100};
+		EXPECT_EQ(v5, 0x1f);
+	}
+
+	{
+		vuint<67> v67;
+		vuint<130> v130;
+		v67.v[0] = -1;
+		v67.v[1] = 0x7;
+		v130 = vuint<130>{v67};
+		EXPECT_EQ(v130.v[0], uint64_t(-1));
+		EXPECT_EQ(v130.v[1], 0x7);
+		EXPECT_EQ(v130.v[2], 0);
+	}
+
+	{
+		vuint<67> v67;
+		vuint<130> v130;
+		v130.v[0] = 5566;
+		v130.v[1] = -1;
+		v130.v[2] = 1;
+		v67 = vuint<67>{v130};
+		EXPECT_EQ(v67.v[0], 5566);
+		EXPECT_EQ(v67.v[1], 0x7);
+	}
+}
+
+TEST(TestVerilogSigned, ExplicitCast) {
+}
