@@ -27,6 +27,9 @@ constexpr unsigned num_bit2dict_key(unsigned num_bit) {
 		unsigned(num_bit > 32)
 	);
 }
+constexpr unsigned num_bit2num_word(unsigned num_bit) {
+	return (num_bit+63) / 64;
+}
 
 // Shift Right Logical 64-bit
 // ^     ^     ^       ^^
@@ -85,7 +88,7 @@ struct vint {
 	static_assert(num_bit > 0);
 	typedef typename detail::dtype_dict<is_signed, detail::num_bit2dict_key(num_bit)>::dtype dtype;
 	static constexpr unsigned bw_word = 8 * sizeof(dtype);
-	static constexpr unsigned num_word = (num_bit-1) / bw_word + 1;
+	static constexpr unsigned num_word = detail::num_bit2num_word(num_bit);
 	static constexpr unsigned ununsed_bit = num_word * bw_word - num_bit;
 	// dtype == vint<is_signed, num_bit>
 	static constexpr bool matched = num_bit == bw_word;
@@ -392,6 +395,32 @@ struct vint {
 			}
 		}
 		return false;
+	}
+
+	// explicit cast
+	template<unsigned num_bit_dst>
+	explicit operator vint<is_signed, num_bit_dst>() {
+		vint<is_signed, num_bit_dst> dst;
+		auto src_beg = ::std::begin(v);
+		auto src_end = ::std::end(v);
+		auto dst_beg = ::std::begin(dst.v);
+		auto dst_end = ::std::end(dst.v);
+		constexpr size_t num_word_min = detail::num_bit2num_word(::std::min(num_bit, num_bit_dst));
+		::std::copy_n(src_beg, num_word_min, dst_beg);
+		if constexpr (num_bit_dst > num_bit) {
+			if constexpr (is_signed) {
+				::std::fill(
+					dst_beg+num_word_min,
+					dst_end,
+					dst_beg[num_word_min-1]>>(num_bit_dst-1)
+				);
+			} else {
+				::std::fill(dst_beg+num_word_min, dst_end, 0);
+			}
+		} else {
+			dst.ClampBits();
+		}
+		return dst;
 	}
 
 	//////////////////////
