@@ -11,7 +11,7 @@ using namespace sc_dt;
 using namespace verilog;
 
 constexpr int kBW = 256;
-using KeyType = vint<false, 257>;
+using KeyType = vuint<kBW>;
 struct RSATwoPowerModIn {
   friend ::std::ostream &operator<<(::std::ostream &os,
                                     const RSATwoPowerModIn &v) {
@@ -24,8 +24,6 @@ struct RSATwoPowerModIn {
 };
 using RSATwoPowerModOut = KeyType;
 
-typedef vint<false, 257> KeyType;
-
 SC_MODULE(RSATwoPowerMod) {
   sc_in_clk clk;
   sc_fifo_in<RSATwoPowerModIn> data_in;
@@ -34,11 +32,12 @@ SC_MODULE(RSATwoPowerMod) {
   SC_CTOR(RSATwoPowerMod) { SC_THREAD(Thread); }
 
   void Thread() {
-    KeyType round_result;
+    using ExtendKeyType = vuint<kBW + 1>;
+    ExtendKeyType round_result;
     while (true) {
       RSATwoPowerModIn in = data_in.read();
       int power = in.power;
-      KeyType modulus = in.modulus;
+      ExtendKeyType modulus = static_cast<ExtendKeyType>(in.modulus);
 
       from_hex(round_result, "1");
       for (size_t i = 0; i < power; i++) {
@@ -47,7 +46,7 @@ SC_MODULE(RSATwoPowerMod) {
           round_result -= modulus;
         }
       }
-      data_out.write(round_result);
+      data_out.write(static_cast<KeyType>(round_result));
     }
   }
 };
