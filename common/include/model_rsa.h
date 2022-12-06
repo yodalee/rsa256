@@ -15,3 +15,16 @@ struct RSATwoPowerModIn {
   KeyType modulus;
 };
 using RSATwoPowerModOut = KeyType;
+
+struct RSAMontgomeryModIn {
+  friend ::std::ostream &operator<<(::std::ostream &os,
+                                    const RSAMontgomeryModIn &in) {
+    os << "{" << in.a << ", " << in.b << ", " << in.modulus << "}" << std::endl;
+    return os;
+  }
+
+  KeyType a;
+  KeyType b;
+  KeyType modulus;
+};
+using RSAMontgomeryModOut = KeyType;

@@ -13,3 +13,8 @@ target_link_libraries(model_RSA ${SYSTEMC_LIBRARY})
 add_executable(model_two_power_mod model_two_power_mod.cpp)
 
 target_link_libraries(model_two_power_mod ${SYSTEMC_LIBRARY})
+
+add_executable(model_montgomery model_montgomery.cpp)
+
+target_link_libraries(model_montgomery ${SYSTEMC_LIBRARY})
+
