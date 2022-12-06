@@ -52,7 +52,7 @@ public:
     KeyType modulus;
     from_hex(
         modulus,
-        "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
+        "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
     driver->push_back({.power = verilog::vuint<32>(512), .modulus = modulus});
   }
 
