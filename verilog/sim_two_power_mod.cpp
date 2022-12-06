@@ -54,7 +54,8 @@ public:
     monitor = make_shared<Monitor<RSATwoPowerModOut>>(
         dut_wrapper.dut->o_valid, dut_wrapper.dut->o_ready,
         [this]() { return this->reader(); },
-        [this](const RSATwoPowerModOut &out) { return this->notify(out); });
+        [this](const RSATwoPowerModOut &out) { return this->notify(out); },
+        KillSimulation);
     dut_wrapper.register_callback(driver);
     dut_wrapper.register_callback(monitor);
 
@@ -78,7 +79,6 @@ public:
   RSATwoPowerModOut reader() {
     RSATwoPowerModOut out;
     read_verilator_port(out, dut_wrapper.dut->o_out);
-    std::cout << "Received: " << out << std::endl;
     return out;
   }
 };
