@@ -2,27 +2,13 @@
 #include <memory>
 #include <systemc>
 
-#include "rsa.h"
+#include "model_rsa.h"
 #include "verilog_int.h"
 
 using namespace std;
 using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
-
-constexpr int kBW = 256;
-using KeyType = vuint<kBW>;
-struct RSATwoPowerModIn {
-  friend ::std::ostream &operator<<(::std::ostream &os,
-                                    const RSATwoPowerModIn &v) {
-    os << "{" << v.power << ", " << v.modulus << "}" << std::endl;
-    return os;
-  }
-
-  sc_uint<32> power;
-  KeyType modulus;
-};
-using RSATwoPowerModOut = KeyType;
 
 SC_MODULE(RSATwoPowerMod) {
   sc_in_clk clk;
@@ -36,7 +22,7 @@ SC_MODULE(RSATwoPowerMod) {
     ExtendKeyType round_result;
     while (true) {
       RSATwoPowerModIn in = data_in.read();
-      int power = in.power;
+      int power = in.power.value();
       ExtendKeyType modulus = static_cast<ExtendKeyType>(in.modulus);
 
       from_hex(round_result, "1");
@@ -75,7 +61,7 @@ SC_MODULE(Testbench) {
   }
 
   void Driver() {
-    sc_uint<32> power = 512;
+    verilog::vuint<32> power(512);
     KeyType modulus;
     cout << "calculate 2^: " << power << endl;
     cout << "modulus: " << str_modulus << endl;

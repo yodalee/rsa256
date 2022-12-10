@@ -7,9 +7,16 @@ include_directories(${cmodel_INCLUDE_DIRS})
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 
 set(SIM_TWO_POWER_MOD Vtwo_power_mod)
+set(SIM_MONTGOMERY Vmontgomery)
 
 add_executable(${SIM_TWO_POWER_MOD} sim_two_power_mod.cpp)
 
 target_link_libraries(${SIM_TWO_POWER_MOD} PUBLIC rsa systemc glog)
 
 verilate(${SIM_TWO_POWER_MOD} TRACE_FST SOURCES two_power_mod.sv)
+
+add_executable(${SIM_MONTGOMERY} sim_montgomery.cpp)
+
+target_link_libraries(${SIM_MONTGOMERY} PUBLIC rsa systemc glog)
+
+verilate(${SIM_MONTGOMERY} TRACE_FST SOURCES montgomery.sv)

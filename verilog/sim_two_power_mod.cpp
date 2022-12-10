@@ -3,6 +3,7 @@
 #include "assign_port.h"
 #include "callback.h"
 #include "dut_wrapper.h"
+#include "model_rsa.h"
 #include "scoreboard.h"
 #include "verilog_int.h"
 #include <iostream>
@@ -12,17 +13,6 @@ using namespace std;
 using namespace sc_core;
 
 using DUT = Vtwo_power_mod;
-using KeyType = verilog::vuint<256>;
-struct RSATwoPowerModIn {
-  friend ::std::ostream &operator<<(::std::ostream &os,
-                                    const RSATwoPowerModIn &v) {
-    os << "{" << v.power << ", " << v.modulus << "}" << std::endl;
-    return os;
-  }
-  verilog::vuint<32> power;
-  KeyType modulus;
-};
-using RSATwoPowerModOut = KeyType;
 
 void KillSimulation() {
   wait(100, SC_NS);
@@ -62,7 +52,7 @@ public:
     KeyType modulus;
     from_hex(
         modulus,
-        "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
+        "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
     driver->push_back({.power = verilog::vuint<32>(512), .modulus = modulus});
   }
 
