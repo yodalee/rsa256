@@ -630,7 +630,7 @@ struct vint {
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {
 		if constexpr (num_word == 1) {
-			os << v.value();
+			os << +v.value();
 		} else {
 			os << to_hex(v);
 		}
