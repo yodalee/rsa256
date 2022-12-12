@@ -5,6 +5,7 @@ enable_testing()
 
 add_executable(unit_test
   test_verilog_int.cpp
+  test_verilog_struct.cpp
   test_assign_port.cpp
   test_abstract_random.cpp
 )

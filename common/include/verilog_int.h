@@ -83,8 +83,10 @@ inline unsigned char subborrow64(int64_t &out, int64_t x, int64_t y, unsigned ch
 
 }
 
-template <bool is_signed, unsigned num_bit>
+template <bool is_signed, unsigned num_bit_>
 struct vint {
+	// Make num_bit accessible from outside
+	static constexpr unsigned num_bit = num_bit_;
 	static_assert(num_bit > 0);
 	typedef typename detail::dtype_dict<is_signed, detail::num_bit2dict_key(num_bit)>::dtype dtype;
 	static constexpr unsigned bw_word = 8 * sizeof(dtype);
@@ -628,7 +630,7 @@ struct vint {
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {
 		if constexpr (num_word == 1) {
-			os << v.value();
+			os << +v.value();
 		} else {
 			os << to_hex(v);
 		}
