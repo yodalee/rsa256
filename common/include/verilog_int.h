@@ -81,7 +81,7 @@ inline unsigned char subborrow64(int64_t &out, int64_t x, int64_t y, unsigned ch
 	return _subborrow_u64(carry_in, x, y, reinterpret_cast<unsigned long long*>(&out));
 }
 
-}
+} // namespace detail
 
 template <bool is_signed, unsigned num_bit_>
 struct vint {
@@ -642,4 +642,4 @@ struct vint {
 template<unsigned num_bit> using vsint = vint<true, num_bit>;
 template<unsigned num_bit> using vuint = vint<false, num_bit>;
 
-}
+} // namespace verilog
