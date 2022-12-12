@@ -2,9 +2,9 @@
 
 #include "callback.h"
 #include <functional>
+#include <memory>
 #include <systemc>
 #include <vector>
-#include <memory>
 #if VM_TRACE
 #include <verilated_fst_c.h>
 #endif
@@ -39,7 +39,7 @@ public:
     Verilated::traceEverOn(true);
     ctx->traceEverOn(true);
     dut->trace(tfp.get(), 99); // Trace 99 levels of hierarchy (or see below)
-    std::string filename = std::string(name()) + "_dump.fst";
+    std::string filename = std::string(dut->modelName()) + "_dump.fst";
     tfp->open(filename.c_str());
 
     dut->clk = 0;
