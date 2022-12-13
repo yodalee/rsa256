@@ -1,5 +1,4 @@
-#include "verilog_int.h"
-#include "verilog_struct.h"
+#include "verilog_bundle.h"
 #include <gtest/gtest.h>
 #include <array>
 #include <cstring>
@@ -37,19 +36,25 @@ struct Struct03 {
 	VERILOG_DEFINE_STRUCT_EXTRA(Struct03)
 };
 
+typedef varray<vuint<13>, 2, 3> Type13x2x3;
+
+struct Struct04 {
+	BOOST_HANA_DEFINE_STRUCT(Struct04,
+		(Type13, v13),
+		(varray<Type13, 5>, v13x5),
+		(varray<Struct02, 1, 2>, s2x1x2)
+	);
+	VERILOG_DEFINE_STRUCT_EXTRA(Struct04)
+};
+
 TEST(TestComputeStructBit, StructSimple) {
-	constexpr unsigned a = num_bit_of<Type13>;
-	constexpr unsigned b = num_bit_of<Struct01>;
-	constexpr unsigned c = num_bit_of<Struct02>;
-	constexpr unsigned d = num_bit_of<Struct03>;
-	static_assert(is_trivially_copyable_v<Type13>);
-	static_assert(is_trivially_copyable_v<Struct01>);
-	static_assert(is_trivially_copyable_v<Struct02>);
-	static_assert(is_trivially_copyable_v<Struct03>);
-	static_assert(a == 13);
-	static_assert(b == 8);
-	static_assert(c == 8+99+17);
-	static_assert(a+b+c == d);
+	constexpr unsigned a = num_bit_of<Type13x2x3>;
+	constexpr unsigned b = num_bit_of<Struct04>;
+	static_assert(a == 13*2*3);
+	static_assert(b == 13+13*5+(8+99+17)*1*2);
+}
+
+TEST(TestComputeStructBit, StructArray) {
 }
 
 TEST(TestPrintStruct, StructSimple) {
@@ -61,18 +66,29 @@ TEST(TestPrintStruct, StructSimple) {
 	s.s2.v99 = 4;
 	s.s2.v17 = 5;
 	PrintContent(ss, s);
-	EXPECT_EQ(ss.str(), "{v13:1,s1:{v8:2,},s2:{v8:3,v99:4,v17:5,},},");
+	EXPECT_EQ(ss.str(), "{v13:1,s1:{v8:2,},s2:{v8:3,v99:4,v17:5,},}");
+}
+
+TEST(TestPrintStruct, DISABLED_StructArray) {
 }
 
 TEST(TestTypeString, StructSimple) {
-	const string a = GetTypeString(Type13{});
-	const string b = GetTypeString(Struct01{});
-	const string c = GetTypeString(Struct02{});
-	const string d = GetTypeString(Struct03{});
+	stringstream os;
+	const string a = GetTypeString<Type13>();
+	const string b = GetTypeString<Struct01>();
+	const string c = GetTypeString<Struct02>();
+	const string d = GetTypeString<Struct03>();
 	EXPECT_EQ(a, "u13");
-	EXPECT_EQ(b, "u8");
-	EXPECT_EQ(c, "u8u99u17");
-	EXPECT_EQ(d, a+b+c);
+	EXPECT_EQ(b, "{u8}");
+	EXPECT_EQ(c, "{u8u99u17}");
+	EXPECT_EQ(d, "{u13{u8}{u8u99u17}}");
+}
+
+TEST(TestTypeString, StructArray) {
+	const string a = GetTypeString<Type13x2x3>();
+	const string b = GetTypeString<Struct04>();
+	EXPECT_EQ(a, "[u13]x2x3");
+	EXPECT_EQ(b, "{u13[u13]x5[{u8u99u17}]x1x2}");
 }
 
 TEST(TestLoadSave, StructSimple) {
@@ -88,7 +104,7 @@ TEST(TestLoadSave, StructSimple) {
 	}
 
 	// Store
-	const string ts_s03 = GetTypeString(Struct03{});
+	const string ts_s03 = GetTypeString<Struct03>();
 	ss << ts_s03 << '$';
 	for (int i = 0; i < N; ++i) {
 		SaveContent(ss, from_data[i]);
@@ -115,4 +131,7 @@ TEST(TestLoadSave, StructSimple) {
 	char c;
 	EXPECT_FALSE(ss.get(c));
 	EXPECT_TRUE(ss.eof());
+}
+
+TEST(TestLoadSave, DISABLED_StructArray) {
 }
