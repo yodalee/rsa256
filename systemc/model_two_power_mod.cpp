@@ -61,7 +61,7 @@ SC_MODULE(Testbench) {
   }
 
   void Driver() {
-    verilog::vuint<32> power(512);
+    RSATwoPowerModIn::TwoPowerMod_Power_t power(512);
     KeyType modulus;
     cout << "calculate 2^: " << power << endl;
     cout << "modulus: " << str_modulus << endl;
