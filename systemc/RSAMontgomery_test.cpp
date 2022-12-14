@@ -2,6 +2,7 @@
 #include <memory>
 #include <systemc>
 
+#include "RSAMontgomery.h"
 #include "model_rsa.h"
 #include "verilog_int.h"
 
@@ -18,44 +19,11 @@ const char str_B[] = "10001";
 const char str_ans[] =
     "314F8ACB18E57C4B2FA37ADEFA7964711B8DCDB7AAC7514C78D97CF4D4121426";
 
-SC_MODULE(RSAMontgomeryMod) {
-  using ExtendKeyType = vuint<kBW + 2>;
-
-  sc_in_clk clk;
-  sc_fifo_in<RSAMontgomeryModIn> data_in;
-  sc_fifo_out<RSAMontgomeryModOut> data_out;
-
-  SC_CTOR(RSAMontgomeryMod) { SC_THREAD(Thread); }
-
-  void Thread() {
-    while (true) {
-      RSAMontgomeryModIn in = data_in.read();
-      KeyType a = in.a;
-      ExtendKeyType b = static_cast<ExtendKeyType>(in.b);
-      ExtendKeyType modulus = static_cast<ExtendKeyType>(in.modulus);
-      ExtendKeyType round_result(0);
-      for (int i = 0; i < kBW; ++i) {
-        if (a.Bit(i)) {
-          round_result += b;
-        }
-        if (round_result.Bit(0)) {
-          round_result += modulus;
-        }
-        round_result >>= 1;
-      }
-      if (round_result > modulus) {
-        round_result -= modulus;
-      }
-      data_out.write(static_cast<KeyType>(round_result));
-    }
-  }
-};
-
 SC_MODULE(Testbench) {
   sc_clock clk;
   sc_fifo<RSAMontgomeryModIn> data_in;
   sc_fifo<RSAMontgomeryModOut> data_out;
-  RSAMontgomeryMod montgomery_mod;
+  RSAMontgomery montgomery_mod;
   bool timeout, pass;
 
   SC_CTOR(Testbench)

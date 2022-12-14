@@ -1,5 +1,5 @@
 
-#include "Vtwo_power_mod.h"
+#include "VRSATwoPowerMod.h"
 #include "assign_port.h"
 #include "model_rsa.h"
 #include "test_fixture.h"
@@ -11,7 +11,7 @@ using namespace std;
 using namespace sc_core;
 
 using IN = RSATwoPowerModIn;
-using DUT = Vtwo_power_mod;
+using DUT = VRSATwoPowerMod;
 using OUT = RSATwoPowerModOut;
 
 class TestBench_RsaTwoPowerMod : public TestBench<IN, OUT, DUT> {
