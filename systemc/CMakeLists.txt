@@ -14,7 +14,8 @@ add_executable(RSATwoPowerMod RSATwoPowerMod.cpp)
 
 target_link_libraries(RSATwoPowerMod ${SYSTEMC_LIBRARY})
 
-add_executable(RSAMontgomery RSAMontgomery.cpp)
 
-target_link_libraries(RSAMontgomery ${SYSTEMC_LIBRARY})
+add_library(RSAMontgomery RSAMontgomery.cpp)
+add_executable(RSAMontgomery_test RSAMontgomery_test.cpp)
+target_link_libraries(RSAMontgomery_test ${SYSTEMC_LIBRARY} RSAMontgomery)
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "verilog_int.h"
 #include <iostream>
 #include <systemc>
