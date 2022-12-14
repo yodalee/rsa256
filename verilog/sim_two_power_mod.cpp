@@ -36,7 +36,8 @@ int sc_main(int, char **) {
   KeyType modulus;
   from_hex(modulus,
            "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
-  testbench->push_input({.power = verilog::vuint<32>(512), .modulus = modulus});
+  testbench->push_input({.power = RSATwoPowerModIn::TwoPowerMod_Power_t(512),
+                         .modulus = modulus});
 
   TestBench_RsaTwoPowerMod::OutType golden;
   from_hex(golden,
