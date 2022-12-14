@@ -1,5 +1,5 @@
 
-#include "Vmontgomery.h"
+#include "VRSAMontgomery.h"
 #include "assign_port.h"
 #include "model_rsa.h"
 #include "test_fixture.h"
@@ -11,7 +11,7 @@ using namespace std;
 using namespace sc_core;
 
 using IN = RSAMontgomeryModIn;
-using DUT = Vmontgomery;
+using DUT = VRSAMontgomery;
 using OUT = RSAMontgomeryModOut;
 
 class TestBench_RsaMontgomery : public TestBench<IN, OUT, DUT> {

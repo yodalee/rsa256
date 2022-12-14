@@ -4,17 +4,17 @@ project(systemcmodel)
 
 include_directories(${cmodel_INCLUDE_DIRS})
 
-add_executable(model_RSA model_rsa.cpp)
+add_executable(RSA256 RSA256.cpp)
 
 set(SYSTEMC_LIBRARY rsa systemc)
 
-target_link_libraries(model_RSA ${SYSTEMC_LIBRARY})
+target_link_libraries(RSA256 ${SYSTEMC_LIBRARY})
 
-add_executable(model_two_power_mod model_two_power_mod.cpp)
+add_executable(RSATwoPowerMod RSATwoPowerMod.cpp)
 
-target_link_libraries(model_two_power_mod ${SYSTEMC_LIBRARY})
+target_link_libraries(RSATwoPowerMod ${SYSTEMC_LIBRARY})
 
-add_executable(model_montgomery model_montgomery.cpp)
+add_executable(RSAMontgomery RSAMontgomery.cpp)
 
-target_link_libraries(model_montgomery ${SYSTEMC_LIBRARY})
+target_link_libraries(RSAMontgomery ${SYSTEMC_LIBRARY})
 

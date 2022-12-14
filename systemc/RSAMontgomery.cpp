@@ -18,14 +18,14 @@ const char str_B[] = "10001";
 const char str_ans[] =
     "314F8ACB18E57C4B2FA37ADEFA7964711B8DCDB7AAC7514C78D97CF4D4121426";
 
-SC_MODULE(RSAMontgomeryMod) {
+SC_MODULE(RSAMontgomery) {
   using ExtendKeyType = vuint<kBW + 2>;
 
   sc_in_clk clk;
   sc_fifo_in<RSAMontgomeryModIn> data_in;
   sc_fifo_out<RSAMontgomeryModOut> data_out;
 
-  SC_CTOR(RSAMontgomeryMod) { SC_THREAD(Thread); }
+  SC_CTOR(RSAMontgomery) { SC_THREAD(Thread); }
 
   void Thread() {
     while (true) {
@@ -55,7 +55,7 @@ SC_MODULE(Testbench) {
   sc_clock clk;
   sc_fifo<RSAMontgomeryModIn> data_in;
   sc_fifo<RSAMontgomeryModOut> data_out;
-  RSAMontgomeryMod montgomery_mod;
+  RSAMontgomery montgomery_mod;
   bool timeout, pass;
 
   SC_CTOR(Testbench)
