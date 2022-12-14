@@ -20,19 +20,21 @@ public:
   using InType = In;
   using OutType = Out;
 
-  TestBench(const sc_module_name &name)
+  TestBench(const sc_module_name &name,
+            BoolPattern *driver_random_policy = nullptr,
+            BoolPattern *monitor_random_policy = nullptr)
       : sc_module(name), clk("clk", 1.0, SC_NS), dut_wrapper("dut_wrapper"),
         score_board(new ScoreBoard<OutType>(KillSimulation)) {
     dut_wrapper.clk(clk);
 
     driver = make_shared<Driver<InType>>(
         dut_wrapper.dut->i_valid, dut_wrapper.dut->i_ready,
-        [this](const InType &in) { this->writer(in); });
+        [this](const InType &in) { this->writer(in); }, driver_random_policy);
     monitor = make_shared<Monitor<OutType>>(
         dut_wrapper.dut->o_valid, dut_wrapper.dut->o_ready,
         [this]() { return this->reader(); },
         [this](const OutType &out) { return this->notify(out); },
-        KillSimulation);
+        KillSimulation, monitor_random_policy);
     dut_wrapper.register_callback(driver);
     dut_wrapper.register_callback(monitor);
   }
