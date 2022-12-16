@@ -98,6 +98,9 @@ TEST(TestVerilogUnsigned, ToHex) {
 	v8.v[0] = 0x2a;
 	EXPECT_EQ(to_hex(v8), "2A");
 
+  v8.v[0] = 0;
+  EXPECT_EQ(to_hex(v8), "0");
+
 	vuint<13> v13;
 	v13.v[0] = 0x1a2a;
 	EXPECT_EQ(to_hex(v13), "1A2A");
