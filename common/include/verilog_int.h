@@ -625,6 +625,10 @@ struct vint {
 				);
 			}
 		}
+		if (!met_nonzero) {
+			// the vint is zero
+			ret.push_back('0');
+		}
 		return ret;
 	}
 
