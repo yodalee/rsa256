@@ -92,6 +92,7 @@ TEST(TestVerilogSigned, InternalLayout) {
 
 ///////////////////////////
 // Test rule of three
+// Mainly test on assigning C++ native type
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
 void RuleOfThreeTemplate() {
@@ -106,31 +107,68 @@ void RuleOfThreeTemplate() {
 	EXPECT_EQ(v13.v[0], uint16_t(0x1fff));
 	v13 = -1;
 	EXPECT_EQ(v13.v[0], uint16_t(0x1fff));
-
 }
 
 TEST(TestVerilogUnsigned, RuleOfThree) {
 	RuleOfThreeTemplate<vuint>();
 
-	// Note sign extension will not apply
-	vuint<99> v99(-1000);
-	EXPECT_EQ(v99.v[0], uint64_t(-1000));
+	// The sign extension rule of >64b signals are described here
+	{
+		// No sign extension by default
+		vuint<99> v99(-1000);
+		EXPECT_EQ(v99.v[0], uint64_t(-1000));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+	}
+	{
+		// Forcely sign extension
+		vuint<99> v99(-123, true);
+		EXPECT_EQ(v99.v[0], uint64_t(-123));
+		EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
+	}
+	vuint<99> v99(0);
+	// No sign extension by default
+	v99 = -1;
+	EXPECT_EQ(v99.v[0], uint64_t(-1));
 	EXPECT_EQ(v99.v[1], uint64_t(0));
-	v99 = 0x8000000000000000llu;
-	EXPECT_EQ(v99.v[0], uint64_t(0x8000000000000000llu));
+	// Force no sign extenstion
+	v99.AssignU(-2);
+	EXPECT_EQ(v99.v[0], uint64_t(-2));
 	EXPECT_EQ(v99.v[1], uint64_t(0));
+	// Force sign extenstion
+	v99.AssignS(-3);
+	EXPECT_EQ(v99.v[0], uint64_t(-3));
+	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
 }
 
 TEST(TestVerilogSigned, RuleOfThree) {
 	RuleOfThreeTemplate<vsint>();
 
-	// Note sign extension will apply
-	vsint<99> v99(-1000);
-	EXPECT_EQ(v99.v[0], uint64_t(-1000));
-	EXPECT_EQ(v99.v[1], uint64_t(0x00000007ffffffffllu));
-	v99 = 0x8000000000000000llu;
-	EXPECT_EQ(v99.v[0], uint64_t(0x8000000000000000llu));
-	EXPECT_EQ(v99.v[1], uint64_t(0x00000007ffffffffllu));
+	// The sign extension rule of >64b signals are described here
+	{
+		// Sign extension by default
+		vsint<99> v99(-1000);
+		EXPECT_EQ(v99.v[0], uint64_t(-1000));
+		EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
+	}
+	{
+		// Forcely no sign extension
+		vsint<99> v99(-123, false);
+		EXPECT_EQ(v99.v[0], uint64_t(-123));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+	}
+	vsint<99> v99(0);
+	// No sign extension by default
+	v99 = -1;
+	EXPECT_EQ(v99.v[0], uint64_t(-1));
+	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
+	// Force no sign extenstion
+	v99.AssignU(-2);
+	EXPECT_EQ(v99.v[0], uint64_t(-2));
+	EXPECT_EQ(v99.v[1], uint64_t(0));
+	// Force sign extenstion
+	v99.AssignS(-3);
+	EXPECT_EQ(v99.v[0], uint64_t(-3));
+	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
 }
 
 ///////////////////////////

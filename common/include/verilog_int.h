@@ -103,16 +103,41 @@ struct vint {
 	stype v[num_word];
 
 	// rule-of-five related
-	explicit vint(const stype rhs) {
-		*this = rhs;
+	explicit vint(const stype rhs, bool sign_ext=is_signed) {
+		if (sign_ext) {
+			AssignS(rhs);
+		} else {
+			AssignU(rhs);
+		}
 	}
 
 	vint& operator=(stype rhs) {
+		if constexpr (is_signed) {
+			AssignS(rhs);
+		} else {
+			AssignU(rhs);
+		}
+		return *this;
+	}
+
+	vint& AssignU(stype rhs) {
 		v[0] = rhs;
 		if constexpr (num_word > 1) {
 			::std::fill_n(
 				::std::begin(v)+1, num_word-1,
-				(is_signed and bool(rhs >> (bw_word-1u))) ? stype(-1) : stype(0)
+				stype(0)
+			);
+		}
+		ClearUnusedBits();
+		return *this;
+	}
+
+	vint& AssignS(stype rhs) {
+		v[0] = rhs;
+		if constexpr (num_word > 1) {
+			::std::fill_n(
+				::std::begin(v)+1, num_word-1,
+				bool(rhs >> (bw_word-1u)) ? stype(-1) : stype(0)
 			);
 		}
 		ClearUnusedBits();
