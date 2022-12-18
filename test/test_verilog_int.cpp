@@ -1,11 +1,211 @@
 #include "verilog_int.h"
 #include <gtest/gtest.h>
+#include <array>
+#include <functional>
 #include <string>
 #include <tuple>
-#include <array>
+#include <type_traits>
 using namespace std;
 using namespace verilog;
 
+///////////////////////////
+// InternalLayout tests the internal storage directly
+// Normally user don't need to access the data in this way
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void InternalLayoutTemplate() {
+	IntTmpl<7> v7;
+	v7.v[0] = 0x3fu;
+	v7.ClearUnusedBits();
+	EXPECT_EQ(v7.v[0], uint8_t(0x3fu));
+	v7.v[0] = 0x7fu;
+	v7.ClearUnusedBits();
+	EXPECT_EQ(v7.v[0], uint8_t(0x7fu));
+	v7.v[0] = -1;
+	v7.ClearUnusedBits();
+	EXPECT_EQ(v7.v[0], uint8_t(0x7fu));
+	v7.v[0] = 0xffu;
+	v7.ClearUnusedBits();
+	EXPECT_EQ(v7.v[0], uint8_t(0x7fu));
+
+	IntTmpl<8> v8;
+	v8.v[0] = 0x7fu;
+	v8.ClearUnusedBits();
+	EXPECT_EQ(v8.v[0], uint8_t(0x7fu));
+	v8.v[0] = -1;
+	v8.ClearUnusedBits();
+	EXPECT_EQ(v8.v[0], uint8_t(0xffu));
+	v8.v[0] = 0xffu;
+	v8.ClearUnusedBits();
+	EXPECT_EQ(v8.v[0], uint8_t(0xffu));
+
+	IntTmpl<10> v10;
+	v10.v[0] = 0xf00u;
+	v10.ClearUnusedBits();
+	EXPECT_EQ(v10.v[0], uint16_t(0x300u));
+
+	IntTmpl<31> v31;
+	v31.v[0] = 0xf0000000u;
+	v31.ClearUnusedBits();
+	EXPECT_EQ(v31.v[0], uint32_t(0x70000000u));
+
+	IntTmpl<33> v33;
+	v33.v[0] = 0xf00000000llu;
+	v33.ClearUnusedBits();
+	EXPECT_EQ(v33.v[0], uint64_t(0x100000000llu));
+
+	IntTmpl<127> v127;
+	v127.v[0] = 0x0123456701234567llu;
+	v127.v[1] = 0x3fffffffffffffffllu;
+	v127.ClearUnusedBits();
+	EXPECT_EQ(v127.v[0], uint64_t(0x0123456701234567llu));
+	EXPECT_EQ(v127.v[1], uint64_t(0x3fffffffffffffffllu));
+	v127.v[0] = 0x0123456701234567llu;
+	v127.v[1] = 0xffffffffffffffffllu;
+	v127.ClearUnusedBits();
+	EXPECT_EQ(v127.v[0], uint64_t(0x0123456701234567llu));
+	EXPECT_EQ(v127.v[1], uint64_t(0x7fffffffffffffffllu));
+
+	IntTmpl<128> v128;
+	v128.v[0] = 0x0123456701234567llu;
+	v128.v[1] = 0xffffffffffffffffllu;
+	v128.ClearUnusedBits();
+	EXPECT_EQ(v128.v[0], uint64_t(0x0123456701234567llu));
+	EXPECT_EQ(v128.v[1], uint64_t(0xffffffffffffffffllu));
+
+	static_assert(is_same_v<typename decltype(v7)::stype, uint8_t>);
+	static_assert(is_same_v<typename decltype(v8)::stype, uint8_t>);
+	static_assert(is_same_v<typename decltype(v10)::stype, uint16_t>);
+	static_assert(is_same_v<typename decltype(v31)::stype, uint32_t>);
+	static_assert(is_same_v<typename decltype(v33)::stype, uint64_t>);
+	static_assert(is_same_v<typename decltype(v127)::stype, uint64_t>);
+	static_assert(is_same_v<typename decltype(v128)::stype, uint64_t>);
+}
+
+TEST(TestVerilogUnsigned, InternalLayout) {
+	InternalLayoutTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, InternalLayout) {
+	InternalLayoutTemplate<vsint>();
+}
+
+///////////////////////////
+// Test rule of three
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void RuleOfThreeTemplate() {
+	IntTmpl<7> v7(0x2a);
+	EXPECT_EQ(v7.v[0], uint8_t(0x2au));
+	v7 = 0xff;
+	EXPECT_EQ(v7.v[0], uint8_t(0x7fu));
+	v7 = -1;
+	EXPECT_EQ(v7.v[0], uint8_t(0x7fu));
+
+	IntTmpl<13> v13(0xffff);
+	EXPECT_EQ(v13.v[0], uint16_t(0x1fff));
+	v13 = -1;
+	EXPECT_EQ(v13.v[0], uint16_t(0x1fff));
+
+}
+
+TEST(TestVerilogUnsigned, RuleOfThree) {
+	RuleOfThreeTemplate<vuint>();
+
+	// Note sign extension will not apply
+	vuint<99> v99(-1000);
+	EXPECT_EQ(v99.v[0], uint64_t(-1000));
+	EXPECT_EQ(v99.v[1], uint64_t(0));
+	v99 = 0x8000000000000000llu;
+	EXPECT_EQ(v99.v[0], uint64_t(0x8000000000000000llu));
+	EXPECT_EQ(v99.v[1], uint64_t(0));
+}
+
+TEST(TestVerilogSigned, RuleOfThree) {
+	RuleOfThreeTemplate<vsint>();
+
+	// Note sign extension will apply
+	vsint<99> v99(-1000);
+	EXPECT_EQ(v99.v[0], uint64_t(-1000));
+	EXPECT_EQ(v99.v[1], uint64_t(0x00000007ffffffffllu));
+	v99 = 0x8000000000000000llu;
+	EXPECT_EQ(v99.v[0], uint64_t(0x8000000000000000llu));
+	EXPECT_EQ(v99.v[1], uint64_t(0x00000007ffffffffllu));
+}
+
+///////////////////////////
+// Test comparison (EQ/NE)
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void CompareEQTemplate() {
+	IntTmpl<7> a7, b7;
+	IntTmpl<99> a99, b99;
+
+	a7 = 0xffu;
+	b7 = -1;
+	EXPECT_EQ(a7, b7);
+	a7 = 0x7fu;
+	b7 = -1;
+	EXPECT_EQ(a7, b7);
+	a7 = 128 + 3;
+	b7 = 0 + 3;
+	EXPECT_EQ(a7, b7);
+	a7 = 1;
+	b7 = 0;
+	EXPECT_NE(a7, b7);
+	a7 = 0xf;
+	b7 = -1;
+	EXPECT_NE(a7, b7);
+
+	a99 = 123;
+	b99 = 123;
+	EXPECT_EQ(a99, b99);
+	a99 = -123;
+	b99 = -123;
+	EXPECT_EQ(a99, b99);
+	a99 = -1;
+	b99 = 123;
+	EXPECT_NE(a99, b99);
+}
+
+TEST(TestVerilogUnsigned, CompareEQ) {
+	CompareEQTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, CompareEQ) {
+	CompareEQTemplate<vsint>();
+}
+
+///////////////////////////
+// Test bit extraction
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void BitExtractionTemplate() {
+	IntTmpl<13> v13;
+	IntTmpl<127> v127;
+	v13.v[0] = 0x123;
+	v127.v[1] = 0xa;
+	v127.v[0] = 0x5;
+	v13.ClearUnusedBits();
+	v127.ClearUnusedBits();
+	EXPECT_TRUE(v13.Bit(0));
+	EXPECT_FALSE(v13.Bit(2));
+	EXPECT_FALSE(v13.Bit(12));
+	EXPECT_TRUE(v127.Bit(2));
+	EXPECT_FALSE(v127.Bit(3));
+	EXPECT_FALSE(v127.Bit(64));
+	EXPECT_TRUE(v127.Bit(65));
+}
+
+TEST(TestVerilogUnsigned, BitExtraction) {
+	BitExtractionTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, BitExtraction) {
+	BitExtractionTemplate<vsint>();
+}
+
+#if 0
 TEST(TestVerilogUnsigned, FromHex) {
 	vuint<8> v8;
 	from_hex(v8, "2A");
@@ -72,27 +272,6 @@ TEST(TestVerilogSigned, FromHex) {
 	from_hex(a127, "5");
 }
 
-TEST(TestVerilogUnsigned, RuleOfThree) {
-	vuint<8> v8{0x2a};
-	EXPECT_EQ(v8.v[0], 0x2a);
-	v8 = 0x99;
-	EXPECT_EQ(v8.v[0], 0x99);
-
-	vuint<13> v13{0xffff};
-	EXPECT_EQ(v13.v[0], 0x1fff);
-	v13 = 0x9999;
-	EXPECT_EQ(v13.v[0], 0x1999);
-
-	vuint<99> v99{30};
-	EXPECT_EQ(v99.v[1], 0);
-	EXPECT_EQ(v99.v[0], 30);
-	v99 = 0x3;
-	EXPECT_EQ(v99.v[0], 0x3);
-}
-
-TEST(TestVerilogSigned, DISABLED_RuleOfThree) {
-}
-
 TEST(TestVerilogUnsigned, ToHex) {
 	vuint<8> v8;
 	v8.v[0] = 0x2a;
@@ -143,36 +322,6 @@ TEST(TestVerilogUnsigned, AddSubMulDiv) {
 }
 
 TEST(TestVerilogSigned, DISABLED_AddSubMulDiv) {
-}
-
-TEST(TestVerilogUnsigned, Bit) {
-	vuint<13> v13;
-	vuint<127> v127;
-	v13.v[0] = 0x123;
-	v127.v[1] = 0xa;
-	v127.v[0] = 0x5;
-	EXPECT_TRUE(v13.Bit(0));
-	EXPECT_FALSE(v13.Bit(2));
-	EXPECT_FALSE(v13.Bit(12));
-	EXPECT_TRUE(v127.Bit(2));
-	EXPECT_FALSE(v127.Bit(3));
-	EXPECT_FALSE(v127.Bit(64));
-	EXPECT_TRUE(v127.Bit(65));
-}
-
-TEST(TestVerilogSigned, Bit) {
-	vsint<13> v13;
-	vsint<127> v127;
-	v13.v[0] = 0x123;
-	v127.v[1] = 0xa;
-	v127.v[0] = 0x5;
-	EXPECT_TRUE(v13.Bit(0));
-	EXPECT_FALSE(v13.Bit(2));
-	EXPECT_FALSE(v13.Bit(12));
-	EXPECT_TRUE(v127.Bit(2));
-	EXPECT_FALSE(v127.Bit(3));
-	EXPECT_FALSE(v127.Bit(64));
-	EXPECT_TRUE(v127.Bit(65));
 }
 
 TEST(TestVerilogUnsigned, Shift) {
@@ -547,12 +696,6 @@ TEST(TestVerilogSigned, Flip) {
 	}
 }
 
-TEST(TestVerilogUnsigned, DISABLED_Compare) {
-}
-
-TEST(TestVerilogSigned, DISABLED_Compare) {
-}
-
 TEST(TestVerilogUnsigned, ExplicitCast) {
 	{
 		vuint<5> v5;
@@ -597,3 +740,5 @@ TEST(TestVerilogUnsigned, ExplicitCast) {
 
 TEST(TestVerilogSigned, ExplicitCast) {
 }
+
+#endif
