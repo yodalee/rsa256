@@ -107,68 +107,187 @@ void RuleOfThreeTemplate() {
 	EXPECT_EQ(v13.v[0], uint16_t(0x1fff));
 	v13 = -1;
 	EXPECT_EQ(v13.v[0], uint16_t(0x1fff));
+
+	// The sign extension rule of >64b signals are described here
+	{
+		// No sign extension
+		IntTmpl<99> v99(5566, false);
+		EXPECT_EQ(v99.v[0], uint64_t(5566));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+	}
+	{
+		// No sign extension
+		IntTmpl<99> v99(1234, true);
+		EXPECT_EQ(v99.v[0], uint64_t(1234));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+	}
+	{
+		// Forcely no sign extension
+		IntTmpl<99> v99(-123, false);
+		EXPECT_EQ(v99.v[0], uint64_t(-123));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+	}
+	{
+		IntTmpl<99> v99(0);
+		// Force no sign extenstion
+		v99.uassign(-2);
+		EXPECT_EQ(v99.v[0], uint64_t(-2));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+		// Force sign extenstion
+		v99.sassign(-3);
+		EXPECT_EQ(v99.v[0], uint64_t(-3));
+		EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
+		// No sign extension
+		v99.uassign(4);
+		EXPECT_EQ(v99.v[0], uint64_t(4));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+		// No sign extension
+		v99.sassign(5);
+		EXPECT_EQ(v99.v[0], uint64_t(5));
+		EXPECT_EQ(v99.v[1], uint64_t(0));
+	}
 }
 
 TEST(TestVerilogUnsigned, RuleOfThree) {
 	RuleOfThreeTemplate<vuint>();
 
 	// The sign extension rule of >64b signals are described here
-	{
-		// No sign extension by default
-		vuint<99> v99(-1000);
-		EXPECT_EQ(v99.v[0], uint64_t(-1000));
-		EXPECT_EQ(v99.v[1], uint64_t(0));
-	}
-	{
-		// Forcely sign extension
-		vuint<99> v99(-123, true);
-		EXPECT_EQ(v99.v[0], uint64_t(-123));
-		EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
-	}
-	vuint<99> v99(0);
+	// No sign extension by default
+	vuint<99> v99(-1000);
+	EXPECT_EQ(v99.v[0], uint64_t(-1000));
+	EXPECT_EQ(v99.v[1], uint64_t(0));
 	// No sign extension by default
 	v99 = -1;
 	EXPECT_EQ(v99.v[0], uint64_t(-1));
 	EXPECT_EQ(v99.v[1], uint64_t(0));
-	// Force no sign extenstion
-	v99.AssignU(-2);
-	EXPECT_EQ(v99.v[0], uint64_t(-2));
-	EXPECT_EQ(v99.v[1], uint64_t(0));
-	// Force sign extenstion
-	v99.AssignS(-3);
-	EXPECT_EQ(v99.v[0], uint64_t(-3));
-	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
 }
 
 TEST(TestVerilogSigned, RuleOfThree) {
 	RuleOfThreeTemplate<vsint>();
 
 	// The sign extension rule of >64b signals are described here
-	{
-		// Sign extension by default
-		vsint<99> v99(-1000);
-		EXPECT_EQ(v99.v[0], uint64_t(-1000));
-		EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
-	}
-	{
-		// Forcely no sign extension
-		vsint<99> v99(-123, false);
-		EXPECT_EQ(v99.v[0], uint64_t(-123));
-		EXPECT_EQ(v99.v[1], uint64_t(0));
-	}
-	vsint<99> v99(0);
-	// No sign extension by default
+	// Sign extension by default
+	vsint<99> v99(-1000);
+	EXPECT_EQ(v99.v[0], uint64_t(-1000));
+	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
+	// Sign extension by default
 	v99 = -1;
 	EXPECT_EQ(v99.v[0], uint64_t(-1));
 	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
-	// Force no sign extenstion
-	v99.AssignU(-2);
-	EXPECT_EQ(v99.v[0], uint64_t(-2));
-	EXPECT_EQ(v99.v[1], uint64_t(0));
-	// Force sign extenstion
-	v99.AssignS(-3);
-	EXPECT_EQ(v99.v[0], uint64_t(-3));
-	EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
+}
+
+///////////////////////////
+// Test from hex conversion
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void FromHexTemplate() {
+	IntTmpl<8> v8;
+	from_hex(v8, "2A");
+	EXPECT_EQ(v8.v[0], 0x2A);
+	// sign extension
+	from_hex(v8, "'2A");
+	EXPECT_EQ(v8.v[0], 0xEA);
+	// negate
+	from_hex(v8, "-1");
+	EXPECT_EQ(v8.v[0], 0xff);
+	// Note: mixing sign extension and negate is un-specified
+
+	IntTmpl<13> v13;
+	// zero
+	from_hex(v13, "");
+	EXPECT_EQ(v13.v[0], 0);
+	from_hex(v13, "1aC");
+	EXPECT_EQ(v13.v[0], 0x1ac);
+	from_hex(v13, "5");
+	EXPECT_EQ(v13.v[0], 0x5);
+	// no sign extension
+	from_hex(v13, "'05");
+	EXPECT_EQ(v13.v[0], 0x5);
+	// sign extension
+	from_hex(v13, "'5");
+	EXPECT_EQ(v13.v[0], 0x1ffd);
+	from_hex(v13, "-1");
+	EXPECT_EQ(v13.v[0], 0x1fff);
+	// non-recognized character are ignored
+	from_hex(v13, "1..2..3..4");
+	EXPECT_EQ(v13.v[0], 0x1234);
+	from_hex(v13, "ffff");
+	EXPECT_EQ(v13.v[0], 0x1fff);
+	from_hex(v13, "00000f");
+	EXPECT_EQ(v13.v[0], 0xf);
+
+	IntTmpl<127> v127;
+	from_hex(v127, "8123_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x01234567acacacacllu);
+	from_hex(v127, "00000000 8123 4567 acac acac 89AB cdef 0000 5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x01234567acacacacllu);
+	from_hex(v127, "3_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x00034567acacacacllu);
+	from_hex(v127, "'3_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x7fff4567acacacacllu);
+	from_hex(v127, "'03_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x00034567acacacacllu);
+	from_hex(v127, "'5");
+	EXPECT_EQ(v127.v[0], 0xfffffffffffffffdllu);
+	EXPECT_EQ(v127.v[1], 0x7fffffffffffffffllu);
+	from_hex(v127, "5");
+	EXPECT_EQ(v127.v[0], 0x5llu);
+	EXPECT_EQ(v127.v[1], 0llu);
+	from_hex(v127, "");
+	EXPECT_EQ(v127.v[0], 0llu);
+	EXPECT_EQ(v127.v[1], 0llu);
+}
+
+TEST(TestVerilogUnsigned, FromHex) {
+	FromHexTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, FromHex) {
+	FromHexTemplate<vsint>();
+}
+
+///////////////////////////
+// Test to hex conversion
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void ToHexTemplate() {
+	IntTmpl<8> v8;
+	v8.v[0] = 0x2a;
+	v8.ClearUnusedBits();
+	EXPECT_EQ(to_hex(v8), "2A");
+
+	v8.v[0] = 0;
+	EXPECT_EQ(to_hex(v8), "0");
+
+	IntTmpl<13> v13;
+	v13.v[0] = 0x1a2a;
+	v8.ClearUnusedBits();
+	EXPECT_EQ(to_hex(v13), "1A2A");
+
+	IntTmpl<66> v66;
+	v66.v[1] = 0x2;
+	v66.v[0] = 0x0123456789abcdefllu;
+	v66.ClearUnusedBits();
+	EXPECT_EQ(to_hex(v66), "20123456789ABCDEF");
+
+	IntTmpl<90> v90;
+	v90.v[1] = 0xfllu;
+	v90.v[0] = 0x5566556612345678llu;
+	v90.ClearUnusedBits();
+	EXPECT_EQ(to_hex(v90), "F5566556612345678");
+}
+
+TEST(TestVerilogUnsigned, ToHex) {
+	ToHexTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, DISABLED_ToHex) {
+	ToHexTemplate<vsint>();
 }
 
 ///////////////////////////
@@ -243,99 +362,10 @@ TEST(TestVerilogSigned, BitExtraction) {
 	BitExtractionTemplate<vsint>();
 }
 
+///////////////////////////
+// Test +-*/
+///////////////////////////
 #if 0
-TEST(TestVerilogUnsigned, FromHex) {
-	vuint<8> v8;
-	from_hex(v8, "2A");
-	EXPECT_EQ(v8, 0x2A);
-	from_hex(v8, "-1");
-	EXPECT_EQ(v8, 0xff);
-
-	vuint<13> v13;
-	from_hex(v13, "1aC");
-	EXPECT_EQ(v13, 0x1ac);
-	from_hex(v13, "");
-	EXPECT_EQ(v13, 0);
-	from_hex(v13, "1..2..3..4");
-	EXPECT_EQ(v13, 0x1234);
-	from_hex(v13, "ffff");
-	EXPECT_EQ(v13, 0x1fff);
-	from_hex(v13, "00000f");
-	EXPECT_EQ(v13, 0xf);
-	from_hex(v13, "-1");
-	EXPECT_EQ(v13, 0x1fff);
-
-	vuint<127> a127, b127;
-	from_hex(a127, "8123_4567_acac_acac_89AB_cdef_0000_5555");
-	from_hex(b127, "00000000 8123 4567 acac acac 89AB cdef 0000 5555");
-	EXPECT_EQ(a127.v[1], 0x01234567acacacacllu);
-	EXPECT_EQ(a127.v[0], 0x89ABCDEF00005555llu);
-	EXPECT_EQ(b127.v[1], 0x01234567acacacacllu);
-	EXPECT_EQ(b127.v[0], 0x89ABCDEF00005555llu);
-	EXPECT_EQ(a127, b127);
-}
-
-TEST(TestVerilogSigned, FromHex) {
-	vsint<8> v8;
-	from_hex(v8, "2A");
-	EXPECT_EQ(v8, 0x2A);
-	from_hex(v8, "'2A");
-	EXPECT_EQ(v8, 0xEA);
-	from_hex(v8, "-1");
-	EXPECT_EQ(v8, 0xff);
-
-	vsint<13> v13;
-	from_hex(v13, "1aC");
-	EXPECT_EQ(v13, 0x1ac);
-	from_hex(v13, "5");
-	EXPECT_EQ(v13, 0x5);
-	from_hex(v13, "'05");
-	EXPECT_EQ(v13, 0x5);
-	from_hex(v13, "'5");
-	EXPECT_EQ(v13, 0x1ffd);
-	from_hex(v13, "-1");
-	EXPECT_EQ(v13, 0x1fff);
-	from_hex(v13, "-'1");
-	EXPECT_EQ(v13, 0x1);
-
-	vsint<127> a127, b127;
-	from_hex(a127, "'123_4567_acac_acac_89AB_cdef_0000_5555");
-	from_hex(b127, "00000000 ff23 4567 acac acac 89AB cdef 0000 5555");
-	EXPECT_EQ(a127.v[1], 0xff234567acacacacllu);
-	EXPECT_EQ(a127.v[0], 0x89ABCDEF00005555llu);
-	EXPECT_EQ(b127.v[1], 0xff234567acacacacllu);
-	EXPECT_EQ(b127.v[0], 0x89ABCDEF00005555llu);
-	EXPECT_EQ(a127, b127);
-	from_hex(a127, "'5");
-	from_hex(a127, "5");
-}
-
-TEST(TestVerilogUnsigned, ToHex) {
-	vuint<8> v8;
-	v8.v[0] = 0x2a;
-	EXPECT_EQ(to_hex(v8), "2A");
-
-	v8.v[0] = 0;
-	EXPECT_EQ(to_hex(v8), "0");
-
-	vuint<13> v13;
-	v13.v[0] = 0x1a2a;
-	EXPECT_EQ(to_hex(v13), "1A2A");
-
-	vuint<66> v66;
-	v66.v[1] = 0x2;
-	v66.v[0] = 0x0123456789abcdefllu;
-	EXPECT_EQ(to_hex(v66), "20123456789ABCDEF");
-
-	vuint<90> v90;
-	v90.v[1] = 0xfllu;
-	v90.v[0] = 0x5566556612345678llu;
-	EXPECT_EQ(to_hex(v90), "F5566556612345678");
-}
-
-TEST(TestVerilogSigned, DISABLED_ToHex) {
-}
-
 TEST(TestVerilogUnsigned, AddSubMulDiv) {
 	vuint<10> a10, b10;
 	a10.v[0] = 1000;

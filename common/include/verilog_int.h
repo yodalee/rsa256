@@ -41,6 +41,21 @@ constexpr unsigned num_bit2num_word(unsigned num_bit) {
 	return (num_bit+63) / 64;
 }
 
+// These functions prevent implementation-defined specific behaviors in C standard
+// Or make abstract if not easy to prevent
+
+// _u_nsigned _s_hift _a_rith _r_ight
+inline uint8_t usar(uint8_t a, unsigned b) { return uint8_t(int8_t(a) >> b); }
+inline uint16_t usar(uint16_t a, unsigned b) { return uint16_t(int16_t(a) >> b); }
+inline uint32_t usar(uint32_t a, unsigned b) { return uint32_t(int32_t(a) >> b); }
+inline uint64_t usar(uint64_t a, unsigned b) { return uint64_t(int64_t(a) >> b); }
+
+// to_signed
+inline int8_t to_signed(uint8_t a) { return int8_t(a); }
+inline int16_t to_signed(uint16_t a) { return int16_t(a); }
+inline int32_t to_signed(uint32_t a) { return int32_t(a); }
+inline int64_t to_signed(uint64_t a) { return int64_t(a); }
+
 // shift n bits from hi to lo (two uint64_t)
 // return lo
 // 0 < n < 64
@@ -79,8 +94,6 @@ struct vint {
 	typedef typename detail::dtype_dict<is_signed, detail::num_bit2dict_key(num_bit)>::dtype dtype;
 	// internal _s_torage type (we always use unsigned to store)
 	typedef typename detail::dtype_dict<false, detail::num_bit2dict_key(num_bit)>::dtype stype;
-	// since u16*u16 is UB, we must define the type they are _p_romoted
-	typedef typename detail::dtype_dict<false, detail::num_bit2dict_key_promoted(num_bit)>::dtype ptype;
 
 	// bit width of stype and dtype
 	static constexpr unsigned bw_word = 8 * sizeof(dtype);
@@ -105,22 +118,22 @@ struct vint {
 	// rule-of-five related
 	explicit vint(const stype rhs, bool sign_ext=is_signed) {
 		if (sign_ext) {
-			AssignS(rhs);
+			sassign(rhs);
 		} else {
-			AssignU(rhs);
+			uassign(rhs);
 		}
 	}
 
 	vint& operator=(stype rhs) {
 		if constexpr (is_signed) {
-			AssignS(rhs);
+			sassign(rhs);
 		} else {
-			AssignU(rhs);
+			uassign(rhs);
 		}
 		return *this;
 	}
 
-	vint& AssignU(stype rhs) {
+	vint& uassign(stype rhs) {
 		v[0] = rhs;
 		if constexpr (num_word > 1) {
 			::std::fill_n(
@@ -132,7 +145,7 @@ struct vint {
 		return *this;
 	}
 
-	vint& AssignS(stype rhs) {
+	vint& sassign(stype rhs) {
 		v[0] = rhs;
 		if constexpr (num_word > 1) {
 			::std::fill_n(
@@ -171,7 +184,9 @@ struct vint {
 		return v[pos/64u] >> (pos%64u);
 	}
 
-	void PutDtypeAtBitPosClean(unsigned pos, stype to_put) {
+	// This function is designed to be used in from_hex/oct/hex exclusively
+	// Use this at your risk
+	void PutStypeAtBitPosUnsafe(unsigned pos, stype to_put) {
 		// This formula also for works num_bit < 64
 		v[pos/64u] |= to_put << (pos%64u);
 	}
@@ -279,19 +294,13 @@ struct vint {
 
 	vint& operator*=(const vint& rhs) {
 		static_assert(num_word == 1, "Multiplication > 64b is not supported");
-		v[0] *= rhs.v[0];
+		// 1u to force integer promotion to unsigned type
+		v[0] = 1u * v[0] * rhs.v[0];
 		ClearUnusedBits();
 		return *this;
 	}
 
-	vint& operator/=(const vint& rhs) {
-		static_assert(num_word == 1, "Division > 64b is not supported");
-		v[0] /= rhs.v[0];
-		ClearUnusedBits();
-		return *this;
-	}
-
-	vint& operator+=(const dtype rhs) {
+	vint& operator+=(const stype rhs) {
 		if constexpr (num_word == 1) {
 			v[0] += rhs;
 		} else {
@@ -305,7 +314,7 @@ struct vint {
 		return *this;
 	}
 
-	vint& operator-=(const dtype rhs) {
+	vint& operator-=(const stype rhs) {
 		if constexpr (num_word == 1) {
 			v[0] -= rhs;
 		} else {
@@ -319,16 +328,9 @@ struct vint {
 		return *this;
 	}
 
-	vint& operator*=(const dtype rhs) {
+	vint& operator*=(const stype rhs) {
 		static_assert(num_word == 1, "Multiplication > 64b is not supported");
-		v[0] *= rhs;
-		ClearUnusedBits();
-		return *this;
-	}
-
-	vint& operator/=(const dtype rhs) {
-		static_assert(num_word == 1, "Division > 64b is not supported");
-		v[0] /= rhs;
+		v[0] = v[0] * rhs;
 		ClearUnusedBits();
 		return *this;
 	}
@@ -340,7 +342,6 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] &= rhs[i];
 		}
-		// ClearUnusedBits();
 		return *this;
 	}
 
@@ -348,7 +349,6 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] |= rhs[i];
 		}
-		// ClearUnusedBits();
 		return *this;
 	}
 
@@ -356,23 +356,22 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] ^= rhs[i];
 		}
-		// ClearUnusedBits();
 		return *this;
 	}
 
-	vint& operator&=(const dtype rhs) {
+	vint& operator&=(const stype rhs) {
 		v[0] &= rhs;
 		ClearUnusedBits();
 		return *this;
 	}
 
-	vint& operator|=(const dtype rhs) {
+	vint& operator|=(const stype rhs) {
 		v[0] |= rhs;
 		ClearUnusedBits();
 		return *this;
 	}
 
-	vint& operator^=(const dtype rhs) {
+	vint& operator^=(const stype rhs) {
 		v[0] ^= rhs;
 		ClearUnusedBits();
 		return *this;
@@ -386,9 +385,7 @@ struct vint {
 		for (unsigned i = 0; i < num_word; ++i) {
 			v[i] = ~v[i];
 		}
-		if constexpr (not is_signed) {
-			ClearUnusedBits();
-		}
+		ClearUnusedBits();
 		return *this;
 	}
 
@@ -401,14 +398,12 @@ struct vint {
 		if constexpr (num_word == 1) {
 			v[0] = -v[0];
 		} else {
-			unsigned char carry = dtype(1);
+			unsigned char carry = 1;
 			for (unsigned i = 0; i < num_word; ++i) {
-				carry = detail::addcarry64(v[i], dtype(~v[i]), dtype(0), carry);
+				carry = detail::addcarry64(v[i], stype(~v[i]), stype(0), carry);
 			}
 		}
-		if constexpr (not is_signed) {
-			ClearUnusedBits();
-		}
+		ClearUnusedBits();
 		return *this;
 	}
 
@@ -522,12 +517,12 @@ struct vint {
 
 	template <bool is_signed2, unsigned num_bit2>
 	vint& operator>>=(const vint<is_signed2, num_bit2>& rhs) {
-		*this >>= rhs.value();
+		*this >>= rhs.uvalue();
 	}
 
 	template <bool is_signed2, unsigned num_bit2>
 	vint& operator<<=(const vint<is_signed2, num_bit2>& rhs) {
-		*this <<= rhs.value();
+		*this <<= rhs.uvalue();
 	}
 
 	//////////////////////
@@ -544,16 +539,16 @@ struct vint {
 	vint operator<<(const vint& rhs) { vint ret = *this; ret <<= rhs; return ret; }
 	bool operator!=(const vint& rhs) const { return not (*this == rhs); }
 
-	vint operator+(const dtype rhs) { vint ret = *this; ret += rhs; return ret; }
-	vint operator-(const dtype rhs) { vint ret = *this; ret -= rhs; return ret; }
-	vint operator*(const dtype rhs) { vint ret = *this; ret *= rhs; return ret; }
-	vint operator/(const dtype rhs) { vint ret = *this; ret /= rhs; return ret; }
-	vint operator&(const dtype rhs) { vint ret = *this; ret &= rhs; return ret; }
-	vint operator|(const dtype rhs) { vint ret = *this; ret |= rhs; return ret; }
-	vint operator^(const dtype rhs) { vint ret = *this; ret ^= rhs; return ret; }
-	vint operator>>(const dtype rhs) { vint ret = *this; ret >>= rhs; return ret; }
-	vint operator<<(const dtype rhs) { vint ret = *this; ret <<= rhs; return ret; }
-	bool operator!=(const dtype rhs) const { return not (*this == rhs); }
+	vint operator+(const stype rhs) { vint ret = *this; ret += rhs; return ret; }
+	vint operator-(const stype rhs) { vint ret = *this; ret -= rhs; return ret; }
+	vint operator*(const stype rhs) { vint ret = *this; ret *= rhs; return ret; }
+	vint operator/(const stype rhs) { vint ret = *this; ret /= rhs; return ret; }
+	vint operator&(const stype rhs) { vint ret = *this; ret &= rhs; return ret; }
+	vint operator|(const stype rhs) { vint ret = *this; ret |= rhs; return ret; }
+	vint operator^(const stype rhs) { vint ret = *this; ret ^= rhs; return ret; }
+	vint operator>>(const stype rhs) { vint ret = *this; ret >>= rhs; return ret; }
+	vint operator<<(const stype rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	bool operator!=(const stype rhs) const { return not (*this == rhs); }
 
 	//////////////////////
 	// slice
@@ -563,27 +558,54 @@ struct vint {
 #ifndef NDEBUG
 		assert(pos < num_bit);
 #endif
-		return bool((v[pos/bw_word] >> (pos%bw_word)) & dtype(1));
+		return bool((v[pos/bw_word] >> (pos%bw_word)) & 1u);
 	}
 
 	//////////////////////
 	// others
 	//////////////////////
+	// Note: no test...
 	dtype value() const {
+		if constexpr (is_signed) {
+			return svalue();
+		} else {
+			return uvalue();
+		}
+	}
+
+	stype uvalue() const {
 		return v[0];
+	}
+
+	dtype svalue() const {
+		stype ret = v[0];
+		const bool is_neg = Bit(num_bit-1u);
+		if constexpr (num_word > 1) {
+			if (not is_neg) {
+				// unsigned, mask the sign bit
+				ret &= (stype(-1)>>1u);
+			}
+		} else {
+			// manual sign extension
+			if (is_neg) {
+				ret |= unused_mask;
+			}
+		}
+		return detail::to_signed(ret);
 	}
 
 	friend void from_hex(vint &val, const ::std::string &s) {
 		constexpr unsigned max_len = (num_bit + 3) / 4;
-		constexpr dtype msb_mask = (1 << (num_bit % 4)) - 1;
 		::std::fill_n(::std::begin(val.v), num_word, 0);
+		if (s.empty()) {
+			return;
+		}
 		unsigned str_pos = s.size()-1;
 		unsigned put_pos = 0;
-		int last_put = 0;
+		int to_put;
 		// pos == size_t(-1) is safe according to the standard
 		for (put_pos = 0; put_pos < 4*max_len and str_pos != -1; --str_pos) {
 			const char c = s[str_pos];
-			int to_put;
 			if ('0' <= c and c <= '9') {
 				to_put = c - '0';
 			} else if ('a' <= c and c <= 'f') {
@@ -593,38 +615,30 @@ struct vint {
 			} else {
 				continue;
 			}
-			val.PutDtypeAtBitPosClean(put_pos, to_put);
-			if (to_put != 0) {
-				last_put = to_put;
-			}
+			val.PutStypeAtBitPosUnsafe(put_pos, to_put);
 			put_pos += 4;
 		}
 		val.ClearUnusedBits();
+		if (put_pos == 0) {
+			return;
+		}
 
-		// Handle negative & sign extension for strings started with -, ', -'
-		str_pos = 0;
-		bool do_negate = false;
-		if (s.size() > str_pos and s[str_pos] == '-') {
-			do_negate = true;
-			++str_pos;
-		}
-		// only support sign extension for signed now
-		if constexpr (is_signed)
-		if (last_put != 0)
-		if (s.size() > str_pos and s[str_pos] == '\'') {
-			const unsigned filled_bit =
-				+ put_pos
-				- unsigned(last_put < 8)
-				- unsigned(last_put < 4)
-				- unsigned(last_put < 2);
-			if (filled_bit < num_bit) {
-				const unsigned unfilled_bit = num_bit - filled_bit;
-				val <<= unfilled_bit;
-				val.ClearUnusedBits();
-				val >>= unfilled_bit;
+		// Handle negative & sign extension for strings started with - or '
+		if (to_put != 0 and s[0] == '\'') {
+			const unsigned to_put_extended = (
+				to_put >= 8 ?  to_put        : (
+				to_put >= 4 ? (to_put | 0x8) : (
+				to_put >= 2 ? (to_put | 0xc) :
+				                        0xf
+			)));
+			// fill previously filled character
+			val.PutStypeAtBitPosUnsafe(put_pos-4u, to_put_extended);
+			// fill from current position to the end
+			for (; put_pos < 4*max_len; put_pos += 4) {
+				val.PutStypeAtBitPosUnsafe(put_pos, 0xf);
 			}
-		}
-		if (do_negate) {
+			val.ClearUnusedBits();
+		} else if (s[0] == '-') {
 			val.Negate();
 		}
 	}
