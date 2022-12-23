@@ -19,10 +19,8 @@ const char str_ans[] =
     "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
 SC_MODULE(Testbench) {
   sc_clock clk;
-  sc_fifo<rsa_key_t> i_message;
-  sc_fifo<rsa_key_t> i_key;
-  sc_fifo<rsa_key_t> i_modulus;
-  sc_fifo<rsa_key_t> o_crypto;
+  sc_fifo<RSAModIn> i_data;
+  sc_fifo<RSAModOut> o_crypto;
   RSA256 rsa;
   bool timeout, pass;
 
@@ -31,9 +29,7 @@ SC_MODULE(Testbench) {
     SC_THREAD(Driver);
     SC_THREAD(Monitor);
     rsa.clk(clk);
-    rsa.i_message(i_message);
-    rsa.i_key(i_key);
-    rsa.i_modulus(i_modulus);
+    rsa.i_data(i_data);
     rsa.o_crypto(o_crypto);
   }
 
@@ -41,18 +37,16 @@ SC_MODULE(Testbench) {
     cout << "Message: " << str_msg << endl;
     cout << "Key: " << str_key << endl;
     cout << "modulus: " << str_modulus << endl;
-    rsa_key_t message, key, modulus;
-    from_hex(message, str_msg);
-    from_hex(key, str_key);
-    from_hex(modulus, str_modulus);
-    i_message.write(message);
-    i_key.write(key);
-    i_modulus.write(modulus);
+    RSAModIn in;
+    from_hex(in.msg, str_msg);
+    from_hex(in.key, str_key);
+    from_hex(in.modulus, str_modulus);
+    i_data.write(in);
   }
 
   void Monitor() {
-    rsa_key_t gotten = o_crypto.read();
-    rsa_key_t ans;
+    RSAModOut gotten = o_crypto.read();
+    RSAModOut ans;
     from_hex(ans, str_ans);
     if (gotten == ans) {
       cout << "OK" << endl;

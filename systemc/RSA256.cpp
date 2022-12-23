@@ -10,11 +10,12 @@ using namespace verilog;
 void RSA256::Thread() {
   char str[256];
   while (true) {
-    rsa_key_t message = i_message.read();
-    rsa_key_t key = i_key.read();
-    rsa_key_t modulus = i_modulus.read();
-    rsa_key_t crypto;
-    rsa(crypto, message, key, modulus);
+    RSAModIn in = i_data.read();
+    vuint<kBW + 2> out;
+    rsa(out, static_cast<vuint<kBW + 2>>(in.msg),
+        static_cast<vuint<kBW + 2>>(in.key),
+        static_cast<vuint<kBW + 2>>(in.modulus));
+    KeyType crypto = static_cast<vuint<kBW>>(out);
     cout << crypto << endl;
     o_crypto.write(crypto);
   }

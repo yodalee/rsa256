@@ -1,4 +1,4 @@
-#include "rsa.h"
+#include "model_rsa.h"
 #include "verilog_int.h"
 #include <systemc>
 
@@ -9,10 +9,8 @@ using namespace verilog;
 
 SC_MODULE(RSA256) {
   sc_in_clk clk;
-  sc_fifo_in<rsa_key_t> i_message;
-  sc_fifo_in<rsa_key_t> i_key;
-  sc_fifo_in<rsa_key_t> i_modulus;
-  sc_fifo_out<rsa_key_t> o_crypto;
+  sc_fifo_in<RSAModIn> i_data;
+  sc_fifo_out<KeyType> o_crypto;
 
   SC_CTOR(RSA256) { SC_THREAD(Thread); }
 
