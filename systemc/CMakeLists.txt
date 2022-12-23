@@ -14,5 +14,6 @@ add_executable(RSAMontgomery_test RSAMontgomery_test.cpp)
 target_link_libraries(RSAMontgomery_test RSAMontgomery ${SYSTEMC_LIBRARY})
 
 add_library(RSA256 RSA256.cpp)
+target_link_libraries(RSA256 RSAMontgomery RSATwoPowerMod)
 add_executable(RSA256_test RSA256_test.cpp)
 target_link_libraries(RSA256_test RSA256 ${SYSTEMC_LIBRARY})
