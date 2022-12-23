@@ -11,11 +11,8 @@ void RSA256::Thread() {
   char str[256];
   while (true) {
     RSAModIn in = i_data.read();
-    vuint<kBW + 2> out;
-    rsa(out, static_cast<vuint<kBW + 2>>(in.msg),
-        static_cast<vuint<kBW + 2>>(in.key),
-        static_cast<vuint<kBW + 2>>(in.modulus));
-    KeyType crypto = static_cast<vuint<kBW>>(out);
+    vuint<kBW> crypto;
+    rsa(crypto, in.msg, in.key, in.modulus);
     cout << crypto << endl;
     o_crypto.write(crypto);
   }
