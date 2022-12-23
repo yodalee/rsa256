@@ -12,6 +12,7 @@ using namespace sc_core;
 
 void KillSimulation() {
   wait(100, SC_NS);
+  LOG(ERROR) << "Kill simulation at " << sc_core::sc_time_stamp() << endl;
   sc_stop();
 }
 
@@ -37,6 +38,13 @@ public:
         KillSimulation, monitor_random_policy);
     dut_wrapper.register_callback(driver);
     dut_wrapper.register_callback(monitor);
+  }
+
+  void run(int duration, sc_time_unit unit) {
+    sc_start(duration, unit);
+    if (!score_board->is_pass()) {
+      LOG(ERROR) << "Score board result mismatch" << endl;
+    }
   }
 
   void push_input(const InType &in) { driver->push_back(in); }
