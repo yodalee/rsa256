@@ -1,3 +1,5 @@
+#pragma once
+
 #include <systemc>
 
 #include "model_rsa.h"

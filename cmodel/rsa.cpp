@@ -1,35 +1,44 @@
-#include "verilog_int.h"
 #include "rsa.h"
+#include "verilog_int.h"
 // #include <iostream>
 // using namespace std;
 
 void two_power_mod(rsa_key_t &out, const unsigned power, const rsa_key_t &N) {
-  out = 1;
+  using extend_key_t = verilog::vuint<kBW_RSA + 1>;
+  extend_key_t base{1};
+  extend_key_t extend_N = static_cast<extend_key_t>(N);
   for (unsigned i = 0; i < power; ++i) {
-    out <<= 1;
-    if (out >= N) {
-      out -= N;
+    base <<= 1;
+    if (base >= extend_N) {
+      base -= extend_N;
     }
   }
+  out = static_cast<rsa_key_t>(base);
 }
 
-void montgomery_base2(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B, const rsa_key_t &N) {
-  out = 0;
+void montgomery_base2(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B,
+                      const rsa_key_t &N) {
+  using extend_key_t = verilog::vuint<kBW_RSA + 2>;
+  extend_key_t round{0};
+  const extend_key_t extend_B = static_cast<extend_key_t>(B);
+  const extend_key_t extend_N = static_cast<extend_key_t>(N);
   for (int i = 0; i < 256; ++i) {
     if (A.Bit(i)) {
-      out += B;
+      round += extend_B;
     }
-    if (out.Bit(0)) {
-      out += N;
+    if (round.Bit(0)) {
+      round += extend_N;
     }
-    out >>= 1;
+    round >>= 1;
   }
-  if (out > N) {
-    out -= N;
+  if (round > extend_N) {
+    round -= extend_N;
   }
+  out = static_cast<rsa_key_t>(round);
 }
 
-void lsb_modular_exponentiation(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B, const rsa_key_t &N) {
+void lsb_modular_exponentiation(rsa_key_t &out, const rsa_key_t &A,
+                                const rsa_key_t &B, const rsa_key_t &N) {
   int src_idx = 0;
   // use double buffer, each loop we use src_idx to compute dst_idx
   rsa_key_t square[2], multiple[2];
@@ -38,7 +47,8 @@ void lsb_modular_exponentiation(rsa_key_t &out, const rsa_key_t &A, const rsa_ke
   for (int i = 0; i < 256; ++i) {
     const int dst_idx = 1 - src_idx;
     if (B.Bit(i)) {
-      montgomery_base2(multiple[dst_idx], multiple[src_idx], square[src_idx], N);
+      montgomery_base2(multiple[dst_idx], multiple[src_idx], square[src_idx],
+                       N);
     } else {
       multiple[dst_idx] = multiple[src_idx];
     }
@@ -48,7 +58,8 @@ void lsb_modular_exponentiation(rsa_key_t &out, const rsa_key_t &A, const rsa_ke
   out = multiple[src_idx];
 }
 
-void rsa(rsa_key_t &crypto, const rsa_key_t &msg, const rsa_key_t &key, const rsa_key_t &N) {
+void rsa(rsa_key_t &crypto, const rsa_key_t &msg, const rsa_key_t &key,
+         const rsa_key_t &N) {
   rsa_key_t pack_value;
   rsa_key_t packed_msg;
   two_power_mod(pack_value, 512, N);

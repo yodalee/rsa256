@@ -401,7 +401,7 @@ struct vint {
 
 	// explicit cast
 	template<unsigned num_bit_dst>
-	explicit operator vint<is_signed, num_bit_dst>() {
+	explicit operator vint<is_signed, num_bit_dst>() const {
 		vint<is_signed, num_bit_dst> dst;
 		auto src_beg = ::std::begin(v);
 		auto src_end = ::std::end(v);

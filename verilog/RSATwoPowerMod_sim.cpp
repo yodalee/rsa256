@@ -2,7 +2,7 @@
 #include "VRSATwoPowerMod.h"
 #include "assign_port.h"
 #include "model_rsa.h"
-#include "test_fixture.h"
+#include "testbench.h"
 #include "verilog_int.h"
 #include <iostream>
 #include <systemc>
