@@ -298,10 +298,16 @@ void CompareEQTemplate() {
 	IntTmpl<7> a7, b7;
 	IntTmpl<99> a99, b99;
 
-	a7 = 0xffu;
+	a7 = -1;
 	b7 = -1;
 	EXPECT_EQ(a7, b7);
-	a7 = 0x7fu;
+	EXPECT_EQ(a7, -1);
+	EXPECT_EQ(b7, -1);
+	EXPECT_EQ(a7, 127);
+	EXPECT_EQ(b7, 127);
+	EXPECT_NE(a7, 255);
+	EXPECT_NE(b7, 255);
+	a7 = 255;
 	b7 = -1;
 	EXPECT_EQ(a7, b7);
 	a7 = 128 + 3;
@@ -391,169 +397,248 @@ TEST(TestVerilogUnsigned, AddSubMulDiv) {
 
 TEST(TestVerilogSigned, DISABLED_AddSubMulDiv) {
 }
+#endif
+
+static const tuple<array<uint16_t, 2>, unsigned> patterns_ru10[] {
+	{{0x1a5, 0x01a}, 4u},
+	{{0x3a5, 0x3a5}, 0u},
+	{{0x3a5, 0x1d2}, 1u},
+	{{0x3a5, 0x03a}, 4u},
+	{{0x3a5, 0x001}, 9u}
+};
+static const tuple<array<uint16_t, 2>, unsigned> patterns_rs10[] {
+	{{0x1a5, 0x01a}, 4u},
+	{{0x3a5, 0x3a5}, 0u},
+	{{0x3a5, 0x3d2}, 1u},
+	{{0x3a5, 0x3fa}, 4u},
+	{{0x3a5, 0x3ff}, 9u}
+};
+static const tuple<array<uint16_t, 2>, unsigned> patterns_l10[] {
+	{{0x3a5, 0x3a5}, 0u},
+	{{0x3a5, 0x250}, 4u},
+	{{0x3a5, 0x100}, 8u}
+};
+static const tuple<array<uint64_t, 6>, unsigned> patterns_ru136[] {
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+	}, 0u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'000fllu, 0xfabc'def0'1234'5678llu, 0x90f0'f0f0'f0f0'f0f0llu,
+	}, 4u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0xffab'cdef'0123'4567llu, 0x890f'0f0f'0f0f'0f0fllu,
+	}, 8u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0x0ffa'bcde'f012'3456llu, 0x7890'f0f0'f0f0'f0f0llu,
+	}, 12u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu,
+	}, 64u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0x0000'0000'0000'000fllu, 0xfabc'def0'1234'5678llu,
+	}, 68u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0x0000'0000'0000'0000llu, 0xffab'cdef'0123'4567llu,
+	}, 72u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0x0000'0000'0000'0000llu, 0x0000'0000'0000'00ffllu,
+	}, 128u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0000llu, 0x0000'0000'0000'0000llu, 0x0000'0000'0000'000fllu,
+	}, 132u }
+};
+static const tuple<array<uint64_t, 6>, unsigned> patterns_rs136[] {
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+	}, 0u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xfabc'def0'1234'5678llu, 0x90f0'f0f0'f0f0'f0f0llu,
+	}, 4u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xffab'cdef'0123'4567llu, 0x890f'0f0f'0f0f'0f0fllu,
+	}, 8u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xfffa'bcde'f012'3456llu, 0x7890'f0f0'f0f0'f0f0llu,
+	}, 12u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xffff'ffff'ffff'ffffllu, 0xabcd'ef01'2345'6789llu,
+	}, 64u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xffff'ffff'ffff'ffffllu, 0xfabc'def0'1234'5678llu,
+	}, 68u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xffff'ffff'ffff'ffffllu, 0xffab'cdef'0123'4567llu,
+	}, 72u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xffff'ffff'ffff'ffffllu, 0xffff'ffff'ffff'ffffllu,
+	}, 128u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xffff'ffff'ffff'ffffllu, 0xffff'ffff'ffff'ffffllu,
+	}, 132u }
+};
+static const tuple<array<uint64_t, 6>, unsigned> patterns_l136[] {
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu
+	}, 0u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0001llu, 0x2345'6789'0f0f'0f0fllu, 0x0f0f'0f0f'0000'0000llu
+	}, 32u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0089llu, 0x0f0f'0f0f'0f0f'0f0fllu, 0x0000'0000'0000'0000llu
+	}, 64u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'000fllu, 0x0f0f'0f0f'0000'0000llu, 0x0000'0000'0000'0000llu
+	}, 96u},
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'000fllu, 0x0000'0000'0000'0000llu, 0x0000'0000'0000'0000llu,
+	}, 128u}
+};
+
+template<template<unsigned> class IntTmpl>
+void ShiftTemplate() {
+	IntTmpl<10> v10;
+	for (auto &p: patterns_ru10) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v10.v[0] = test_data[0];
+		// force unsigned
+		v10.ushiftopr(nshift);
+		EXPECT_EQ(v10.v[0], test_data[1]) << "rshift " << nshift;
+	}
+	for (auto &p: patterns_rs10) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v10.v[0] = test_data[0];
+		// force signed
+		v10.sshiftopr(nshift);
+		EXPECT_EQ(v10.v[0], test_data[1]) << "rshift " << nshift;
+	}
+	for (auto &p: patterns_l10) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v10.v[0] = test_data[0];
+		v10 <<= nshift;
+		EXPECT_EQ(v10.v[0], test_data[1]) << "lshift " << nshift;
+	}
+
+	IntTmpl<136> v136;
+	for (auto &p: patterns_ru136) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v136.v[0] = test_data[2];
+		v136.v[1] = test_data[1];
+		v136.v[2] = test_data[0];
+		// force unsigned
+		v136.ushiftopr(nshift);
+		EXPECT_EQ(v136.v[0], test_data[5]) << "rshift " << nshift;
+		EXPECT_EQ(v136.v[1], test_data[4]) << "rshift " << nshift;
+		EXPECT_EQ(v136.v[2], test_data[3]) << "rshift " << nshift;
+	}
+	for (auto &p: patterns_rs136) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v136.v[0] = test_data[2];
+		v136.v[1] = test_data[1];
+		v136.v[2] = test_data[0];
+		// force signed
+		v136.sshiftopr(nshift);
+		EXPECT_EQ(v136.v[0], test_data[5]) << "lshift " << nshift;
+		EXPECT_EQ(v136.v[1], test_data[4]) << "lshift " << nshift;
+		EXPECT_EQ(v136.v[2], test_data[3]) << "lshift " << nshift;
+	}
+	for (auto &p: patterns_l136) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v136.v[0] = test_data[2];
+		v136.v[1] = test_data[1];
+		v136.v[2] = test_data[0];
+		v136 <<= nshift;
+		EXPECT_EQ(v136.v[0], test_data[5]) << "lshift " << nshift;
+		EXPECT_EQ(v136.v[1], test_data[4]) << "lshift " << nshift;
+		EXPECT_EQ(v136.v[2], test_data[3]) << "lshift " << nshift;
+	}
+}
 
 TEST(TestVerilogUnsigned, Shift) {
-	tuple<array<uint16_t, 2>, unsigned> patterns10[] {
-		{{uint16_t(0x3ff), uint16_t(0x3ff)}, 0u},
-		{{uint16_t(0x3ff), uint16_t(0x1ff)}, 1u},
-		{{uint16_t(0x3ff), uint16_t(0x1)}, 9u}
-	};
+	ShiftTemplate<vuint>();
+
 	vuint<10> v10;
-	for (auto &p: patterns10) {
-		v10.v[0] = get<0>(p)[0];
-		v10 >>= get<1>(p);
-		EXPECT_EQ(v10.v[0], get<0>(p)[1]);
+	for (auto &p: patterns_ru10) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v10.v[0] = test_data[0];
+		// default unsigned
+		v10 >>= nshift;
+		EXPECT_EQ(v10.v[0], test_data[1]);
 	}
 
-	tuple<array<uint64_t, 4>, unsigned> patterns127[] {
-		{
-			{
-				uint64_t(0x0f0f'0f0f'0f0f'0f0fllu),
-				uint64_t(0x0000'0000'0000'ffffllu),
-				uint64_t(0x0f0f'0f0f'0f0f'0f0fllu),
-				uint64_t(0x0000'0000'0000'ffffllu)
-			}, 0u
-		},
-		{
-			{
-				uint64_t(0x0f0f'0f0f'0f0f'0f0fllu),
-				uint64_t(0x0000'0000'0000'ffffllu),
-				uint64_t(0x0fff'f0f0'f0f0'f0f0llu),
-				uint64_t(0x0000'0000'0000'0000llu)
-			}, 20u
-		},
-		{
-			{
-				uint64_t(0x0f0f'0f0f'0f0f'0f0fllu),
-				uint64_t(0x0000'0000'0000'ffffllu),
-				uint64_t(0x0000'0000'0001'fffellu),
-				uint64_t(0x0000'0000'0000'0000llu)
-			}, 63u
-		},
-		{
-			{
-				uint64_t(0x0f0f'0f0f'0f0f'0f0fllu),
-				uint64_t(0x0000'0000'0000'ffffllu),
-				uint64_t(0x0000'0000'0000'ffffllu),
-				uint64_t(0x0000'0000'0000'0000llu)
-			}, 64u
-		},
-		{
-			{
-				uint64_t(0x0f0f'0f0f'0f0f'0f0fllu),
-				uint64_t(0x0000'0000'0000'ffffllu),
-				uint64_t(0x0000'0000'0000'7fffllu),
-				uint64_t(0x0000'0000'0000'0000llu)
-			}, 65u
-		},
-	};
-	for (auto &p: patterns127) {
-		vuint<127> v127;
-		v127.v[0] = get<0>(p)[0];
-		v127.v[1] = get<0>(p)[1];
-		v127 >>= get<1>(p);
-		EXPECT_EQ(v127.v[0], get<0>(p)[2]);
-		EXPECT_EQ(v127.v[1], get<0>(p)[3]);
-	}
-
-	const string pattern256("123abcde123abcde5566556655665566123abcde123abcde5566556655665566");
-	for (int i = 0; i < 64; i += 6) {
-		vuint<256> from_v256, to_v256;
-		from_hex(from_v256, pattern256);
-		from_v256 >>= i*4;
-		from_hex(to_v256, string(pattern256, 0, 64-i));
-		EXPECT_EQ(from_v256, to_v256);
-	}
-	for (int i = 0; i < 64; i += 6) {
-		vuint<256> from_v256, to_v256;
-		from_hex(from_v256, pattern256);
-		from_v256 <<= i*4;
-		from_hex(to_v256, string(pattern256, i) + string(i, '0'));
-		EXPECT_EQ(from_v256, to_v256);
+	vuint<136> v136;
+	for (auto &p: patterns_ru136) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v136.v[0] = test_data[2];
+		v136.v[1] = test_data[1];
+		v136.v[2] = test_data[0];
+		// force unsigned
+		v136.ushiftopr(nshift);
+		EXPECT_EQ(v136.v[0], test_data[5]) << "rshift " << nshift;
+		EXPECT_EQ(v136.v[1], test_data[4]) << "rshift " << nshift;
+		EXPECT_EQ(v136.v[2], test_data[3]) << "rshift " << nshift;
 	}
 }
 
 TEST(TestVerilogSigned, Shift) {
-	tuple<array<int16_t, 2>, unsigned> patterns10[] {
-		{{int16_t(0x3ff), int16_t(0x3ff)}, 0u},
-		{{int16_t(0x3ff), int16_t(0x1ff)}, 1u},
-		{{int16_t(0x3ff), int16_t(0x1)}, 9u}
-	};
+	ShiftTemplate<vsint>();
+
 	vsint<10> v10;
-	for (auto &p: patterns10) {
-		v10.v[0] = get<0>(p)[0];
-		v10 >>= get<1>(p);
-		EXPECT_EQ(v10.v[0], get<0>(p)[1]);
+	for (auto &p: patterns_rs10) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v10.v[0] = test_data[0];
+		// default signed
+		v10 >>= nshift;
+		EXPECT_EQ(v10.v[0], test_data[1]);
 	}
 
-	tuple<array<int64_t, 4>, unsigned> patterns127[] {
-		{
-			{
-				int64_t(0x0f0f'0f0f'0f0f'0f0fll),
-				int64_t(0x0000'0000'0000'ffffll),
-				int64_t(0x0f0f'0f0f'0f0f'0f0fll),
-				int64_t(0x0000'0000'0000'ffffll)
-			}, 0u
-		},
-		{
-			{
-				int64_t(0x0f0f'0f0f'0f0f'0f0fll),
-				int64_t(0x0000'0000'0000'ffffll),
-				int64_t(0x0fff'f0f0'f0f0'f0f0ll),
-				int64_t(0x0000'0000'0000'0000ll)
-			}, 20u
-		},
-		{
-			{
-				int64_t(0x0f0f'0f0f'0f0f'0f0fll),
-				int64_t(0x0000'0000'0000'ffffll),
-				int64_t(0x0000'0000'0001'fffell),
-				int64_t(0x0000'0000'0000'0000ll)
-			}, 63u
-		},
-		{
-			{
-				int64_t(0x0f0f'0f0f'0f0f'0f0fll),
-				int64_t(0x0000'0000'0000'ffffll),
-				int64_t(0x0000'0000'0000'ffffll),
-				int64_t(0x0000'0000'0000'0000ll)
-			}, 64u
-		},
-		{
-			{
-				int64_t(0x0f0f'0f0f'0f0f'0f0fll),
-				int64_t(0x0000'0000'0000'ffffll),
-				int64_t(0x0000'0000'0000'7fffll),
-				int64_t(0x0000'0000'0000'0000ll)
-			}, 65u
-		},
-	};
-	for (auto &p: patterns127) {
-		vsint<127> v127;
-		v127.v[0] = get<0>(p)[0];
-		v127.v[1] = get<0>(p)[1];
-		v127 >>= get<1>(p);
-		EXPECT_EQ(v127.v[0], get<0>(p)[2]);
-		EXPECT_EQ(v127.v[1], get<0>(p)[3]);
-	}
-
-	const string pattern256("123abcde123abcde5566556655665566123abcde123abcde5566556655665566");
-	for (int i = 0; i < 64; i += 6) {
-		vsint<256> from_v256, to_v256;
-		from_hex(from_v256, pattern256);
-		from_v256 >>= i*4;
-		from_hex(to_v256, string(pattern256, 0, 64-i));
-		EXPECT_EQ(from_v256, to_v256);
-	}
-	for (int i = 0; i < 64; i += 6) {
-		vsint<256> from_v256, to_v256;
-		from_hex(from_v256, pattern256);
-		from_v256 <<= i*4;
-		from_hex(to_v256, string(pattern256, i) + string(i, '0'));
-		EXPECT_EQ(from_v256, to_v256);
+	vuint<136> v136;
+	for (auto &p: patterns_rs136) {
+		const auto &test_data = get<0>(p);
+		const unsigned nshift = get<1>(p);
+		v136.v[0] = test_data[2];
+		v136.v[1] = test_data[1];
+		v136.v[2] = test_data[0];
+		// default signed
+		v136.sshiftopr(nshift);
+		EXPECT_EQ(v136.v[0], test_data[5]) << "rshift " << nshift;
+		EXPECT_EQ(v136.v[1], test_data[4]) << "rshift " << nshift;
+		EXPECT_EQ(v136.v[2], test_data[3]) << "rshift " << nshift;
 	}
 }
 
+#if 0
 TEST(TestVerilogUnsigned, Negate) {
 	array<uint8_t, 2> patterns7[]{
 		{uint8_t(0x2a), uint8_t(0x56)},

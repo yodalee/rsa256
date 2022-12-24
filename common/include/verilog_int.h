@@ -30,13 +30,6 @@ constexpr unsigned num_bit2dict_key(unsigned num_bit) {
 	);
 }
 
-// since u16*u16 can trigger implementation error
-// we need to cast them to unsigned first
-// this calculate the type > unsigned
-constexpr unsigned num_bit2dict_key_promoted(unsigned num_bit) {
-	return 2u + unsigned(num_bit > 32);
-}
-
 constexpr unsigned num_bit2num_word(unsigned num_bit) {
 	return (num_bit+63) / 64;
 }
@@ -199,7 +192,18 @@ struct vint {
 	// 1: larger
 	// 0: must check further
 	// -1: smaller
-	int compare(const vint& rhs) const {
+	int compare(const vint& rhs, bool sign_mode) const {
+		const stype rhs_msb = rhs.v[num_word-1];
+		stype msb = v[num_word-1];
+		if (sign_mode) {
+			// flip the sign bit
+			msb ^= msb_mask;
+		}
+		if (msb > rhs_msb) {
+			return 1;
+		} else if (msb < rhs_msb) {
+			return -1;
+		}
 		if constexpr (num_word > 1) {
 			for (unsigned i = num_word; i > 0;) {
 				--i;
@@ -213,9 +217,9 @@ struct vint {
 		return 0;
 	}
 
-	int compare(const dtype rhs) const {
+	int compare(const stype rhs, bool sign_mode) const {
 		if constexpr (num_word > 1) {
-			const dtype expected_sign = (is_signed and rhs < 0) ? -1 : 0;
+			const stype expected_sign = (sign_mode and to_signed(rhs) < 0) ? -1 : 0;
 			for (unsigned i = num_word; i > 1;) {
 				--i;
 				if (v[i] > expected_sign) {
@@ -224,42 +228,54 @@ struct vint {
 					return 1;
 				}
 			}
+		} else {
+			const stype rhs_msb = rhs & unused_bit;
+			stype msb = v[num_word-1];
+			if (sign_mode) {
+				// flip the sign bit
+				msb ^= msb_mask;
+			}
+			if (msb > rhs_msb) {
+				return 1;
+			} else if (msb < rhs_msb) {
+				return -1;
+			}
 		}
 		return 0;
 	}
 
-	bool operator==(const vint& rhs) const { return compare(rhs) == 0; }
-	bool operator>(const vint& rhs) const { return compare(rhs) > 0; }
-	bool operator<(const vint& rhs) const { return compare(rhs) < 0; }
-	bool operator>=(const vint& rhs) const { return compare(rhs) >= 0; }
-	bool operator<=(const vint& rhs) const { return compare(rhs) <= 0; }
+	bool operator==(const vint& rhs) const { return compare(rhs, is_signed) == 0; }
+	bool operator>(const vint& rhs) const { return compare(rhs, is_signed) > 0; }
+	bool operator<(const vint& rhs) const { return compare(rhs, is_signed) < 0; }
+	bool operator>=(const vint& rhs) const { return compare(rhs, is_signed) >= 0; }
+	bool operator<=(const vint& rhs) const { return compare(rhs, is_signed) <= 0; }
 
 	bool operator==(dtype rhs) const {
 		rhs = SafeForOperation(rhs);
-		return compare(rhs) == 0 and v[0] == rhs;
+		return compare(rhs, is_signed) == 0 and v[0] == rhs;
 	}
 
 	bool operator>(dtype rhs) const {
 		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs);
+		const int cmp = compare(rhs, is_signed);
 		return cmp > 0 or cmp == 0 and v[0] > rhs;
 	}
 
 	bool operator<(dtype rhs) const {
 		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs);
+		const int cmp = compare(rhs, is_signed);
 		return cmp < 0 or cmp == 0 and v[0] < rhs;
 	}
 
 	bool operator>=(dtype rhs) const {
 		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs);
+		const int cmp = compare(rhs, is_signed);
 		return cmp > 0 or cmp == 0 and v[0] >= rhs;
 	}
 
 	bool operator<=(dtype rhs) const {
 		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs);
+		const int cmp = compare(rhs, is_signed);
 		return cmp < 0 or cmp == 0 and v[0] <= rhs;
 	}
 
@@ -450,18 +466,39 @@ struct vint {
 	//////////////////////
 	// shift assignment
 	//////////////////////
-	/*
-	vint& operator>>=(const unsigned rhs) {
+	void signext_after_shiftr(const unsigned rhs) {
+		const unsigned num_remaining = num_bit - rhs;
+		const unsigned signext_from_word = detail::num_bit2num_word(num_remaining);
+		const unsigned used_bit_after_shift_minus_one = (num_remaining-1u) % bw_word;
+		if constexpr (num_word > 1) {
+			assert(signext_from_word > 0); // since rhs != 0, this shall not fail
+			::std::fill(v+signext_from_word, v+num_word, stype(-1));
+		}
+		v[signext_from_word-1] |= stype(-2) << used_bit_after_shift_minus_one;
+		ClearUnusedBits();
+	}
+
+	void clear_after_shiftr(const unsigned rhs) {
+		if constexpr (num_word > 1) {
+			const unsigned num_remaining = num_bit - rhs;
+			const unsigned signext_from_word = detail::num_bit2num_word(num_remaining);
+			const unsigned unused_bit_after_shift = (-num_remaining) % bw_word;
+			assert(signext_from_word > 0); // since rhs != 0, this shall not fail
+			::std::fill(v+signext_from_word, v+num_word, stype(0));
+			v[signext_from_word-1] &= stype(-1) >> unused_bit_after_shift;
+		}
+	}
+
+	[[gnu::noinline]]
+	void raw_shiftopr(const unsigned rhs, bool is_neg) {
 		// rhs >= num_bit is UB in C, but not sure in Verilog
 		if (rhs == 0 or rhs >= num_bit) {
 			// do nothing
-			return *this;
+			return;
 		}
-
 		if constexpr (num_word == 1) {
 			v[0] >>= rhs;
 		} else {
-			const dtype sign_ext = v[num_word-1] >> 63;
 			const unsigned word_shift = rhs / 64;
 			const unsigned bit_shift = rhs % 64;
 			if (bit_shift == 0) {
@@ -469,19 +506,42 @@ struct vint {
 					v[i-word_shift] = v[i];
 				}
 			} else {
-				const unsigned interleave_bit = bit_shift;
 				for (unsigned i = word_shift; i < num_word-1; ++i) {
-					v[i-word_shift] = detail::interleave64(v[i], v[i+1], interleave_bit);
+					v[i-word_shift] = detail::shiftright128(v[i+1], v[i], bit_shift);
 				}
-				v[num_word-word_shift-1] = detail::interleave64(v[num_word-1], sign_ext, interleave_bit);
+				v[num_word-word_shift-1] = v[num_word-1] >> bit_shift;
 			}
-			::std::fill_n(::std::end(v) - word_shift, word_shift, sign_ext);
 		}
-		// Not necessary for right shift
-		// ClearUnusedBits();
+		if (is_neg) {
+			signext_after_shiftr(rhs);
+		} else {
+			clear_after_shiftr(rhs);
+		}
+	}
+
+	// >>=, unsigned
+	vint& ushiftopr(const unsigned rhs) {
+		raw_shiftopr(rhs, false);
 		return *this;
 	}
 
+	// >>=, signed
+	vint& sshiftopr(const unsigned rhs) {
+		const bool is_neg = Bit(num_bit-1u);
+		raw_shiftopr(rhs, is_neg);
+		return *this;
+	}
+
+	vint& operator>>=(const unsigned rhs) {
+		if constexpr (is_signed) {
+			sshiftopr(rhs);
+		} else {
+			ushiftopr(rhs);
+		}
+		return *this;
+	}
+
+	[[gnu::noinline]]
 	vint& operator<<=(const unsigned rhs) {
 		// rhs >= num_bit is UB in C, but not sure in Verilog
 		if (rhs == 0 or rhs >= num_bit) {
@@ -492,28 +552,25 @@ struct vint {
 		if constexpr (num_word == 1) {
 			v[0] <<= rhs;
 		} else {
-			const dtype sign_ext = v[num_word-1] >> 63;
-			unsigned word_shift = rhs / 64;
-			unsigned bit_shift = rhs % 64;
+			unsigned word_shift = rhs / 64u;
+			unsigned bit_shift = rhs % 64u;
 			if (bit_shift == 0) {
 				for (unsigned i = num_word; i > word_shift;) {
 					--i;
 					v[i] = v[i-word_shift];
 				}
 			} else {
-				const unsigned interleave_bit = 64 - bit_shift;
 				for (unsigned i = num_word; i > word_shift+1;) {
 					--i;
-					v[i] = detail::interleave64(v[i-word_shift-1], v[i-word_shift], interleave_bit);
+					v[i] = detail::shiftleft128(v[i-word_shift], v[i-word_shift-1], bit_shift);
 				}
-				v[word_shift] = detail::interleave64(dtype(0), v[0], interleave_bit);
+				v[word_shift] = v[0] << bit_shift;
 			}
 			::std::fill_n(::std::begin(v), word_shift, 0);
 		}
 		ClearUnusedBits();
 		return *this;
 	}
-	*/
 
 	template <bool is_signed2, unsigned num_bit2>
 	vint& operator>>=(const vint<is_signed2, num_bit2>& rhs) {
@@ -594,6 +651,7 @@ struct vint {
 		return detail::to_signed(ret);
 	}
 
+	[[gnu::noinline]]
 	friend void from_hex(vint &val, const ::std::string &s) {
 		constexpr unsigned max_len = (num_bit + 3) / 4;
 		::std::fill_n(::std::begin(val.v), num_word, 0);
@@ -643,6 +701,7 @@ struct vint {
 		}
 	}
 
+	[[gnu::noinline]]
 	friend ::std::string to_hex(const vint &val) {
 		::std::string ret;
 		constexpr unsigned max_len = (num_bit+3) / 4;
