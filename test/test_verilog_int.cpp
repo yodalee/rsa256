@@ -399,6 +399,9 @@ TEST(TestVerilogSigned, DISABLED_AddSubMulDiv) {
 }
 #endif
 
+///////////////////////////
+// Test shift
+///////////////////////////
 static const tuple<array<uint16_t, 2>, unsigned> patterns_ru10[] {
 	{{0x1a5, 0x01a}, 4u},
 	{{0x3a5, 0x3a5}, 0u},
@@ -638,217 +641,119 @@ TEST(TestVerilogSigned, Shift) {
 	}
 }
 
-#if 0
-TEST(TestVerilogUnsigned, Negate) {
-	array<uint8_t, 2> patterns7[]{
-		{uint8_t(0x2a), uint8_t(0x56)},
-		{uint8_t(0x56), uint8_t(0x2a)},
-		{uint8_t(0x00), uint8_t(0x00)}
-	};
-	for (auto &p: patterns7) {
-		vuint<7> v7;
-		v7.v[0] = get<0>(p);
+///////////////////////////
+// Test negate
+///////////////////////////
+static const array<uint8_t, 2> pattern_neg7[]{
+	{0x2a, 0x56},
+	{0x7f, 0x01},
+	{0x00, 0x00}
+};
+static const array<uint64_t, 4> pattern_neg127[]{
+	{
+		0x0000'0000'0000'0000ll, 0x0000'0000'0000'0001ll,
+		0x7fff'ffff'ffff'ffffll, 0xffff'ffff'ffff'ffffll
+	},
+	{
+		0x7fff'ffff'ffff'0000ll, 0x0000'0000'0000'0001ll,
+		0x0000'0000'0000'ffffll, 0xffff'ffff'ffff'ffffll
+	},
+	{
+		0x0000'0000'0000'0000ll, 0x0000'0000'0000'0000ll,
+		0x0000'0000'0000'0000ll, 0x0000'0000'0000'0000ll
+	}
+};
+
+template<template<unsigned> class IntTmpl>
+void NegateTemplate() {
+	IntTmpl<7> v7;
+	for (auto &p: pattern_neg7) {
+		v7.v[0] = p[0];
 		v7.Negate();
-		EXPECT_EQ(v7.v[0], get<1>(p));
+		EXPECT_EQ(v7.v[0], p[1]);
+		// do it reversely
+		v7.Negate();
+		EXPECT_EQ(v7.v[0], p[0]);
 	}
 
-	array<uint8_t, 2> patterns8[]{
-		{uint8_t(0x2a), uint8_t(0xd6)},
-		{uint8_t(0xd6), uint8_t(0x2a)},
-		{uint8_t(0x00), uint8_t(0x00)}
-	};
-	for (auto &p: patterns8) {
-		vuint<8> v8;
-		v8.v[0] = get<0>(p);
-		v8.Negate();
-		EXPECT_EQ(v8.v[0], get<1>(p));
-	}
-
-	array<int64_t, 4> patterns128[]{
-		{
-			int64_t(0x0000'0000'0000'0001ll),
-			int64_t(0xf000'0000'0000'0000ll),
-			int64_t(0xffff'ffff'ffff'ffffll),
-			int64_t(0x0fff'ffff'ffff'ffffll)
-		},
-		{
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll)
-		}
-	};
-	for (auto &p: patterns128) {
-		vuint<127> v127;
-		v127.v[0] = get<0>(p);
-		v127.v[1] = get<1>(p);
+	IntTmpl<127> v127;
+	for (auto &p: pattern_neg127) {
+		v127.v[0] = p[1];
+		v127.v[1] = p[0];
 		v127.Negate();
-		EXPECT_EQ(v127.v[0], get<2>(p));
-		EXPECT_EQ(v127.v[1], get<3>(p));
+		EXPECT_EQ(v127.v[0], p[3]);
+		EXPECT_EQ(v127.v[1], p[2]);
+		// do it reversely
+		v127.Negate();
+		EXPECT_EQ(v127.v[0], p[1]);
+		EXPECT_EQ(v127.v[1], p[0]);
 	}
 }
 
+TEST(TestVerilogUnsigned, Negate) {
+	NegateTemplate<vuint>();
+}
+
 TEST(TestVerilogSigned, Negate) {
-	array<int8_t, 2> patterns78[]{
-		{int8_t(0x2a), int8_t(0xd6)},
-		{int8_t(0xd6), int8_t(0x2a)},
-		{int8_t(0x00), int8_t(0x00)}
-	};
-	for (auto &p: patterns78) {
-		vsint<7> v7;
-		v7.v[0] = get<0>(p);
-		v7.Negate();
-		EXPECT_EQ(v7.v[0], get<1>(p));
+	NegateTemplate<vsint>();
+}
+
+///////////////////////////
+// Test flip
+///////////////////////////
+static const array<uint8_t, 2> pattern_flip7[]{
+	{0x2a, 0x55},
+	{0x7f, 0x00}
+};
+static const array<uint64_t, 4> pattern_flip127[]{
+	{
+		0x0000'0000'0000'0000ll, 0x0000'0000'0000'0000ll,
+		0x7fff'ffff'ffff'ffffll, 0xffff'ffff'ffff'ffffll
+	},
+	{
+		0x7fff'ffff'ffff'0000ll, 0x0000'0000'0000'0000ll,
+		0x0000'0000'0000'ffffll, 0xffff'ffff'ffff'ffffll
 	}
-	for (auto &p: patterns78) {
-		vsint<8> v8;
-		v8.v[0] = get<0>(p);
-		v8.Negate();
-		EXPECT_EQ(v8.v[0], get<1>(p));
+};
+
+template<template<unsigned> class IntTmpl>
+void FlipTemplate() {
+	IntTmpl<7> v7;
+	for (auto &p: pattern_flip7) {
+		v7.v[0] = p[0];
+		v7.Flip();
+		EXPECT_EQ(v7.v[0], p[1]);
+		// do it reversely
+		v7.Flip();
+		EXPECT_EQ(v7.v[0], p[0]);
 	}
 
-	array<int64_t, 4> patterns128[]{
-		{
-			int64_t(0x0000'0000'0000'0001ll),
-			int64_t(0xf000'0000'0000'0000ll),
-			int64_t(0xffff'ffff'ffff'ffffll),
-			int64_t(0x0fff'ffff'ffff'ffffll)
-		},
-		{
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll)
-		}
-	};
-	for (auto &p: patterns128) {
-		vsint<127> v127;
-		v127.v[0] = get<0>(p);
-		v127.v[1] = get<1>(p);
-		v127.Negate();
-		EXPECT_EQ(v127.v[0], get<2>(p));
-		EXPECT_EQ(v127.v[1], get<3>(p));
+	IntTmpl<127> v127;
+	for (auto &p: pattern_flip127) {
+		v127.v[0] = p[1];
+		v127.v[1] = p[0];
+		v127.Flip();
+		EXPECT_EQ(v127.v[0], p[3]);
+		EXPECT_EQ(v127.v[1], p[2]);
+		// do it reversely
+		v127.Flip();
+		EXPECT_EQ(v127.v[0], p[1]);
+		EXPECT_EQ(v127.v[1], p[0]);
 	}
 }
 
 TEST(TestVerilogUnsigned, Flip) {
-	array<uint8_t, 2> patterns7[]{
-		{uint8_t(0x2a), uint8_t(0x55)},
-		{uint8_t(0x55), uint8_t(0x2a)},
-		{uint8_t(0x00), uint8_t(0x7f)},
-		{uint8_t(0x7f), uint8_t(0x00)}
-	};
-	for (auto &p: patterns7) {
-		vuint<7> v7;
-		v7.v[0] = get<0>(p);
-		v7.Flip();
-		EXPECT_EQ(v7.v[0], get<1>(p));
-	}
-	array<uint8_t, 2> patterns8[]{
-		{uint8_t(0x2a), uint8_t(0xd5)},
-		{uint8_t(0xd5), uint8_t(0x2a)},
-		{uint8_t(0x00), uint8_t(0xff)},
-		{uint8_t(0xff), uint8_t(0x00)}
-	};
-	for (auto &p: patterns8) {
-		vuint<8> v8;
-		v8.v[0] = get<0>(p);
-		v8.Flip();
-		EXPECT_EQ(v8.v[0], get<1>(p));
-	}
-
-	array<uint64_t, 4> patterns127[]{
-		{
-			uint64_t(0x0000'0000'0000'0001llu),
-			uint64_t(0x7000'0000'0000'0000llu),
-			uint64_t(0xffff'ffff'ffff'fffellu),
-			uint64_t(0x0fff'ffff'ffff'ffffllu)
-		},
-		{
-			uint64_t(0x0000'0000'0000'0000llu),
-			uint64_t(0x0000'0000'0000'0000llu),
-			uint64_t(0xffff'ffff'ffff'ffffllu),
-			uint64_t(0x7fff'ffff'ffff'ffffllu)
-		},
-		{
-			uint64_t(0xffff'ffff'ffff'fffellu),
-			uint64_t(0x0fff'ffff'ffff'ffffllu),
-			uint64_t(0x0000'0000'0000'0001llu),
-			uint64_t(0x7000'0000'0000'0000llu)
-		},
-		{
-			uint64_t(0xffff'ffff'ffff'ffffllu),
-			uint64_t(0x7fff'ffff'ffff'ffffllu),
-			uint64_t(0x0000'0000'0000'0000llu),
-			uint64_t(0x0000'0000'0000'0000llu)
-		}
-	};
-	for (auto &p: patterns127) {
-		vuint<127> v127;
-		v127.v[0] = get<0>(p);
-		v127.v[1] = get<1>(p);
-		v127.Flip();
-		EXPECT_EQ(v127.v[0], get<2>(p));
-		EXPECT_EQ(v127.v[1], get<3>(p));
-	}
+	FlipTemplate<vuint>();
 }
 
 TEST(TestVerilogSigned, Flip) {
-	array<int8_t, 2> patterns78[]{
-		{int8_t(0x2a), int8_t(0xd5)},
-		{int8_t(0xd5), int8_t(0x2a)},
-		{int8_t(0x00), int8_t(0xff)},
-		{int8_t(0xff), int8_t(0x00)}
-	};
-	for (auto &p: patterns78) {
-		vsint<7> v7;
-		v7.v[0] = get<0>(p);
-		v7.Flip();
-		EXPECT_EQ(v7.v[0], get<1>(p));
-	}
-	for (auto &p: patterns78) {
-		vsint<8> v8;
-		v8.v[0] = get<0>(p);
-		v8.Flip();
-		EXPECT_EQ(v8.v[0], get<1>(p));
-	}
-
-	array<int64_t, 4> patterns127[]{
-		{
-			int64_t(0x0000'0000'0000'0001ll),
-			int64_t(0xf000'0000'0000'0000ll),
-			int64_t(0xffff'ffff'ffff'fffell),
-			int64_t(0x0fff'ffff'ffff'ffffll)
-		},
-		{
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0xffff'ffff'ffff'ffffll),
-			int64_t(0xffff'ffff'ffff'ffffll)
-		},
-		{
-			int64_t(0xffff'ffff'ffff'fffell),
-			int64_t(0x0fff'ffff'ffff'ffffll),
-			int64_t(0x0000'0000'0000'0001ll),
-			int64_t(0xf000'0000'0000'0000ll)
-		},
-		{
-			int64_t(0xffff'ffff'ffff'ffffll),
-			int64_t(0xffff'ffff'ffff'ffffll),
-			int64_t(0x0000'0000'0000'0000ll),
-			int64_t(0x0000'0000'0000'0000ll)
-		}
-	};
-	for (auto &p: patterns127) {
-		vsint<127> v127;
-		v127.v[0] = get<0>(p);
-		v127.v[1] = get<1>(p);
-		v127.Flip();
-		EXPECT_EQ(v127.v[0], get<2>(p));
-		EXPECT_EQ(v127.v[1], get<3>(p));
-	}
+	FlipTemplate<vsint>();
 }
 
+#if 0
+///////////////////////////
+// Test cast
+///////////////////////////
 TEST(TestVerilogUnsigned, ExplicitCast) {
 	{
 		vuint<5> v5;
