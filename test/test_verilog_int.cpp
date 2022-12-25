@@ -350,7 +350,7 @@ TEST(TestVerilogSigned, CompareEQ) {
 }
 
 ///////////////////////////
-// Test bit read
+// Test bit read/write
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
 void BitReadTemplate() {
@@ -379,12 +379,12 @@ TEST(TestVerilogSigned, BitRead) {
 }
 
 ///////////////////////////
-// Test bit write
+// Test slice read/write
 ///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_BitWrite) {
+TEST(TestVerilogUnsigned, DISABLED_SliceRead) {
 }
 
-TEST(TestVerilogSigned, DISABLED_BitWrite) {
+TEST(TestVerilogSigned, DISABLED_SliceRead) {
 }
 
 ///////////////////////////
@@ -392,32 +392,92 @@ TEST(TestVerilogSigned, DISABLED_BitWrite) {
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
 void BasicArithTemplate() {
-	IntTmpl<10> a10, b10;
+	IntTmpl<10> a10, b10, c10;
+	// normal +
+	a10.v[0] = 900;
+	b10.v[0] = 100;
+	c10 = a10 - b10;
+	EXPECT_EQ(c10.v[0], 800);
+	// normal -
+	a10.v[0] = 1000;
+	b10.v[0] = 100;
+	c10 = a10 - b10;
+	EXPECT_EQ(c10.v[0], 900);
+	// normal *
+	a10.v[0] = 3;
+	b10.v[0] = 3;
+	c10 = a10 * b10;
+	EXPECT_EQ(c10.v[0], 9);
+	// overflow +
 	a10.v[0] = 1000;
 	b10.v[0] = 124;
-	EXPECT_EQ((a10+b10), 100);
+	c10 = a10 + b10;
+	EXPECT_EQ(c10.v[0], 100);
+	// underflow -
+	a10.v[0] = 1;
+	b10.v[0] = 2;
+	c10 = a10 - b10;
+	EXPECT_EQ(c10.v[0], 0x3ff); // -1
+	// overflow *
+	a10.v[0] = 50;
+	b10.v[0] = 21;
+	c10 = a10 * b10;
+	EXPECT_EQ(c10.v[0], 26); // 1050-1024
+	// underflow *
+	a10.v[0] = 50;
+	b10.v[0] = 0x3ff; // -1
+	c10 = a10 * b10;
+	EXPECT_EQ(c10.v[0], 974); // 1024-50
 
-	IntTmpl<127> a127, b127;
+	IntTmpl<127> a127, b127, c127;
+	// normal + (no carry)
 	a127.v[1] = 1;
 	a127.v[0] = -1;
 	b127.v[1] = 2;
 	b127.v[0] = 1;
-	a127 += b127;
-	EXPECT_EQ(a127.v[1], 4);
-	EXPECT_EQ(a127.v[0], 0);
-
-	IntTmpl<127> c127;
-	c127.v[1] = 99;
-	c127.v[0] = 40;
-	c127 -= 100;
-	EXPECT_EQ(c127.v[1], 98);
-	EXPECT_EQ(c127.v[0], -60);
+	c127 = a127 + b127;
+	EXPECT_EQ(c127.v[1], 4);
+	EXPECT_EQ(c127.v[0], 0);
+	// normal + (carry)
+	a127.v[1] = 2;
+	a127.v[0] = 0x8000'0000'0000'0001llu;
+	b127.v[1] = 2;
+	b127.v[0] = 0x8000'0000'0000'0001llu;
+	c127 = a127 + b127;
+	EXPECT_EQ(c127.v[1], 5);
+	EXPECT_EQ(c127.v[0], 2);
+	// normal - (borrow)
+	a127.v[1] = 12;
+	a127.v[0] = 0;
+	b127.v[1] = 0;
+	b127.v[0] = 10;
+	c127 = a127 - b127;
+	EXPECT_EQ(c127.v[1], 11);
+	EXPECT_EQ(c127.v[0], -10);
+	// overflow +
+	a127.v[1] = 0x7fff'ffff'ffff'0000;
+	a127.v[0] = 0xa000'0000'0000'0003;
+	b127.v[1] = 0x7fff'ffff'ffff'0000;
+	b127.v[0] = 0x6000'0000'0000'0002;
+	c127 = a127 + b127;
+	EXPECT_EQ(c127.v[1], 0x7fff'ffff'fffe'0001);
+	EXPECT_EQ(c127.v[0], 5);
+	// underflow -
+	a127.v[1] = 0;
+	a127.v[0] = 0;
+	b127.v[1] = 0;
+	b127.v[0] = 2;
+	c127 = a127 - b127;
+	EXPECT_EQ(c127.v[1], 0x7fff'ffff'ffff'ffff);
+	EXPECT_EQ(c127.v[0], -2);
 }
 
-TEST(TestVerilogUnsigned, AddSubMulDiv) {
+TEST(TestVerilogUnsigned, BasicArith) {
+	BasicArithTemplate<vuint>();
 }
 
-TEST(TestVerilogSigned, DISABLED_BasicArith) {
+TEST(TestVerilogSigned, BasicArith) {
+	BasicArithTemplate<vsint>();
 }
 
 ///////////////////////////
@@ -923,24 +983,6 @@ TEST(TestVerilogUnsigned, ExplicitCast) {
 		EXPECT_EQ(vs68.v[0], 0xf0);
 		EXPECT_EQ(vs68.v[1], 0x3);
 	}
-}
-
-///////////////////////////
-// Test slice read
-///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_SliceRead) {
-}
-
-TEST(TestVerilogSigned, DISABLED_SliceRead) {
-}
-
-///////////////////////////
-// Test slice write
-///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_SliceWrite) {
-}
-
-TEST(TestVerilogSigned, DISABLED_SliceWrite) {
 }
 
 ///////////////////////////
