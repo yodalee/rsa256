@@ -140,7 +140,7 @@ void read_verilator_port(verilog::vuint<num_bit> &dest, VlWide<Vlword> &src) {
       dest.v[put_pos] &= 0x00000000ffffffff;
     }
   }
-  dest.ClampBits();
+  dest.ClearUnusedBits();
 }
 
 } // namespace verilog

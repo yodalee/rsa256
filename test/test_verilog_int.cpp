@@ -301,52 +301,69 @@ TEST(TestVerilogSigned, DISABLED_ToHex) {
 }
 
 ///////////////////////////
-// Test comparison (EQ/NE)
+// Test comparison
+// NOTE: This test is more difficult than others, it mixes more arith, assign...
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
-void CompareEQTemplate() {
+void CompareTemplate() {
 	IntTmpl<7> a7, b7;
-	IntTmpl<99> a99, b99;
+	IntTmpl<130> a130, b130;
+	constexpr unsigned is_signed = decltype(a7)::is_signed;
+
+	a7 = 7;
+	b7 = 8;
+	EXPECT_LE(a7, b7);
+	EXPECT_LT(a7, b7);
+	EXPECT_GT(b7, a7);
+	EXPECT_GE(b7, a7);
+	EXPECT_NE(a7, b7);
+	EXPECT_GE(a7, 6);
+	EXPECT_GT(a7, 6);
+	EXPECT_LE(a7, 8);
+	EXPECT_LT(a7, 8);
+	if constexpr (is_signed) {
+		EXPECT_GE(a7, -1);
+		EXPECT_GT(a7, -1);
+	} else {
+		EXPECT_LE(a7, -1);
+		EXPECT_LT(a7, -1);
+	}
 
 	a7 = -1;
 	b7 = -1;
 	EXPECT_EQ(a7, b7);
 	EXPECT_EQ(a7, -1);
 	EXPECT_EQ(b7, -1);
-	EXPECT_EQ(a7, 127);
-	EXPECT_EQ(b7, 127);
-	EXPECT_NE(a7, 255);
-	EXPECT_NE(b7, 255);
-	a7 = 255;
-	b7 = -1;
-	EXPECT_EQ(a7, b7);
-	a7 = 128 + 3;
-	b7 = 0 + 3;
-	EXPECT_EQ(a7, b7);
-	a7 = 1;
-	b7 = 0;
+	b7 *= 2;
+	EXPECT_LE(b7, -2);
+	EXPECT_GE(b7, -2);
+	EXPECT_EQ(b7, -2);
 	EXPECT_NE(a7, b7);
-	a7 = 0xf;
-	b7 = -1;
-	EXPECT_NE(a7, b7);
-
-	a99 = 123;
-	b99 = 123;
-	EXPECT_EQ(a99, b99);
-	a99 = -123;
-	b99 = -123;
-	EXPECT_EQ(a99, b99);
-	a99 = -1;
-	b99 = 123;
-	EXPECT_NE(a99, b99);
+	// signed: -3 < -2 < -1 < 0 < 3
+	// unsigned: while -3(61) < -2(62) < -1(63), -1(63) > 3(3)
+	EXPECT_LT(b7, -1);
+	EXPECT_LE(b7, -1);
+	EXPECT_GT(b7, -3);
+	EXPECT_GE(b7, -3);
+	if constexpr (is_signed) {
+		EXPECT_LT(b7, 0);
+		EXPECT_LE(b7, 0);
+		EXPECT_LT(b7, 3);
+		EXPECT_LE(b7, 3);
+	} else {
+		EXPECT_GT(b7, 0);
+		EXPECT_GE(b7, 0);
+		EXPECT_GT(b7, 3);
+		EXPECT_GE(b7, 3);
+	}
 }
 
-TEST(TestVerilogUnsigned, CompareEQ) {
-	CompareEQTemplate<vuint>();
+TEST(TestVerilogUnsigned, Compare) {
+	CompareTemplate<vuint>();
 }
 
-TEST(TestVerilogSigned, CompareEQ) {
-	CompareEQTemplate<vsint>();
+TEST(TestVerilogSigned, Compare) {
+	CompareTemplate<vsint>();
 }
 
 ///////////////////////////

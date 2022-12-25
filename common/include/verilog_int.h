@@ -92,14 +92,15 @@ struct vint {
 	static constexpr unsigned bw_word = 8 * sizeof(dtype);
 	// how many stype required to store the vint
 	static constexpr unsigned num_word = detail::num_bit2num_word(num_bit);
-	// part of the most significant word is unused
+	// part of the most significant word is (un)used
 	static constexpr unsigned unused_bit = num_word * bw_word - num_bit;
+	static constexpr unsigned used_bit = bw_word - unused_bit;
 	// The 1s of the used bits
 	static constexpr stype used_mask = stype(-1) >> unused_bit;
 	// The 1s of the unused bits
 	static constexpr stype unused_mask = ~used_mask;
 	// The 1 of the msb-bit
-	static constexpr stype msb_mask = stype(1) << (bw_word - 1 - unused_bit);
+	static constexpr stype msb_mask = stype(1) << (used_bit - 1u);
 	// vint holds 8, 16, 32, 64 bit data types that matches native C++ type
 	static constexpr bool matched = num_bit == bw_word;
 	// there might not be any totally unused word
@@ -150,13 +151,6 @@ struct vint {
 		return *this;
 	}
 
-	explicit vint(::std::string s, int base=16) {
-		assert(0);
-#ifndef NDEBUG
-		assert(base == 2 or base == 8 or base == 16);
-#endif
-	}
-
 	vint() = default;
 	vint(const vint&) = default;
 	vint(vint&&) = default;
@@ -192,20 +186,29 @@ struct vint {
 	// 1: larger
 	// 0: must check further
 	// -1: smaller
-	int compare(const vint& rhs, bool sign_mode) const {
-		const stype rhs_msb = rhs.v[num_word-1];
-		stype msb = v[num_word-1];
+	int compare_msb(stype rhs, bool sign_mode) const {
+		stype lhs = v[num_word-1];
 		if (sign_mode) {
 			// flip the sign bit
-			msb ^= msb_mask;
+			lhs ^= msb_mask;
+			rhs ^= msb_mask;
 		}
-		if (msb > rhs_msb) {
+		if (lhs > rhs) {
 			return 1;
-		} else if (msb < rhs_msb) {
+		} else if (lhs < rhs) {
 			return -1;
 		}
+		return 0;
+	}
+
+	[[gnu::noinline]]
+	int compare(const vint& rhs, bool sign_mode) const {
+		int cmp = compare_msb(rhs.v[num_word-1], sign_mode);
+		if (cmp != 0) {
+			return cmp;
+		}
 		if constexpr (num_word > 1) {
-			for (unsigned i = num_word; i > 0;) {
+			for (unsigned i = num_word-1; i > 0;) {
 				--i;
 				if (v[i] > rhs.v[i]) {
 					return 1;
@@ -217,10 +220,15 @@ struct vint {
 		return 0;
 	}
 
+	[[gnu::noinline]]
 	int compare(const stype rhs, bool sign_mode) const {
 		if constexpr (num_word > 1) {
-			const stype expected_sign = (sign_mode and to_signed(rhs) < 0) ? -1 : 0;
-			for (unsigned i = num_word; i > 1;) {
+			const stype expected_sign = (sign_mode and to_signed(rhs) < 0) ? stype(-1) : stype(0);
+			int cmp = compare_msb(SafeForOperation(expected_sign), sign_mode);
+			if (cmp != 0) {
+				return cmp;
+			}
+			for (unsigned i = num_word-1; i > 1;) {
 				--i;
 				if (v[i] > expected_sign) {
 					return -1;
@@ -229,55 +237,26 @@ struct vint {
 				}
 			}
 		} else {
-			const stype rhs_msb = rhs & unused_bit;
-			stype msb = v[num_word-1];
-			if (sign_mode) {
-				// flip the sign bit
-				msb ^= msb_mask;
-			}
-			if (msb > rhs_msb) {
-				return 1;
-			} else if (msb < rhs_msb) {
-				return -1;
-			}
+			return compare_msb(SafeForOperation(rhs), sign_mode);
 		}
 		return 0;
 	}
+
+	int ucompare(const vint& rhs) const { return compare(rhs, false); }
+	int ucompare(const stype rhs) const { return compare(rhs, false); }
+	int scompare(const vint& rhs) const { return compare(rhs, true); }
+	int scompare(const stype rhs) const { return compare(rhs, true); }
 
 	bool operator==(const vint& rhs) const { return compare(rhs, is_signed) == 0; }
 	bool operator>(const vint& rhs) const { return compare(rhs, is_signed) > 0; }
 	bool operator<(const vint& rhs) const { return compare(rhs, is_signed) < 0; }
 	bool operator>=(const vint& rhs) const { return compare(rhs, is_signed) >= 0; }
 	bool operator<=(const vint& rhs) const { return compare(rhs, is_signed) <= 0; }
-
-	bool operator==(dtype rhs) const {
-		rhs = SafeForOperation(rhs);
-		return compare(rhs, is_signed) == 0 and v[0] == rhs;
-	}
-
-	bool operator>(dtype rhs) const {
-		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs, is_signed);
-		return cmp > 0 or cmp == 0 and v[0] > rhs;
-	}
-
-	bool operator<(dtype rhs) const {
-		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs, is_signed);
-		return cmp < 0 or cmp == 0 and v[0] < rhs;
-	}
-
-	bool operator>=(dtype rhs) const {
-		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs, is_signed);
-		return cmp > 0 or cmp == 0 and v[0] >= rhs;
-	}
-
-	bool operator<=(dtype rhs) const {
-		rhs = SafeForOperation(rhs);
-		const int cmp = compare(rhs, is_signed);
-		return cmp < 0 or cmp == 0 and v[0] <= rhs;
-	}
+	bool operator==(const stype rhs) const { return compare(rhs, is_signed) == 0; }
+	bool operator>(const stype rhs) const { return compare(rhs, is_signed) > 0; }
+	bool operator<(const stype rhs) const { return compare(rhs, is_signed) < 0; }
+	bool operator>=(const stype rhs) const { return compare(rhs, is_signed) >= 0; }
+	bool operator<=(const stype rhs) const { return compare(rhs, is_signed) <= 0; }
 
 	//////////////////////
 	// add/sub/mul/div assignment
@@ -607,10 +586,31 @@ struct vint {
 	//////////////////////
 	// slice
 	//////////////////////
-	// TODO: bit W, slice RW
 	bool Bit(unsigned pos) const {
 		assert(pos < num_bit);
 		return bool((v[pos/bw_word] >> (pos%bw_word)) & 1u);
+	}
+
+	void SetBit(unsigned pos, bool value) const {
+		assert(pos < num_bit);
+		// TODO
+	}
+
+	template<bool is_signed>
+	void SetBit(unsigned pos, vint<is_signed, 1u> value) const {
+		assert(pos < num_bit);
+		SetBit(pos, bool(value));
+	}
+
+	template<unsigned num_bit_src, unsigned pos>
+	bool Slice() const {
+		// TODO
+		return false;
+	}
+
+	template<unsigned num_bit_src, unsigned pos>
+	void SetSlice() const {
+		// TODO
 	}
 
 	//////////////////////
@@ -722,6 +722,11 @@ struct vint {
 		return ret;
 	}
 
+	friend void from_string(vint &val, ::std::string s, unsigned base=16u) {
+		assert(base == 16);
+		from_hex(val);
+	}
+
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {
 		if constexpr (num_word == 1) {
 			os << +v.value();
@@ -731,9 +736,43 @@ struct vint {
 		return os;
 	}
 
+	explicit vint(::std::string s, unsigned base=16u) {
+		from_string(*this, s, base);
+	}
+
+};
+
+struct vint_accessor_base {
+	virtual void from_string(::std::string s, unsigned base) = 0;
+	virtual void from_uint(uint64_t v) = 0;
+	virtual ::std::string to_string(unsigned base) const = 0;
+	virtual uint64_t to_uint() const = 0;
+	virtual ~vint_accessor_base() {}
+};
+
+template <bool is_signed, unsigned num_bit>
+class vint_accessor: public vint_accessor_base {
+	vint<is_signed, num_bit> &internal_;
+public:
+	vint_accessor(vint<is_signed, num_bit> &internal): internal_(internal) {}
+	void from_string(::std::string s, unsigned base) override {
+		from_string(internal_, s, base);
+	}
+	void from_uint(uint64_t v) override {
+		internal_ = v;
+	}
+	::std::string to_string(unsigned base) const override {
+		// TODO
+		return "";
+	}
+	uint64_t to_uint() const override {
+		return internal_.uvalue();
+	}
 };
 
 template<unsigned num_bit> using vsint = vint<true, num_bit>;
 template<unsigned num_bit> using vuint = vint<false, num_bit>;
+template<unsigned num_bit> using vsint_accessor = vint_accessor<true, num_bit>;
+template<unsigned num_bit> using vuint_accessor = vint_accessor<false, num_bit>;
 
 } // namespace verilog
