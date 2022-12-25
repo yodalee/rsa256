@@ -418,7 +418,7 @@ struct vint {
 
 	// explicit cast
 	template<bool is_signed_dst, unsigned num_bit_dst>
-	explicit operator vint<is_signed_dst, num_bit_dst>() {
+	explicit operator vint<is_signed_dst, num_bit_dst>() const {
 		vint<is_signed_dst, num_bit_dst> dst;
 		typedef decltype(dst) dst_t;
 		const bool is_neg = Bit(num_bit-1u);

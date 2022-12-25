@@ -2,7 +2,7 @@
 #include "VRSAMontgomery.h"
 #include "assign_port.h"
 #include "model_rsa.h"
-#include "test_fixture.h"
+#include "testbench.h"
 #include "verilog_int.h"
 #include <iostream>
 #include <systemc>
@@ -48,6 +48,6 @@ int sc_main(int, char **) {
            "314F8ACB18E57C4B2FA37ADEFA7964711B8DCDB7AAC7514C78D97CF4D4121426");
   testbench->push_golden(golden);
 
-  sc_start(1200.0, SC_NS);
+  testbench->run(1200, SC_NS);
   return 0;
 }

@@ -38,6 +38,8 @@ public:
     }
   }
 
+  bool is_pass() { return goldens.empty() && receiveds.empty(); }
+
 private:
   ::std::deque<DataType> goldens;
   ::std::deque<DataType> receiveds;
