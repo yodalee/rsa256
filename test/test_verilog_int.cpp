@@ -177,6 +177,16 @@ TEST(TestVerilogSigned, RuleOfThree) {
 }
 
 ///////////////////////////
+// Test to C++ native type conversion
+// namely value, uvalue, svalue
+///////////////////////////
+TEST(TestVerilogUnsigned, DISABLED_Value) {
+}
+
+TEST(TestVerilogSigned, DISABLED_Value) {
+}
+
+///////////////////////////
 // Test from hex conversion
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
@@ -340,10 +350,10 @@ TEST(TestVerilogSigned, CompareEQ) {
 }
 
 ///////////////////////////
-// Test bit extraction
+// Test bit read
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
-void BitExtractionTemplate() {
+void BitReadTemplate() {
 	IntTmpl<13> v13;
 	IntTmpl<127> v127;
 	v13.v[0] = 0x123;
@@ -360,25 +370,34 @@ void BitExtractionTemplate() {
 	EXPECT_TRUE(v127.Bit(65));
 }
 
-TEST(TestVerilogUnsigned, BitExtraction) {
-	BitExtractionTemplate<vuint>();
+TEST(TestVerilogUnsigned, BitRead) {
+	BitReadTemplate<vuint>();
 }
 
-TEST(TestVerilogSigned, BitExtraction) {
-	BitExtractionTemplate<vsint>();
+TEST(TestVerilogSigned, BitRead) {
+	BitReadTemplate<vsint>();
 }
 
 ///////////////////////////
-// Test +-*/
+// Test bit write
 ///////////////////////////
-#if 0
-TEST(TestVerilogUnsigned, AddSubMulDiv) {
-	vuint<10> a10, b10;
+TEST(TestVerilogUnsigned, DISABLED_BitWrite) {
+}
+
+TEST(TestVerilogSigned, DISABLED_BitWrite) {
+}
+
+///////////////////////////
+// Test Basic Arithmetic
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void BasicArithTemplate() {
+	IntTmpl<10> a10, b10;
 	a10.v[0] = 1000;
 	b10.v[0] = 124;
 	EXPECT_EQ((a10+b10), 100);
 
-	vuint<127> a127, b127;
+	IntTmpl<127> a127, b127;
 	a127.v[1] = 1;
 	a127.v[0] = -1;
 	b127.v[1] = 2;
@@ -387,7 +406,7 @@ TEST(TestVerilogUnsigned, AddSubMulDiv) {
 	EXPECT_EQ(a127.v[1], 4);
 	EXPECT_EQ(a127.v[0], 0);
 
-	vuint<127> c127;
+	IntTmpl<127> c127;
 	c127.v[1] = 99;
 	c127.v[0] = 40;
 	c127 -= 100;
@@ -395,9 +414,11 @@ TEST(TestVerilogUnsigned, AddSubMulDiv) {
 	EXPECT_EQ(c127.v[0], -60);
 }
 
-TEST(TestVerilogSigned, DISABLED_AddSubMulDiv) {
+TEST(TestVerilogUnsigned, AddSubMulDiv) {
 }
-#endif
+
+TEST(TestVerilogSigned, DISABLED_BasicArith) {
+}
 
 ///////////////////////////
 // Test shift
@@ -750,53 +771,192 @@ TEST(TestVerilogSigned, Flip) {
 	FlipTemplate<vsint>();
 }
 
-#if 0
 ///////////////////////////
 // Test cast
 ///////////////////////////
 TEST(TestVerilogUnsigned, ExplicitCast) {
+	// We cast from singed to unsigned in this test,
+	// so this test does not have TestVerilogSigned version
+
+	// 5b <-> 130b
 	{
-		vuint<5> v5;
-		vuint<100> v100;
-		v5 = 12;
-		v100 = vuint<100>{v5};
-		EXPECT_EQ(v100.v[0], 12);
-		EXPECT_EQ(v100.v[1], 0);
+		vuint<5> vu5;
+		vsint<5> vs5;
+		vuint<130> vu130;
+		vsint<130> vs130;
+		// positive short to long: no sign extension U2S and U2U
+		vu5.v[0] = 12;
+		vu130 = static_cast<vuint<130>>(vu5);
+		vs130 = static_cast<vsint<130>>(vu5);
+		EXPECT_EQ(vu130.v[0], 12);
+		EXPECT_EQ(vu130.v[1], 0);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 12);
+		EXPECT_EQ(vs130.v[1], 0);
+		EXPECT_EQ(vs130.v[2], 0);
+
+		// positive short to long: no sign extension S2S and S2U
+		vs5.v[0] = 12;
+		vu130 = static_cast<vuint<130>>(vs5);
+		vs130 = static_cast<vsint<130>>(vs5);
+		EXPECT_EQ(vu130.v[0], 12);
+		EXPECT_EQ(vu130.v[1], 0);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 12);
+		EXPECT_EQ(vs130.v[1], 0);
+		EXPECT_EQ(vs130.v[2], 0);
+
+		// negative short to long: no sign extension U2S and U2U
+		vu5.v[0] = 0x10;
+		vu130 = static_cast<vuint<130>>(vu5);
+		vs130 = static_cast<vsint<130>>(vu5);
+		EXPECT_EQ(vu130.v[0], 0x10);
+		EXPECT_EQ(vu130.v[1], 0);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 0x10);
+		EXPECT_EQ(vs130.v[1], 0);
+		EXPECT_EQ(vs130.v[2], 0);
+
+		// negative short to long: only sign extension for S2S, not for S2U
+		vs5.v[0] = 0x10;
+		vu130 = static_cast<vuint<130>>(vs5);
+		vs130 = static_cast<vsint<130>>(vs5);
+		EXPECT_EQ(vu130.v[0], 0x10);
+		EXPECT_EQ(vu130.v[1], 0);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 0xffff'ffff'ffff'fff0llu);
+		EXPECT_EQ(vs130.v[1], 0xffff'ffff'ffff'ffffllu);
+		EXPECT_EQ(vs130.v[2], 0x0000'0000'0000'0003llu);
+
+		// positive long to short
+		vu130.v[0] = 0xf0;
+		vu130.v[1] = 0x123;
+		vu130.v[2] = 0x456;
+		vu5 = static_cast<vuint<5>>(vu130);
+		vs5 = static_cast<vsint<5>>(vu130);
+		EXPECT_EQ(vu5.v[0], 0x10);
+		EXPECT_EQ(vs5.v[0], 0x10);
+
+		// positive long to short
+		vs130.v[0] = 0xf0;
+		vs130.v[1] = 0x123;
+		vs130.v[2] = 0x456;
+		vu5 = static_cast<vuint<5>>(vs130);
+		vs5 = static_cast<vsint<5>>(vs130);
+		EXPECT_EQ(vu5.v[0], 0x10);
+		EXPECT_EQ(vs5.v[0], 0x10);
 	}
 
+	// 68b <-> 130b
 	{
-		vuint<5> v5;
-		vuint<100> v100;
-		v100.v[0] = 0xff;
-		v100.v[1] = 0x99;
-		v5 = vuint<5>{v100};
-		EXPECT_EQ(v5, 0x1f);
-	}
+		vuint<68> vu68;
+		vsint<68> vs68;
+		vuint<130> vu130;
+		vsint<130> vs130;
+		// positive short to long: no sign extension U2S and U2U
+		vu68.v[0] = 0xabc;
+		vu68.v[1] = 0x7;
+		vu130 = static_cast<vuint<130>>(vu68);
+		vs130 = static_cast<vsint<130>>(vu68);
+		EXPECT_EQ(vu130.v[0], 0xabc);
+		EXPECT_EQ(vu130.v[1], 0x7);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 0xabc);
+		EXPECT_EQ(vs130.v[1], 0x7);
+		EXPECT_EQ(vs130.v[2], 0);
 
-	{
-		vuint<67> v67;
-		vuint<130> v130;
-		v67.v[0] = -1;
-		v67.v[1] = 0x7;
-		v130 = vuint<130>{v67};
-		EXPECT_EQ(v130.v[0], uint64_t(-1));
-		EXPECT_EQ(v130.v[1], 0x7);
-		EXPECT_EQ(v130.v[2], 0);
-	}
+		// positive short to long: no sign extension S2S and S2U
+		vs68.v[0] = 0xabc;
+		vs68.v[1] = 0x7;
+		vu130 = static_cast<vuint<130>>(vs68);
+		vs130 = static_cast<vsint<130>>(vs68);
+		EXPECT_EQ(vu130.v[0], 0xabc);
+		EXPECT_EQ(vu130.v[1], 0x7);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 0xabc);
+		EXPECT_EQ(vs130.v[1], 0x7);
+		EXPECT_EQ(vs130.v[2], 0);
 
-	{
-		vuint<67> v67;
-		vuint<130> v130;
-		v130.v[0] = 5566;
-		v130.v[1] = -1;
-		v130.v[2] = 1;
-		v67 = vuint<67>{v130};
-		EXPECT_EQ(v67.v[0], 5566);
-		EXPECT_EQ(v67.v[1], 0x7);
+		// negative short to long: no sign extension U2S and U2U
+		vu68.v[0] = 0xabc;
+		vu68.v[1] = 0x8;
+		vu130 = static_cast<vuint<130>>(vu68);
+		vs130 = static_cast<vsint<130>>(vu68);
+		EXPECT_EQ(vu130.v[0], 0xabc);
+		EXPECT_EQ(vu130.v[1], 0x8);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 0xabc);
+		EXPECT_EQ(vs130.v[1], 0x8);
+		EXPECT_EQ(vs130.v[2], 0);
+
+		// negative short to long: only sign extension for S2S, not for S2U
+		vs68.v[0] = 0xabc;
+		vs68.v[1] = 0x8;
+		vu130 = static_cast<vuint<130>>(vs68);
+		vs130 = static_cast<vsint<130>>(vs68);
+		EXPECT_EQ(vu130.v[0], 0xabc);
+		EXPECT_EQ(vu130.v[1], 0x8);
+		EXPECT_EQ(vu130.v[2], 0);
+		EXPECT_EQ(vs130.v[0], 0xabc);
+		EXPECT_EQ(vs130.v[1], 0xffff'ffff'ffff'fff8llu);
+		EXPECT_EQ(vs130.v[2], 0x0000'0000'0000'0003llu);
+
+		// positive long to short
+		vu130.v[0] = 0xf0;
+		vu130.v[1] = 0x123;
+		vu130.v[2] = 0x456;
+		vu68 = static_cast<vuint<68>>(vu130);
+		vs68 = static_cast<vsint<68>>(vu130);
+		EXPECT_EQ(vu68.v[0], 0xf0);
+		EXPECT_EQ(vu68.v[1], 0x3);
+		EXPECT_EQ(vs68.v[0], 0xf0);
+		EXPECT_EQ(vs68.v[1], 0x3);
+
+		// positive long to short
+		vs130.v[0] = 0xf0;
+		vs130.v[1] = 0x123;
+		vs130.v[2] = 0x456;
+		vu68 = static_cast<vuint<68>>(vs130);
+		vs68 = static_cast<vsint<68>>(vs130);
+		EXPECT_EQ(vu68.v[0], 0xf0);
+		EXPECT_EQ(vu68.v[1], 0x3);
+		EXPECT_EQ(vs68.v[0], 0xf0);
+		EXPECT_EQ(vs68.v[1], 0x3);
 	}
 }
 
-TEST(TestVerilogSigned, ExplicitCast) {
+///////////////////////////
+// Test slice read
+///////////////////////////
+TEST(TestVerilogUnsigned, DISABLED_SliceRead) {
 }
 
-#endif
+TEST(TestVerilogSigned, DISABLED_SliceRead) {
+}
+
+///////////////////////////
+// Test slice write
+///////////////////////////
+TEST(TestVerilogUnsigned, DISABLED_SliceWrite) {
+}
+
+TEST(TestVerilogSigned, DISABLED_SliceWrite) {
+}
+
+///////////////////////////
+// Test pack
+///////////////////////////
+TEST(TestVerilogUnsigned, DISABLED_Pack) {
+}
+
+TEST(TestVerilogSigned, DISABLED_Pack) {
+}
+
+///////////////////////////
+// Test unpack
+///////////////////////////
+TEST(TestVerilogUnsigned, DISABLED_Unpack) {
+}
+
+TEST(TestVerilogSigned, DISABLED_Unpack) {
+}

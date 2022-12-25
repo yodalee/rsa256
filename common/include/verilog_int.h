@@ -438,26 +438,23 @@ struct vint {
 	}
 
 	// explicit cast
-	template<unsigned num_bit_dst>
-	explicit operator vint<is_signed, num_bit_dst>() {
-		vint<is_signed, num_bit_dst> dst;
+	template<bool is_signed_dst, unsigned num_bit_dst>
+	explicit operator vint<is_signed_dst, num_bit_dst>() {
+		vint<is_signed_dst, num_bit_dst> dst;
+		typedef decltype(dst) dst_t;
+		const bool is_neg = Bit(num_bit-1u);
 		auto src_beg = ::std::begin(v);
-		auto src_end = ::std::end(v);
 		auto dst_beg = ::std::begin(dst.v);
-		auto dst_end = ::std::end(dst.v);
-		constexpr size_t num_word_min = detail::num_bit2num_word(::std::min(num_bit, num_bit_dst));
+		constexpr size_t num_word_min = ::std::min(dst_t::num_word, num_word);
 		::std::copy_n(src_beg, num_word_min, dst_beg);
 		if constexpr (num_bit_dst > num_bit) {
-			if constexpr (is_signed) {
-				::std::fill(
-					dst_beg+num_word_min,
-					dst_end,
-					dst_beg[num_word_min-1]>>(num_bit_dst-1)
-				);
+			constexpr unsigned bit_shifted =  num_bit_dst - num_bit;
+			if (is_neg and dst_t::is_signed and is_signed) {
+				dst.signext_after_shiftr(bit_shifted);
 			} else {
-				::std::fill(dst_beg+num_word_min, dst_end, 0);
+				dst.clear_after_shiftr(bit_shifted);
 			}
-		} else {
+		} else if constexpr (num_bit_dst < num_bit) {
 			dst.ClearUnusedBits();
 		}
 		return dst;
@@ -610,18 +607,15 @@ struct vint {
 	//////////////////////
 	// slice
 	//////////////////////
-	// TODO: slice
+	// TODO: bit W, slice RW
 	bool Bit(unsigned pos) const {
-#ifndef NDEBUG
 		assert(pos < num_bit);
-#endif
 		return bool((v[pos/bw_word] >> (pos%bw_word)) & 1u);
 	}
 
 	//////////////////////
 	// others
 	//////////////////////
-	// Note: no test...
 	dtype value() const {
 		if constexpr (is_signed) {
 			return svalue();
@@ -637,13 +631,7 @@ struct vint {
 	dtype svalue() const {
 		stype ret = v[0];
 		const bool is_neg = Bit(num_bit-1u);
-		if constexpr (num_word > 1) {
-			if (not is_neg) {
-				// unsigned, mask the sign bit
-				ret &= (stype(-1)>>1u);
-			}
-		} else {
-			// manual sign extension
+		if constexpr (num_word == 1) {
 			if (is_neg) {
 				ret |= unused_mask;
 			}
