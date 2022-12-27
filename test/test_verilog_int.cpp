@@ -246,6 +246,28 @@ void FromStrTemplate() {
 	EXPECT_EQ(v13.v[0], 0xa);
 
 	IntTmpl<127> v127;
+	from_hex(v127, "8123_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x01234567acacacacllu);
+	from_hex(v127, "00000000 8123 4567 acac acac 89AB cdef 0000 5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x01234567acacacacllu);
+	from_hex(v127, "3_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x00034567acacacacllu);
+	from_hex(v127, "'3_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x7fff4567acacacacllu);
+	from_hex(v127, "'03_4567_acac_acac_89AB_cdef_0000_5555");
+	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
+	EXPECT_EQ(v127.v[1], 0x00034567acacacacllu);
+	from_hex(v127, "'5");
+	EXPECT_EQ(v127.v[0], 0xfffffffffffffffdllu);
+	from_hex(v127, "5");
+	EXPECT_EQ(v127.v[0], 0x5llu);
+	from_hex(v127, "");
+	EXPECT_EQ(v127.v[0], 0llu);
+	EXPECT_EQ(v127.v[1], 0llu);
 	from_bin(v127,
 		"0111_1111_1111_1111_1111_1111_1111_1111"
 		"1010_1010_1010_1010_1010_1010_1010_1010"
