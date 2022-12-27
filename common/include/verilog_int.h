@@ -183,7 +183,6 @@ struct vint {
 		return 0;
 	}
 
-	[[gnu::noinline]]
 	int compare(const vint& rhs, const bool sign_mode) const {
 		int cmp = compare_msb(rhs.v[num_word-1], sign_mode);
 		if (cmp != 0) {
@@ -202,7 +201,6 @@ struct vint {
 		return 0;
 	}
 
-	[[gnu::noinline]]
 	int compare(const stype rhs, const bool sign_mode) const {
 		if constexpr (num_word > 1) {
 			const stype expected_sign = (sign_mode and to_signed(rhs) < 0) ? stype(-1) : stype(0);
@@ -448,7 +446,6 @@ struct vint {
 	}
 
 	// >>=
-	[[gnu::noinline]]
 	vint& shiftopr(const unsigned rhs, const bool sign_mode) {
 		// rhs >= num_bit is UB in C, but not sure in Verilog
 		if (rhs == 0 or rhs >= num_bit) {
@@ -484,7 +481,6 @@ struct vint {
 		return shiftopr(rhs, is_signed);
 	}
 
-	[[gnu::noinline]]
 	vint& operator<<=(const unsigned rhs) {
 		// rhs >= num_bit is UB in C, but not sure in Verilog
 		if (rhs == 0 or rhs >= num_bit) {
@@ -657,6 +653,45 @@ struct vint {
 	}
 
 	[[gnu::noinline]]
+	friend void from_bin(vint &val, const ::std::string &s) {
+		constexpr unsigned max_len = num_bit;
+		::std::fill_n(::std::begin(val.v), num_word, 0);
+		if (s.empty()) {
+			return;
+		}
+		unsigned str_pos = s.size()-1;
+		unsigned put_pos = 0;
+		int to_put;
+		// pos == size_t(-1) is safe according to the standard
+		for (put_pos = 0; put_pos < max_len and str_pos != -1; --str_pos) {
+			const char c = s[str_pos];
+			if ('0' <= c and c <= '1') {
+				to_put = c - '0';
+			} else {
+				continue;
+			}
+			val.PutStypeAtBitPosUnsafe(put_pos, to_put);
+			put_pos += 1;
+		}
+		val.ClearUnusedBits();
+		if (put_pos == 0) {
+			return;
+		}
+
+		// Handle negative & sign extension for strings started with - or '
+		if (to_put != 0 and s[0] == '\'') {
+			const unsigned to_put_extended = to_put == 1;
+			// fill from current position to the end
+			for (; put_pos < max_len; put_pos += 1) {
+				val.PutStypeAtBitPosUnsafe(put_pos, 0x1);
+			}
+			val.ClearUnusedBits();
+		} else if (s[0] == '-') {
+			val.Negate();
+		}
+	}
+
+	[[gnu::noinline]]
 	friend ::std::string to_hex(const vint &val) {
 		::std::string ret;
 		constexpr unsigned max_len = (num_bit+3) / 4;
@@ -690,8 +725,19 @@ struct vint {
 	}
 
 	friend void from_string(vint &val, ::std::string s, unsigned base=16u) {
-		assert(base == 16);
-		from_hex(val);
+		switch (base) {
+			case 2: {
+				from_bin(val);
+				break;
+			}
+			case 16: {
+				from_hex(val);
+				break;
+			}
+			default: {
+				assert(0);
+			}
+		}
 	}
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const vint &v) {
