@@ -110,42 +110,24 @@ struct vint {
 	stype v[num_word];
 
 	// rule-of-five related
-	explicit vint(const stype rhs, bool sign_ext=is_signed) {
-		if (sign_ext) {
-			sassign(rhs);
-		} else {
-			uassign(rhs);
-		}
+	explicit vint(const stype rhs, bool sign_mode=is_signed) {
+		assign(rhs, sign_mode);
 	}
 
 	vint& operator=(stype rhs) {
-		if constexpr (is_signed) {
-			sassign(rhs);
-		} else {
-			uassign(rhs);
-		}
+		assign(rhs, is_signed);
 		return *this;
 	}
 
-	vint& uassign(stype rhs) {
+	vint& assign(stype rhs, const bool sign_mode) {
 		v[0] = rhs;
 		if constexpr (num_word > 1) {
-			::std::fill_n(
-				::std::begin(v)+1, num_word-1,
+			stype extension_value = (
+				(sign_mode and bool(rhs >> (bw_word-1u))) ?
+				stype(-1) :
 				stype(0)
 			);
-		}
-		ClearUnusedBits();
-		return *this;
-	}
-
-	vint& sassign(stype rhs) {
-		v[0] = rhs;
-		if constexpr (num_word > 1) {
-			::std::fill_n(
-				::std::begin(v)+1, num_word-1,
-				bool(rhs >> (bw_word-1u)) ? stype(-1) : stype(0)
-			);
+			::std::fill_n(::std::begin(v)+1, num_word-1, extension_value);
 		}
 		ClearUnusedBits();
 		return *this;
@@ -202,7 +184,7 @@ struct vint {
 	}
 
 	[[gnu::noinline]]
-	int compare(const vint& rhs, bool sign_mode) const {
+	int compare(const vint& rhs, const bool sign_mode) const {
 		int cmp = compare_msb(rhs.v[num_word-1], sign_mode);
 		if (cmp != 0) {
 			return cmp;
@@ -221,7 +203,7 @@ struct vint {
 	}
 
 	[[gnu::noinline]]
-	int compare(const stype rhs, bool sign_mode) const {
+	int compare(const stype rhs, const bool sign_mode) const {
 		if constexpr (num_word > 1) {
 			const stype expected_sign = (sign_mode and to_signed(rhs) < 0) ? stype(-1) : stype(0);
 			int cmp = compare_msb(SafeForOperation(expected_sign), sign_mode);
@@ -465,13 +447,15 @@ struct vint {
 		}
 	}
 
+	// >>=
 	[[gnu::noinline]]
-	void raw_shiftopr(const unsigned rhs, bool is_neg) {
+	vint& shiftopr(const unsigned rhs, const bool sign_mode) {
 		// rhs >= num_bit is UB in C, but not sure in Verilog
 		if (rhs == 0 or rhs >= num_bit) {
 			// do nothing
-			return;
+			return *this;
 		}
+		const bool do_sign_extension = sign_mode and Bit(num_bit-1u);
 		if constexpr (num_word == 1) {
 			v[0] >>= rhs;
 		} else {
@@ -488,33 +472,16 @@ struct vint {
 				v[num_word-word_shift-1] = v[num_word-1] >> bit_shift;
 			}
 		}
-		if (is_neg) {
+		if (do_sign_extension) {
 			signext_after_shiftr(rhs);
 		} else {
 			clear_after_shiftr(rhs);
 		}
-	}
-
-	// >>=, unsigned
-	vint& ushiftopr(const unsigned rhs) {
-		raw_shiftopr(rhs, false);
-		return *this;
-	}
-
-	// >>=, signed
-	vint& sshiftopr(const unsigned rhs) {
-		const bool is_neg = Bit(num_bit-1u);
-		raw_shiftopr(rhs, is_neg);
 		return *this;
 	}
 
 	vint& operator>>=(const unsigned rhs) {
-		if constexpr (is_signed) {
-			sshiftopr(rhs);
-		} else {
-			ushiftopr(rhs);
-		}
-		return *this;
+		return shiftopr(rhs, is_signed);
 	}
 
 	[[gnu::noinline]]

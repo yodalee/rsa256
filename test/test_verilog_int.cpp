@@ -130,19 +130,19 @@ void RuleOfThreeTemplate() {
 	{
 		IntTmpl<99> v99(0);
 		// Force no sign extenstion
-		v99.uassign(-2);
+		v99.assign(-2, false);
 		EXPECT_EQ(v99.v[0], uint64_t(-2));
 		EXPECT_EQ(v99.v[1], uint64_t(0));
 		// Force sign extenstion
-		v99.sassign(-3);
+		v99.assign(-3, true);
 		EXPECT_EQ(v99.v[0], uint64_t(-3));
 		EXPECT_EQ(v99.v[1], uint64_t(0x7ffffffffllu));
 		// No sign extension
-		v99.uassign(4);
+		v99.assign(4, true);
 		EXPECT_EQ(v99.v[0], uint64_t(4));
 		EXPECT_EQ(v99.v[1], uint64_t(0));
 		// No sign extension
-		v99.sassign(5);
+		v99.assign(5, false);
 		EXPECT_EQ(v99.v[0], uint64_t(5));
 		EXPECT_EQ(v99.v[1], uint64_t(0));
 	}
@@ -626,7 +626,7 @@ void ShiftTemplate() {
 		const unsigned nshift = get<1>(p);
 		v10.v[0] = test_data[0];
 		// force unsigned
-		v10.ushiftopr(nshift);
+		v10.shiftopr(nshift, false);
 		EXPECT_EQ(v10.v[0], test_data[1]) << "rshift " << nshift;
 	}
 	for (auto &p: patterns_rs10) {
@@ -634,7 +634,7 @@ void ShiftTemplate() {
 		const unsigned nshift = get<1>(p);
 		v10.v[0] = test_data[0];
 		// force signed
-		v10.sshiftopr(nshift);
+		v10.shiftopr(nshift, true);
 		EXPECT_EQ(v10.v[0], test_data[1]) << "rshift " << nshift;
 	}
 	for (auto &p: patterns_l10) {
@@ -653,7 +653,7 @@ void ShiftTemplate() {
 		v136.v[1] = test_data[1];
 		v136.v[2] = test_data[0];
 		// force unsigned
-		v136.ushiftopr(nshift);
+		v136.shiftopr(nshift, false);
 		EXPECT_EQ(v136.v[0], test_data[5]) << "rshift " << nshift;
 		EXPECT_EQ(v136.v[1], test_data[4]) << "rshift " << nshift;
 		EXPECT_EQ(v136.v[2], test_data[3]) << "rshift " << nshift;
@@ -665,7 +665,7 @@ void ShiftTemplate() {
 		v136.v[1] = test_data[1];
 		v136.v[2] = test_data[0];
 		// force signed
-		v136.sshiftopr(nshift);
+		v136.shiftopr(nshift, true);
 		EXPECT_EQ(v136.v[0], test_data[5]) << "lshift " << nshift;
 		EXPECT_EQ(v136.v[1], test_data[4]) << "lshift " << nshift;
 		EXPECT_EQ(v136.v[2], test_data[3]) << "lshift " << nshift;
@@ -704,7 +704,7 @@ TEST(TestVerilogUnsigned, Shift) {
 		v136.v[1] = test_data[1];
 		v136.v[2] = test_data[0];
 		// force unsigned
-		v136.ushiftopr(nshift);
+		v136.shiftopr(nshift, false);
 		EXPECT_EQ(v136.v[0], test_data[5]) << "rshift " << nshift;
 		EXPECT_EQ(v136.v[1], test_data[4]) << "rshift " << nshift;
 		EXPECT_EQ(v136.v[2], test_data[3]) << "rshift " << nshift;
@@ -732,7 +732,7 @@ TEST(TestVerilogSigned, Shift) {
 		v136.v[1] = test_data[1];
 		v136.v[2] = test_data[0];
 		// default signed
-		v136.sshiftopr(nshift);
+		v136.shiftopr(nshift, true);
 		EXPECT_EQ(v136.v[0], test_data[5]) << "rshift " << nshift;
 		EXPECT_EQ(v136.v[1], test_data[4]) << "rshift " << nshift;
 		EXPECT_EQ(v136.v[2], test_data[3]) << "rshift " << nshift;
