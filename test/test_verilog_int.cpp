@@ -398,10 +398,67 @@ TEST(TestVerilogSigned, BitRead) {
 ///////////////////////////
 // Test slice read/write
 ///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_SliceRead) {
+template<template<unsigned> class IntTmpl>
+void SliceReadTemplate() {
+	IntTmpl<33> v33;
+	IntTmpl<188> v188;
+	v33.v[0] = 0x123456789llu;
+	v188.v[2] = 0x0765432187654321llu;
+	v188.v[1] = 0xabcdabcdabcdabcdllu;
+	v188.v[0] = 0x1234567812345678llu;
+
+	{
+		vuint<20> tmp;
+		tmp = v33.template Slice<20, 0>();
+		EXPECT_EQ(tmp, 0x56789);
+		tmp = v33.template Slice<20, 4>();
+		EXPECT_EQ(tmp, 0x45678);
+		tmp = v188.template Slice<20, 64>();
+		EXPECT_EQ(tmp, 0xdabcd);
+		tmp = v188.template Slice<20, 72>();
+		EXPECT_EQ(tmp, 0xbcdab);
+		tmp = v188.template Slice<20, 124>();
+		EXPECT_EQ(tmp, 0x4321a);
+		tmp = v188.template Slice<20, 132>();
+		EXPECT_EQ(tmp, 0x65432);
+		tmp = v188.template Slice<20, 168>();
+		EXPECT_EQ(tmp, 0x76543u);
+	}
+	{
+		vuint<100> tmp;
+		tmp = v188.template Slice<100, 0>();
+		EXPECT_EQ(tmp.v[1], 0xdabcdabcdllu);
+		EXPECT_EQ(tmp.v[0], 0x1234567812345678llu);
+		tmp = v188.template Slice<100, 8>();
+		EXPECT_EQ(tmp.v[1], 0xbcdabcdabllu);
+		EXPECT_EQ(tmp.v[0], 0xcd12345678123456llu);
+		tmp = v188.template Slice<100, 56>();
+		EXPECT_EQ(tmp.v[1], 0x7654321abllu);
+		EXPECT_EQ(tmp.v[0], 0xcdabcdabcdabcd12llu);
+		tmp = v188.template Slice<100, 64>();
+		EXPECT_EQ(tmp.v[1], 0x187654321llu);
+		EXPECT_EQ(tmp.v[0], 0xabcdabcdabcdabcdllu);
+		tmp = v188.template Slice<100, 68>();
+		EXPECT_EQ(tmp.v[1], 0x218765432llu);
+		EXPECT_EQ(tmp.v[0], 0x1abcdabcdabcdabcllu);
+		tmp = v188.template Slice<100, 88>();
+		EXPECT_EQ(tmp.v[1], 0x765432187llu);
+		EXPECT_EQ(tmp.v[0], 0x654321abcdabcdabllu);
+	}
 }
 
-TEST(TestVerilogSigned, DISABLED_SliceRead) {
+TEST(TestVerilogUnsigned, SliceRead) {
+	SliceReadTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, SliceRead) {
+	SliceReadTemplate<vsint>();
+}
+
+TEST(TestVerilogUnsigned, DISABLED_SliceWrite) {
+}
+
+TEST(TestVerilogSigned, DISABLED_SliceWrite) {
 }
 
 ///////////////////////////

@@ -560,24 +560,56 @@ struct vint {
 
 	void SetBit(unsigned pos, bool value) const {
 		assert(pos < num_bit);
-		// TODO
+		v[pos/bw_word] &= stype(-2) << bw_word;
+		if (value) {
+			v[pos/bw_word] |= stype(1) << bw_word;
+		}
 	}
 
 	template<bool is_signed>
-	void SetBit(unsigned pos, vint<is_signed, 1u> value) const {
+	void SetBit(unsigned pos, vint<is_signed, 1u> value) {
 		assert(pos < num_bit);
 		SetBit(pos, bool(value));
 	}
 
-	template<unsigned num_bit_src, unsigned pos>
-	bool Slice() const {
-		// TODO
-		return false;
+	template<unsigned num_bit_slice, unsigned pos>
+	vint<false, num_bit_slice> Slice() const {
+		static_assert(pos + num_bit_slice <= num_bit);
+		vint<false, num_bit_slice> sl;
+		constexpr unsigned shamt = pos % bw_word;
+		constexpr unsigned lsb_word = pos / bw_word;
+		constexpr unsigned num_word_slice = detail::num_bit2num_word(num_bit_slice);
+		if constexpr (shamt == 0) {
+			for (unsigned i = 0; i < num_word_slice; ++i) {
+				sl.v[i] = v[i+lsb_word];
+			}
+		} else {
+			for (unsigned i = 0; i < num_word_slice - 1u; ++i) {
+				sl.v[i] = detail::shiftright128(v[i+lsb_word+1], v[i+lsb_word], shamt);
+			}
+			constexpr unsigned required_msb_word = num_word_slice+lsb_word;
+			if constexpr (required_msb_word == num_word) {
+				sl.v[num_word_slice-1] = v[num_word-1] >> shamt;
+			} else {
+				sl.v[num_word_slice-1] = detail::shiftright128(
+					v[required_msb_word],
+					v[required_msb_word-1],
+					shamt
+				);
+			}
+		}
+		sl.ClearUnusedBits();
+		return sl;
 	}
 
-	template<unsigned num_bit_src, unsigned pos>
-	void SetSlice() const {
-		// TODO
+	template<unsigned num_bit_slice, unsigned pos>
+	void SetSlice(const vint<false, num_bit_slice>& sl) {
+		static_assert(pos + num_bit_slice < num_bit);
+		constexpr unsigned lsb_word = pos / sizeof(stype);
+		constexpr unsigned msb_word = (pos + num_bit_slice - 1) / sizeof(stype);
+		if constexpr (lsb_word == msb_word) {
+		} else {
+		}
 	}
 
 	//////////////////////
