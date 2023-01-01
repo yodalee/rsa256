@@ -673,7 +673,6 @@ struct vint {
 			val.PutStypeAtBitPosUnsafe(put_pos, to_put);
 			put_pos += 1;
 		}
-		val.ClearUnusedBits();
 		if (put_pos == 0) {
 			return;
 		}
