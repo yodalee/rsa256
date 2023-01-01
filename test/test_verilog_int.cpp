@@ -187,10 +187,10 @@ TEST(TestVerilogSigned, DISABLED_Value) {
 }
 
 ///////////////////////////
-// Test from hex conversion
+// Test from string conversion
 ///////////////////////////
 template<template<unsigned> class IntTmpl>
-void FromHexTemplate() {
+void FromStrTemplate() {
 	IntTmpl<8> v8;
 	from_hex(v8, "2A");
 	EXPECT_EQ(v8.v[0], 0x2A);
@@ -226,6 +226,25 @@ void FromHexTemplate() {
 	from_hex(v13, "00000f");
 	EXPECT_EQ(v13.v[0], 0xf);
 
+	// zero
+	from_bin(v13, "");
+	EXPECT_EQ(v13.v[0], 0);
+	from_bin(v13, "1001");
+	EXPECT_EQ(v13.v[0], 0x9);
+	from_bin(v13, "1111000011110000");
+	EXPECT_EQ(v13.v[0], 0x10f0);
+	// no sign extension
+	from_bin(v13, "'01");
+	EXPECT_EQ(v13.v[0], 1);
+	// sign extension
+	from_bin(v13, "'100");
+	EXPECT_EQ(v13.v[0], 0x1ffc);
+	from_bin(v13, "-1");
+	EXPECT_EQ(v13.v[0], 0x1fff);
+	// non-recognized character are ignored
+	from_bin(v13, "1..0..1..0");
+	EXPECT_EQ(v13.v[0], 0xa);
+
 	IntTmpl<127> v127;
 	from_hex(v127, "8123_4567_acac_acac_89AB_cdef_0000_5555");
 	EXPECT_EQ(v127.v[0], 0x89ABCDEF00005555llu);
@@ -244,21 +263,69 @@ void FromHexTemplate() {
 	EXPECT_EQ(v127.v[1], 0x00034567acacacacllu);
 	from_hex(v127, "'5");
 	EXPECT_EQ(v127.v[0], 0xfffffffffffffffdllu);
-	EXPECT_EQ(v127.v[1], 0x7fffffffffffffffllu);
 	from_hex(v127, "5");
 	EXPECT_EQ(v127.v[0], 0x5llu);
-	EXPECT_EQ(v127.v[1], 0llu);
 	from_hex(v127, "");
+	EXPECT_EQ(v127.v[0], 0llu);
+	EXPECT_EQ(v127.v[1], 0llu);
+	from_bin(v127,
+		"0111_1111_1111_1111_1111_1111_1111_1111"
+		"1010_1010_1010_1010_1010_1010_1010_1010"
+		"0101_0101_0101_0101_0101_0101_0101_0101"
+		"0000_1111_0000_1111_0000_1111_0000_1111"
+	);
+	EXPECT_EQ(v127.v[0], 0x555555550f0f0f0fllu);
+	EXPECT_EQ(v127.v[1], 0x7fffffffaaaaaaaallu);
+	from_bin(v127,
+		"1010101"
+		"1111_1111_1111_1111_1111_1111_1111_1111"
+		"1010_1010_1010_1010_1010_1010_1010_1010"
+		"0101_0101_0101_0101_0101_0101_0101_0101"
+		"0000_1111_0000_1111_0000_1111_0000_1111"
+	);
+	EXPECT_EQ(v127.v[0], 0x555555550f0f0f0fllu);
+	EXPECT_EQ(v127.v[1], 0x7fffffffaaaaaaaallu);
+	from_bin(v127,
+		"10000"
+		"0101_0101_0101_0101_0101_0101_0101_0101"
+		"0000_1111_0000_1111_0000_1111_0000_1111"
+	);
+	EXPECT_EQ(v127.v[0], 0x555555550f0f0f0fllu);
+	EXPECT_EQ(v127.v[1], 0x0000000000000010llu);
+	from_bin(v127,
+		"'010000"
+		"0101_0101_0101_0101_0101_0101_0101_0101"
+		"0000_1111_0000_1111_0000_1111_0000_1111"
+	);
+	EXPECT_EQ(v127.v[0], 0x555555550f0f0f0fllu);
+	EXPECT_EQ(v127.v[1], 0x0000000000000010llu);
+	from_bin(v127,
+		"'10000"
+		"0101_0101_0101_0101_0101_0101_0101_0101"
+		"0000_1111_0000_1111_0000_1111_0000_1111"
+	);
+	EXPECT_EQ(v127.v[0], 0x555555550f0f0f0fllu);
+	EXPECT_EQ(v127.v[1], 0x7ffffffffffffff0llu);
+	from_bin(v127, "'10");
+	EXPECT_EQ(v127.v[0], 0xfffffffffffffffellu);
+	EXPECT_EQ(v127.v[1], 0x7fffffffffffffffllu);
+	from_bin(v127, "'010");
+	EXPECT_EQ(v127.v[0], 0x2llu);
+	EXPECT_EQ(v127.v[1], 0llu);
+	from_bin(v127, "10");
+	EXPECT_EQ(v127.v[0], 0x2llu);
+	EXPECT_EQ(v127.v[1], 0llu);
+	from_bin(v127, "");
 	EXPECT_EQ(v127.v[0], 0llu);
 	EXPECT_EQ(v127.v[1], 0llu);
 }
 
-TEST(TestVerilogUnsigned, FromHex) {
-	FromHexTemplate<vuint>();
+TEST(TestVerilogUnsigned, FromStr) {
+	FromStrTemplate<vuint>();
 }
 
-TEST(TestVerilogSigned, FromHex) {
-	FromHexTemplate<vsint>();
+TEST(TestVerilogSigned, FromStr) {
+	FromStrTemplate<vsint>();
 }
 
 ///////////////////////////
