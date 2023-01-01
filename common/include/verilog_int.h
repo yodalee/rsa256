@@ -555,14 +555,18 @@ struct vint {
 	//////////////////////
 	bool Bit(unsigned pos) const {
 		assert(pos < num_bit);
-		return bool((v[pos/bw_word] >> (pos%bw_word)) & 1u);
+		const unsigned shamt =  pos % bw_word;
+		const unsigned lsb_word = pos / bw_word;
+		return bool((v[lsb_word] >> shamt) & 1u);
 	}
 
-	void SetBit(unsigned pos, bool value) const {
+	void SetBit(unsigned pos, bool value) {
 		assert(pos < num_bit);
-		v[pos/bw_word] &= stype(-2) << bw_word;
+		const unsigned shamt =  pos % bw_word;
+		const unsigned lsb_word = pos / bw_word;
+		v[lsb_word] &= stype(-2) << shamt;
 		if (value) {
-			v[pos/bw_word] |= stype(1) << bw_word;
+			v[lsb_word] |= stype(1) << shamt;
 		}
 	}
 

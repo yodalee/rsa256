@@ -395,6 +395,52 @@ TEST(TestVerilogSigned, BitRead) {
 	BitReadTemplate<vsint>();
 }
 
+template<template<unsigned> class IntTmpl>
+void BitWriteTemplate() {
+	IntTmpl<13> v13;
+	IntTmpl<127> v127;
+	v13.v[0] = 0xf;
+	v127.v[1] = 0xf0;
+	v127.v[0] = 0xf;
+	v13.ClearUnusedBits();
+	v127.ClearUnusedBits();
+
+	v13.SetBit(0, false);
+	EXPECT_EQ(v13, 0x0e);
+	v13.SetBit(4, true);
+	EXPECT_EQ(v13, 0x1e);
+	v13.SetBit(0, true);
+	EXPECT_EQ(v13, 0x1f);
+	v13.SetBit(3, true);
+	EXPECT_EQ(v13, 0x0f);
+	v13.SetBit(4, true);
+	EXPECT_EQ(v13, 0x0f);
+
+	v127.SetBit(4, false);
+	EXPECT_EQ(v127.v[1], 0xf0);
+	EXPECT_EQ(v127.v[0], 0xf);
+	v127.SetBit(5, true);
+	EXPECT_EQ(v127.v[1], 0xf0);
+	EXPECT_EQ(v127.v[0], 0x1f);
+	v127.SetBit(64, true);
+	EXPECT_EQ(v127.v[1], 0xf1);
+	EXPECT_EQ(v127.v[0], 0x1f);
+	v127.SetBit(71, false);
+	EXPECT_EQ(v127.v[1], 0x71);
+	EXPECT_EQ(v127.v[0], 0x1f);
+	v127.SetBit(5, false);
+	EXPECT_EQ(v127.v[1], 0x71);
+	EXPECT_EQ(v127.v[0], 0xf);
+}
+
+TEST(TestVerilogUnsigned, DISABLED_BitWrite) {
+	BitWriteTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, DISABLED_BitWrite) {
+	BitWriteTemplate<vsint>();
+}
+
 ///////////////////////////
 // Test slice read/write
 ///////////////////////////
