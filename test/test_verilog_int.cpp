@@ -296,7 +296,7 @@ TEST(TestVerilogUnsigned, ToHex) {
 	ToHexTemplate<vuint>();
 }
 
-TEST(TestVerilogSigned, DISABLED_ToHex) {
+TEST(TestVerilogSigned, ToHex) {
 	ToHexTemplate<vsint>();
 }
 
@@ -411,15 +411,15 @@ void BitWriteTemplate() {
 	EXPECT_EQ(v13, 0x1e);
 	v13.SetBit(0, true);
 	EXPECT_EQ(v13, 0x1f);
-	v13.SetBit(3, true);
-	EXPECT_EQ(v13, 0x0f);
+	v13.SetBit(3, false);
+	EXPECT_EQ(v13, 0x17);
 	v13.SetBit(4, true);
-	EXPECT_EQ(v13, 0x0f);
+	EXPECT_EQ(v13, 0x17);
 
 	v127.SetBit(4, false);
 	EXPECT_EQ(v127.v[1], 0xf0);
 	EXPECT_EQ(v127.v[0], 0xf);
-	v127.SetBit(5, true);
+	v127.SetBit(4, true);
 	EXPECT_EQ(v127.v[1], 0xf0);
 	EXPECT_EQ(v127.v[0], 0x1f);
 	v127.SetBit(64, true);
@@ -428,16 +428,16 @@ void BitWriteTemplate() {
 	v127.SetBit(71, false);
 	EXPECT_EQ(v127.v[1], 0x71);
 	EXPECT_EQ(v127.v[0], 0x1f);
-	v127.SetBit(5, false);
+	v127.SetBit(3, false);
 	EXPECT_EQ(v127.v[1], 0x71);
-	EXPECT_EQ(v127.v[0], 0xf);
+	EXPECT_EQ(v127.v[0], 0x17);
 }
 
-TEST(TestVerilogUnsigned, DISABLED_BitWrite) {
+TEST(TestVerilogUnsigned, BitWrite) {
 	BitWriteTemplate<vuint>();
 }
 
-TEST(TestVerilogSigned, DISABLED_BitWrite) {
+TEST(TestVerilogSigned, BitWrite) {
 	BitWriteTemplate<vsint>();
 }
 
@@ -455,39 +455,39 @@ void SliceReadTemplate() {
 
 	{
 		vuint<20> tmp;
-		tmp = v33.template Slice<20, 0>();
+		tmp = v33.template Slice<0, 20>();
 		EXPECT_EQ(tmp, 0x56789);
-		tmp = v33.template Slice<20, 4>();
+		tmp = v33.template Slice<4, 20>();
 		EXPECT_EQ(tmp, 0x45678);
-		tmp = v188.template Slice<20, 64>();
+		tmp = v188.template Slice<64, 20>();
 		EXPECT_EQ(tmp, 0xdabcd);
-		tmp = v188.template Slice<20, 72>();
+		tmp = v188.template Slice<72, 20>();
 		EXPECT_EQ(tmp, 0xbcdab);
-		tmp = v188.template Slice<20, 124>();
+		tmp = v188.template Slice<124, 20>();
 		EXPECT_EQ(tmp, 0x4321a);
-		tmp = v188.template Slice<20, 132>();
+		tmp = v188.template Slice<132, 20>();
 		EXPECT_EQ(tmp, 0x65432);
-		tmp = v188.template Slice<20, 168>();
+		tmp = v188.template Slice<168, 20>();
 		EXPECT_EQ(tmp, 0x76543u);
 	}
 	{
 		vuint<100> tmp;
-		tmp = v188.template Slice<100, 0>();
+		tmp = v188.template Slice<0, 100>();
 		EXPECT_EQ(tmp.v[1], 0xdabcdabcdllu);
 		EXPECT_EQ(tmp.v[0], 0x1234567812345678llu);
-		tmp = v188.template Slice<100, 8>();
+		tmp = v188.template Slice<8, 100>();
 		EXPECT_EQ(tmp.v[1], 0xbcdabcdabllu);
 		EXPECT_EQ(tmp.v[0], 0xcd12345678123456llu);
-		tmp = v188.template Slice<100, 56>();
+		tmp = v188.template Slice<56, 100>();
 		EXPECT_EQ(tmp.v[1], 0x7654321abllu);
 		EXPECT_EQ(tmp.v[0], 0xcdabcdabcdabcd12llu);
-		tmp = v188.template Slice<100, 64>();
+		tmp = v188.template Slice<64, 100>();
 		EXPECT_EQ(tmp.v[1], 0x187654321llu);
 		EXPECT_EQ(tmp.v[0], 0xabcdabcdabcdabcdllu);
-		tmp = v188.template Slice<100, 68>();
+		tmp = v188.template Slice<68, 100>();
 		EXPECT_EQ(tmp.v[1], 0x218765432llu);
 		EXPECT_EQ(tmp.v[0], 0x1abcdabcdabcdabcllu);
-		tmp = v188.template Slice<100, 88>();
+		tmp = v188.template Slice<88, 100>();
 		EXPECT_EQ(tmp.v[1], 0x765432187llu);
 		EXPECT_EQ(tmp.v[0], 0x654321abcdabcdabllu);
 	}
@@ -501,10 +501,78 @@ TEST(TestVerilogSigned, SliceRead) {
 	SliceReadTemplate<vsint>();
 }
 
-TEST(TestVerilogUnsigned, DISABLED_SliceWrite) {
+template<template<unsigned> class IntTmpl>
+void SliceWriteTemplate() {
+	IntTmpl<33> v33;
+	IntTmpl<188> v188;
+	{
+		v33 = 0;
+		vint<false, 12> v12;
+		vint<false, 72> v72;
+		v12 = 0x123;
+		v72.v[1] = 0xaa;
+		v72.v[0] = 0x4321'ffff'ffff'1234llu;
+		v33.template SetSlice<0>(v12);
+		EXPECT_EQ(v33.v[0], 0x123);
+		v33.template SetSlice<4>(v12);
+		EXPECT_EQ(v33.v[0], 0x1233);
+
+		v188 = 0;
+		v188.template SetSlice<0>(v12);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0);
+		EXPECT_EQ(v188.v[0], 0x123);
+		v188.template SetSlice<4>(v12);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0);
+		EXPECT_EQ(v188.v[0], 0x1233);
+		v188.template SetSlice<56>(v12);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0x1);
+		EXPECT_EQ(v188.v[0], 0x2300'0000'0000'1233llu);
+		v188.template SetSlice<60>(v12);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0x12);
+		EXPECT_EQ(v188.v[0], 0x3300'0000'0000'1233llu);
+		v188.template SetSlice<64>(v12);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0x123);
+		EXPECT_EQ(v188.v[0], 0x3300'0000'0000'1233llu);
+		v188.template SetSlice<68>(v12);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0x1233);
+		EXPECT_EQ(v188.v[0], 0x3300'0000'0000'1233llu);
+
+		v188 = 0;
+		v188.template SetSlice<0>(v72);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0xaa);
+		EXPECT_EQ(v188.v[0], 0x4321'ffff'ffff'1234llu);
+		v188.template SetSlice<32>(v72);
+		EXPECT_EQ(v188.v[2], 0x0);
+		EXPECT_EQ(v188.v[1], 0xaa'4321'ffffllu);
+		EXPECT_EQ(v188.v[0], 0xffff'1234'ffff'1234llu);
+		v188.template SetSlice<60>(v72);
+		EXPECT_EQ(v188.v[2], 0xa);
+		EXPECT_EQ(v188.v[1], 0xa'4321'ffff'ffff'123llu);
+		EXPECT_EQ(v188.v[0], 0x4fff'1234'ffff'1234llu);
+		v188.template SetSlice<64>(v72);
+		EXPECT_EQ(v188.v[2], 0xaa);
+		EXPECT_EQ(v188.v[1], 0x4321'ffff'ffff'1234llu);
+		EXPECT_EQ(v188.v[0], 0x4fff'1234'ffff'1234llu);
+		v188.template SetSlice<188-72>(v72);
+		EXPECT_EQ(v188.v[2], 0xaa'4321'ffff'ffff'1llu);
+		EXPECT_EQ(v188.v[1], 0x2341'ffff'ffff'1234llu);
+		EXPECT_EQ(v188.v[0], 0x4fff'1234'ffff'1234llu);
+	}
 }
 
-TEST(TestVerilogSigned, DISABLED_SliceWrite) {
+TEST(TestVerilogUnsigned, SliceWrite) {
+	SliceWriteTemplate<vsint>();
+}
+
+TEST(TestVerilogSigned, SliceWrite) {
+	SliceWriteTemplate<vsint>();
 }
 
 ///////////////////////////
@@ -1118,6 +1186,23 @@ TEST(TestVerilogSigned, DISABLED_Pack) {
 // Test unpack
 ///////////////////////////
 TEST(TestVerilogUnsigned, DISABLED_Unpack) {
+	/*
+	vuint<68> v68;
+	vuint<60> v60;
+	vuint<8> v8;
+	vuint<12> v12;
+	v8 = 0xff;
+	v12 = 0xaaa;
+	v60 = 0x234567812345678;
+	{
+		vuint<80> all;
+		vuint<68> v68;
+		vuint<60> v60;
+		vuint<8> v8;
+		vuint<12> v12;
+		Unpack(v80, v68, v12);
+	}
+	*/
 }
 
 TEST(TestVerilogSigned, DISABLED_Unpack) {

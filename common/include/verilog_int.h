@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <ostream>
 #include <string>
+#include <type_traits>
 
 namespace verilog {
 
@@ -564,9 +565,10 @@ struct vint {
 		assert(pos < num_bit);
 		const unsigned shamt =  pos % bw_word;
 		const unsigned lsb_word = pos / bw_word;
-		v[lsb_word] &= stype(-2) << shamt;
+		const stype bmask = stype(1) << shamt;
+		v[lsb_word] &= ~bmask;
 		if (value) {
-			v[lsb_word] |= stype(1) << shamt;
+			v[lsb_word] |= bmask;
 		}
 	}
 
@@ -576,7 +578,7 @@ struct vint {
 		SetBit(pos, bool(value));
 	}
 
-	template<unsigned num_bit_slice, unsigned pos>
+	template<unsigned pos, unsigned num_bit_slice>
 	vint<false, num_bit_slice> Slice() const {
 		static_assert(pos + num_bit_slice <= num_bit);
 		vint<false, num_bit_slice> sl;
@@ -606,14 +608,53 @@ struct vint {
 		return sl;
 	}
 
-	template<unsigned num_bit_slice, unsigned pos>
-	void SetSlice(const vint<false, num_bit_slice>& sl) {
-		static_assert(pos + num_bit_slice < num_bit);
-		constexpr unsigned lsb_word = pos / sizeof(stype);
-		constexpr unsigned msb_word = (pos + num_bit_slice - 1) / sizeof(stype);
-		if constexpr (lsb_word == msb_word) {
+	template<unsigned lsb_pos, unsigned num_bit_slice>
+	void ClearSlice() {
+		constexpr unsigned msb_pos = lsb_pos + num_bit_slice - 1;
+		constexpr unsigned lsb_word_slice = lsb_pos / bw_word;
+		constexpr unsigned msb_word_slice = msb_pos / bw_word;
+		constexpr unsigned unused_lsb_slice = lsb_pos % bw_word;
+		constexpr unsigned unused_msb_slice = bw_word - 1 - (msb_pos % bw_word);
+		constexpr stype lsb_mask_slice = ~(stype(-1) << unused_lsb_slice);
+		constexpr stype msb_mask_slice = ~(stype(-1) >> unused_msb_slice);
+		if constexpr (lsb_word_slice == msb_word_slice) {
+			v[lsb_word_slice] &= lsb_mask_slice | msb_mask_slice;
 		} else {
+			v[lsb_word_slice] &= lsb_mask_slice;
+			for (unsigned i = lsb_word_slice+1; i < msb_word_slice; ++i) {
+				v[i] = 0;
+			}
+			v[msb_word_slice] &= msb_mask_slice;
 		}
+	}
+
+	template<unsigned lsb_pos, unsigned num_bit_slice>
+	void WriteSlice(const vint<false, num_bit_slice>& sl) {
+		constexpr unsigned msb_pos = lsb_pos + num_bit_slice - 1;
+		constexpr unsigned lsb_word_slice = lsb_pos / bw_word;
+		constexpr unsigned msb_word_slice = msb_pos / bw_word;
+		constexpr unsigned num_word_slice = detail::num_bit2num_word(num_bit_slice);
+		constexpr unsigned unused_lsb_slice = lsb_pos % bw_word;
+		if constexpr (unused_lsb_slice == 0) {
+			for (unsigned i = 0; i < num_word_slice; ++i) {
+				v[lsb_word_slice+i] |= sl.v[i];
+			}
+		} else {
+			v[lsb_word_slice] |= stype(sl.v[0]) << unused_lsb_slice;
+			for (unsigned i = 1; i < num_word_slice; ++i) {
+				v[lsb_word_slice+i] |= detail::shiftleft128(sl.v[i], sl.v[i-1], unused_lsb_slice);
+			}
+			if constexpr (msb_word_slice == lsb_word_slice+num_word_slice) {
+				v[msb_word_slice] |= stype(sl.v[num_word_slice-1]) >> (bw_word - unused_lsb_slice);
+			}
+		}
+	}
+
+	template<unsigned lsb_pos, unsigned num_bit_slice>
+	void SetSlice(const vint<false, num_bit_slice>& sl) {
+		static_assert(lsb_pos + num_bit_slice <= num_bit);
+		ClearSlice<lsb_pos, num_bit_slice>();
+		WriteSlice<lsb_pos>(sl);
 	}
 
 	//////////////////////
