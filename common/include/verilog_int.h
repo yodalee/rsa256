@@ -610,6 +610,7 @@ struct vint {
 
 	template<unsigned lsb_pos, unsigned num_bit_slice>
 	void ClearSlice() {
+		static_assert(lsb_pos + num_bit_slice <= num_bit);
 		constexpr unsigned msb_pos = lsb_pos + num_bit_slice - 1;
 		constexpr unsigned lsb_word_slice = lsb_pos / bw_word;
 		constexpr unsigned msb_word_slice = msb_pos / bw_word;
@@ -631,7 +632,8 @@ struct vint {
 	}
 
 	template<unsigned lsb_pos, unsigned num_bit_slice>
-	void WriteSlice(const vint<false, num_bit_slice>& sl) {
+	void WriteSliceUnsafe(const vint<false, num_bit_slice>& sl) {
+		static_assert(lsb_pos + num_bit_slice <= num_bit);
 		constexpr unsigned msb_pos = lsb_pos + num_bit_slice - 1;
 		constexpr unsigned lsb_word_slice = lsb_pos / bw_word;
 		constexpr unsigned msb_word_slice = msb_pos / bw_word;
@@ -654,9 +656,8 @@ struct vint {
 
 	template<unsigned lsb_pos, unsigned num_bit_slice>
 	void SetSlice(const vint<false, num_bit_slice>& sl) {
-		static_assert(lsb_pos + num_bit_slice <= num_bit);
 		ClearSlice<lsb_pos, num_bit_slice>();
-		WriteSlice<lsb_pos>(sl);
+		WriteSliceUnsafe<lsb_pos>(sl);
 	}
 
 	//////////////////////
@@ -834,7 +835,7 @@ auto operator+(
 	const vint<false, add_num_bit>& rhs,
 	ConcatProxy<cur_ofs, total_bits> proxy
 ) {
-	proxy.target_.template WriteSlice<cur_ofs>(rhs);
+	proxy.target_.template WriteSliceUnsafe<cur_ofs>(rhs);
 	return ConcatProxy<cur_ofs + add_num_bit, total_bits>(proxy.target_);
 }
 
