@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <ostream>
 #include <string>
+#include <type_traits>
 
 namespace verilog {
 
@@ -551,29 +552,108 @@ struct vint {
 	//////////////////////
 	bool Bit(unsigned pos) const {
 		assert(pos < num_bit);
-		return bool((v[pos/bw_word] >> (pos%bw_word)) & 1u);
+		const unsigned shamt =  pos % bw_word;
+		const unsigned lsb_word = pos / bw_word;
+		return bool((v[lsb_word] >> shamt) & 1u);
 	}
 
-	void SetBit(unsigned pos, bool value) const {
+	void SetBit(unsigned pos, bool value) {
 		assert(pos < num_bit);
-		// TODO
+		const unsigned shamt =  pos % bw_word;
+		const unsigned lsb_word = pos / bw_word;
+		const stype bmask = stype(1) << shamt;
+		v[lsb_word] &= ~bmask;
+		if (value) {
+			v[lsb_word] |= bmask;
+		}
 	}
 
 	template<bool is_signed>
-	void SetBit(unsigned pos, vint<is_signed, 1u> value) const {
+	void SetBit(unsigned pos, vint<is_signed, 1u> value) {
 		assert(pos < num_bit);
 		SetBit(pos, bool(value));
 	}
 
-	template<unsigned num_bit_src, unsigned pos>
-	bool Slice() const {
-		// TODO
-		return false;
+	template<unsigned pos, unsigned num_bit_slice>
+	vint<false, num_bit_slice> Slice() const {
+		static_assert(pos + num_bit_slice <= num_bit);
+		vint<false, num_bit_slice> sl;
+		constexpr unsigned shamt = pos % bw_word;
+		constexpr unsigned lsb_word = pos / bw_word;
+		constexpr unsigned num_word_slice = detail::num_bit2num_word(num_bit_slice);
+		if constexpr (shamt == 0) {
+			for (unsigned i = 0; i < num_word_slice; ++i) {
+				sl.v[i] = v[i+lsb_word];
+			}
+		} else {
+			for (unsigned i = 0; i < num_word_slice - 1u; ++i) {
+				sl.v[i] = detail::shiftright128(v[i+lsb_word+1], v[i+lsb_word], shamt);
+			}
+			constexpr unsigned required_msb_word = num_word_slice+lsb_word;
+			if constexpr (required_msb_word == num_word) {
+				sl.v[num_word_slice-1] = v[num_word-1] >> shamt;
+			} else {
+				sl.v[num_word_slice-1] = detail::shiftright128(
+					v[required_msb_word],
+					v[required_msb_word-1],
+					shamt
+				);
+			}
+		}
+		sl.ClearUnusedBits();
+		return sl;
 	}
 
-	template<unsigned num_bit_src, unsigned pos>
-	void SetSlice() const {
-		// TODO
+	template<unsigned lsb_pos, unsigned num_bit_slice>
+	void ClearSlice() {
+		static_assert(lsb_pos + num_bit_slice <= num_bit);
+		constexpr unsigned msb_pos = lsb_pos + num_bit_slice - 1;
+		constexpr unsigned lsb_word_slice = lsb_pos / bw_word;
+		constexpr unsigned msb_word_slice = msb_pos / bw_word;
+		constexpr unsigned unused_lsb_slice = lsb_pos % bw_word;
+		constexpr unsigned unused_msb_slice = bw_word - 1 - (msb_pos % bw_word);
+		// create somethig like 0b1111000 and 0b00001111
+		// TODO: any clear way to prevent gcc warning elegantly?
+		constexpr stype lsb_mask_slice = (stype(-1) >> unused_lsb_slice << unused_lsb_slice) ^ stype(-1);
+		constexpr stype msb_mask_slice = (stype(-1) >> unused_msb_slice) ^ stype(-1);
+		if constexpr (lsb_word_slice == msb_word_slice) {
+			v[lsb_word_slice] &= lsb_mask_slice | msb_mask_slice;
+		} else {
+			v[lsb_word_slice] &= lsb_mask_slice;
+			for (unsigned i = lsb_word_slice+1; i < msb_word_slice; ++i) {
+				v[i] = 0;
+			}
+			v[msb_word_slice] &= msb_mask_slice;
+		}
+	}
+
+	template<unsigned lsb_pos, unsigned num_bit_slice>
+	void WriteSliceUnsafe(const vint<false, num_bit_slice>& sl) {
+		static_assert(lsb_pos + num_bit_slice <= num_bit);
+		constexpr unsigned msb_pos = lsb_pos + num_bit_slice - 1;
+		constexpr unsigned lsb_word_slice = lsb_pos / bw_word;
+		constexpr unsigned msb_word_slice = msb_pos / bw_word;
+		constexpr unsigned num_word_slice = detail::num_bit2num_word(num_bit_slice);
+		constexpr unsigned unused_lsb_slice = lsb_pos % bw_word;
+		if constexpr (unused_lsb_slice == 0) {
+			for (unsigned i = 0; i < num_word_slice; ++i) {
+				v[lsb_word_slice+i] |= sl.v[i];
+			}
+		} else {
+			v[lsb_word_slice] |= stype(sl.v[0]) << unused_lsb_slice;
+			for (unsigned i = 1; i < num_word_slice; ++i) {
+				v[lsb_word_slice+i] |= detail::shiftleft128(sl.v[i], sl.v[i-1], unused_lsb_slice);
+			}
+			if constexpr (msb_word_slice == lsb_word_slice+num_word_slice) {
+				v[msb_word_slice] |= stype(sl.v[num_word_slice-1]) >> (bw_word - unused_lsb_slice);
+			}
+		}
+	}
+
+	template<unsigned lsb_pos, unsigned num_bit_slice>
+	void SetSlice(const vint<false, num_bit_slice>& sl) {
+		ClearSlice<lsb_pos, num_bit_slice>();
+		WriteSliceUnsafe<lsb_pos>(sl);
 	}
 
 	//////////////////////
@@ -786,5 +866,33 @@ template<unsigned num_bit> using vsint = vint<true, num_bit>;
 template<unsigned num_bit> using vuint = vint<false, num_bit>;
 template<unsigned num_bit> using vsint_accessor = vint_accessor<true, num_bit>;
 template<unsigned num_bit> using vuint_accessor = vint_accessor<false, num_bit>;
+
+namespace detail {
+
+template<unsigned cur_ofs, unsigned total_bits>
+struct ConcatProxy {
+	vint<false, total_bits> &target_;
+	ConcatProxy(vint<false, total_bits> &target): target_(target) {}
+};
+
+template<unsigned cur_ofs, unsigned total_bits, unsigned add_num_bit>
+auto operator+(
+	const vint<false, add_num_bit>& rhs,
+	ConcatProxy<cur_ofs, total_bits> proxy
+) {
+	proxy.target_.template WriteSliceUnsafe<cur_ofs>(rhs);
+	return ConcatProxy<cur_ofs + add_num_bit, total_bits>(proxy.target_);
+}
+
+} // detail
+
+template<unsigned...num_bits>
+auto Concat(const vint<false, num_bits>&...values) {
+	constexpr unsigned total_bits = (num_bits + ...);
+	vint<false, total_bits> ret;
+	::std::fill(::std::begin(ret.v), ::std::end(ret.v), 0);
+	(values + ... + detail::ConcatProxy<0u, total_bits>(ret));
+	return ret;
+}
 
 } // namespace verilog
