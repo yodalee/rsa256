@@ -30,3 +30,9 @@ jobs:
 
     - name: Running RSA unittests
       run: ${{github.workspace}}/build/cmodel/test_rsa_cmodel
+
+    - name: Running Verilog RSATwoPowerMod
+      run: ${{github.workspace}}/build/verilog/VRSATwoPowerMod
+
+    - name: Running Verilog RSAMontgomery
+      run: ${{github.workspace}}/build/verilog/VRSAMontgomery
