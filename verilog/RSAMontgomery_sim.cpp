@@ -37,15 +37,17 @@ int sc_main(int, char **) {
   KeyType a;
   KeyType b;
   KeyType modulus;
-  from_hex(a, "412820616369726641206874756F53202C48544542415A494C452054524F50");
-  from_hex(b, "10001");
+  from_hex(a,
+           "6C7DA0B0F70C7D3DFE4EF30ECA54694E68E7AD2A7BD63EDBB71C77B178BEEEF4");
+  from_hex(b,
+           "6C7DA0B0F70C7D3DFE4EF30ECA54694E68E7AD2A7BD63EDBB71C77B178BEEEF4");
   from_hex(modulus,
            "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
   testbench->push_input({.a = a, .b = b, .modulus = modulus});
 
   TestBench_RsaMontgomery::OutType golden;
   from_hex(golden,
-           "314F8ACB18E57C4B2FA37ADEFA7964711B8DCDB7AAC7514C78D97CF4D4121426");
+           "1ECC89942DF6DD65E01D20F2AC49F495CB47F0EA9977351FD92DD3F8FD4B33D7");
   testbench->push_golden(golden);
 
   testbench->run(1200, SC_NS);

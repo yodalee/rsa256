@@ -22,6 +22,7 @@ logic [MOD_WIDTH + 2 - 1:0] data_a;
 logic [MOD_WIDTH + 2 - 1:0] data_b;
 logic [MOD_WIDTH + 2 - 1:0] data_modulus;
 logic [MOD_WIDTH + 2 - 1:0] round_result;
+logic [MOD_WIDTH + 2 - 1:0] mod_result;
 logic [MOD_WIDTH + 2 - 1:0] round_result_next;
 
 logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
@@ -36,7 +37,8 @@ State_t state, state_next;
 
 assign i_ready = state == STATE_IDLE;
 assign o_valid = state == STATE_WAITDONE;
-assign o_out = round_result[MOD_WIDTH-1:0];
+assign mod_result = round_result > data_modulus ? round_result - data_modulus : round_result;
+assign o_out = mod_result[MOD_WIDTH - 1 : 0];
 
 // update state logic
 always_ff @(posedge clk or negedge rst) begin
