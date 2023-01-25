@@ -66,8 +66,8 @@ public:
       }
       ctx->timeInc(1);
       dut->clk = true;
-      tfp->dump(ctx->time());
       dut->eval();
+      tfp->dump(ctx->time());
 
       bool update = false;
       for (auto &callback : this->callbacks) {
@@ -79,8 +79,8 @@ public:
 
       ctx->timeInc(1);
       dut->clk = false;
-      tfp->dump(ctx->time());
       dut->eval();
+      tfp->dump(ctx->time());
     }
   }
 };
