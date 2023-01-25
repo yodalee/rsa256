@@ -1,7 +1,7 @@
 #pragma once
 
 #include "verilated.h"
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 
 namespace verilog {
 namespace verilator {

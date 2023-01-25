@@ -1,12 +1,18 @@
 #pragma once
+// Direct include
+// C system headers
+// C++ standard library headers
 #include <cstdint>
-#include <immintrin.h>
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
 #include <ostream>
 #include <string>
 #include <type_traits>
+// Other libraries' .h files.
+#include <immintrin.h>
+// Your project's .h files.
+#include "verilog/dtype_base.h"
 
 namespace verilog {
 
@@ -81,9 +87,11 @@ struct vint {
 	// Make template arguments accessible from outside
 	static constexpr unsigned num_bit = num_bit_;
 	static constexpr bool is_signed = is_signed_;
-
-	// the ununsed bits must be kept zero (unsigned) or sign extended (signed)
 	static_assert(num_bit > 0);
+	// Make vint compatible to dtype
+	static constexpr unsigned dtype_tag = DTYPE_VINT;
+	static constexpr unsigned bits() { return num_bit; }
+
 	// cast to native C++ _d_ata type
 	typedef typename detail::dtype_dict<is_signed, detail::num_bit2dict_key(num_bit)>::dtype dtype;
 	// internal _s_torage type (we always use unsigned to store)
@@ -108,6 +116,7 @@ struct vint {
 	static_assert(unused_bit != bw_word);
 
 	// the only data storage of vint
+	// the ununsed bits must be kept zero (unsigned) or sign extended (signed)
 	stype v[num_word];
 
 	// rule-of-five related
@@ -834,39 +843,10 @@ struct vint {
 
 };
 
-struct vint_accessor_base {
-	virtual void from_string(::std::string s, unsigned base) = 0;
-	virtual void from_uint(uint64_t v) = 0;
-	virtual ::std::string to_string(unsigned base) const = 0;
-	virtual uint64_t to_uint() const = 0;
-	virtual ~vint_accessor_base() {}
-};
-
-template <bool is_signed, unsigned num_bit>
-class vint_accessor: public vint_accessor_base {
-	vint<is_signed, num_bit> &internal_;
-public:
-	vint_accessor(vint<is_signed, num_bit> &internal): internal_(internal) {}
-	void from_string(::std::string s, unsigned base) override {
-		from_string(internal_, s, base);
-	}
-	void from_uint(uint64_t v) override {
-		internal_ = v;
-	}
-	::std::string to_string(unsigned base) const override {
-		// TODO
-		return "";
-	}
-	uint64_t to_uint() const override {
-		return internal_.uvalue();
-	}
-};
-
 template<unsigned num_bit> using vsint = vint<true, num_bit>;
 template<unsigned num_bit> using vuint = vint<false, num_bit>;
-template<unsigned num_bit> using vsint_accessor = vint_accessor<true, num_bit>;
-template<unsigned num_bit> using vuint_accessor = vint_accessor<false, num_bit>;
 
+/*
 namespace detail {
 
 template<unsigned cur_ofs, unsigned total_bits>
@@ -894,5 +874,6 @@ auto Concat(const vint<false, num_bits>&...values) {
 	(values + ... + detail::ConcatProxy<0u, total_bits>(ret));
 	return ret;
 }
+*/
 
 } // namespace verilog
