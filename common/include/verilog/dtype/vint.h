@@ -841,6 +841,12 @@ struct vint {
 		from_string(*this, s, base);
 	}
 
+	vint<false, num_bit> Packed() const {
+		vint<false, num_bit> ret;
+		::std::copy_n(::std::begin(v), num_word, ::std::begin(ret.v));
+		return ret;
+	}
+
 };
 
 template<unsigned num_bit> using vsint = vint<true, num_bit>;

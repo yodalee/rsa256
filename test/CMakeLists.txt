@@ -3,19 +3,24 @@ set(CMAKE_BUILD_TYPE Debug)
 
 enable_testing()
 
-add_executable(unit_test
-  test_verilog_int.cpp
-#  test_verilog_bundle.cpp
+add_executable(test_dtype
+  test_vint.cpp
+  test_varray.cpp
+#  test_vstruct.cpp
+#  test_vunion.cpp
+#  test_dtype_mixed.cpp
+)
+# add_executable(test_???
 #  test_assign_port.cpp
 #  test_abstract_random.cpp
-)
+# )
 
 target_link_libraries(
-  unit_test
+  test_dtype
   gtest_main
   gtest
 )
 
 include(GoogleTest)
-gtest_discover_tests(unit_test)
-target_include_directories(unit_test PUBLIC "/usr/share/verilator/include")
+gtest_discover_tests(test_dtype)
+# target_include_directories(test_dtype PUBLIC "/usr/share/verilator/include")
