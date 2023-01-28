@@ -6,7 +6,7 @@ enable_testing()
 add_executable(test_dtype
   test_vint.cpp
   test_varray.cpp
-#  test_vstruct.cpp
+  test_vstruct.cpp
 #  test_vunion.cpp
 #  test_dtype_mixed.cpp
 )

@@ -1253,8 +1253,7 @@ TEST(TestVerilogUnsigned, ExplicitCast) {
 ///////////////////////////
 // Test pack
 ///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_Pack) {
-	/*
+TEST(TestVerilogUnsigned, Pack) {
 	vuint<4> v4;
 	vuint<12> v12;
 	vuint<72> v72;
@@ -1280,7 +1279,6 @@ TEST(TestVerilogUnsigned, DISABLED_Pack) {
 		EXPECT_EQ(v88.v[1], 0x1'ef123);
 		EXPECT_EQ(v88.v[0], 0x45678'abcdabcd'abcllu);
 	}
-	*/
 }
 
 ///////////////////////////

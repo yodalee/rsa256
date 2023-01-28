@@ -852,7 +852,6 @@ struct vint {
 template<unsigned num_bit> using vsint = vint<true, num_bit>;
 template<unsigned num_bit> using vuint = vint<false, num_bit>;
 
-/*
 namespace detail {
 
 template<unsigned cur_ofs, unsigned total_bits>
@@ -880,6 +879,5 @@ auto Concat(const vint<false, num_bits>&...values) {
 	(values + ... + detail::ConcatProxy<0u, total_bits>(ret));
 	return ret;
 }
-*/
 
 } // namespace verilog

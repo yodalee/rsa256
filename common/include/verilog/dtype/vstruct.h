@@ -7,6 +7,27 @@
 // Other libraries' .h files.
 // Your project's .h files.
 #include "verilog/dtype_base.h"
+#include "verilog/dtype/vint.h"
+
+namespace verilog {
+namespace detail {
+
+template<typename T, unsigned ...i>
+constexpr unsigned vstruct_bits(::std::integer_sequence<unsigned, i...>) {
+	T* tp = nullptr;
+	return (::std::remove_reference_t<decltype(tp->template get<i>())>::bits() + ...);
+}
+
+template<unsigned ret_bits, typename T, unsigned ...i>
+vint<false, ret_bits> vstruct_Packed(
+	const T& t,
+	::std::integer_sequence<unsigned, i...> idx
+) {
+	return Concat((t.template get<i>().Packed())...);
+}
+
+} // namespace detail
+} // namespace verilog
 
 #define DEFINE_VSTRUCT(name) \
 struct name {\
@@ -21,12 +42,14 @@ struct name {\
 	template<unsigned x> static Str get_name() { return get_name(Constant<x>{}); }\
 	static constexpr unsigned kCounterEnd = __COUNTER__;\
 	static constexpr unsigned num_member() { return kCounterEnd - kCounterBegin; }\
-	template<unsigned... i>\
-	static constexpr unsigned bits(::std::integer_sequence<unsigned, i...>) {\
-		return (verilog::bits<decltype(get<i>())>() + ...);\
-	}\
 	static constexpr unsigned bits() {\
-		return bits(::std::make_integer_sequence<unsigned, num_member()>());\
+		return detail::vstruct_bits<name>(::std::make_integer_sequence<unsigned, num_member()>());\
+	}\
+	auto Packed() const {\
+		return verilog::detail::vstruct_Packed<bits()>(\
+			*this,\
+			::std::make_integer_sequence<unsigned, num_member()>()\
+		);\
 	}\
 };
 #ifndef VTYPE

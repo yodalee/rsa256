@@ -64,4 +64,12 @@ template<typename T> constexpr unsigned bits() {
 	return T::bits();
 }
 
+///////////////////
+// analog to verilog {>>{}} (packing)
+///////////////////
+template<typename T> constexpr unsigned Packed(const T& t) {
+	static_assert(is_dtype_v<T>, "Cannot compute bits of T");
+	return t.Packed();
+}
+
 } // namespace verilog
