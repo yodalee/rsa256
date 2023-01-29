@@ -25,8 +25,8 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Running vint unittests
-      run: ${{github.workspace}}/build/test/unit_test
+    - name: Running vint/varray/vstruct unittests
+      run: ${{github.workspace}}/build/test/test_dtype
 
     - name: Running RSA unittests
       run: ${{github.workspace}}/build/cmodel/test_rsa_cmodel
