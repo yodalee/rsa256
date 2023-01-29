@@ -15,15 +15,15 @@ namespace detail {
 template<typename T, unsigned ...i>
 constexpr unsigned vstruct_bits(::std::integer_sequence<unsigned, i...>) {
 	T* tp = nullptr;
-	return (::std::remove_reference_t<decltype(tp->template get<i>())>::bits() + ...);
+	return (bits<decltype(tp->template get<i>())>() + ...);
 }
 
-template<unsigned ret_bits, typename T, unsigned ...i>
-vint<false, ret_bits> vstruct_Packed(
-	const T& t,
+template<typename T, unsigned ...i>
+auto vstruct_packed(
+	const T &src,
 	::std::integer_sequence<unsigned, i...> idx
 ) {
-	return Concat((t.template get<i>().Packed())...);
+	return concat(packed(src.template get<i>())...);
 }
 
 } // namespace detail
@@ -41,16 +41,7 @@ struct name {\
 	template<unsigned x> const auto&  get() const { return get(Constant<x>{}); }\
 	template<unsigned x> static Str get_name() { return get_name(Constant<x>{}); }\
 	static constexpr unsigned kCounterEnd = __COUNTER__;\
-	static constexpr unsigned num_member() { return kCounterEnd - kCounterBegin; }\
-	static constexpr unsigned bits() {\
-		return detail::vstruct_bits<name>(::std::make_integer_sequence<unsigned, num_member()>());\
-	}\
-	auto Packed() const {\
-		return verilog::detail::vstruct_Packed<bits()>(\
-			*this,\
-			::std::make_integer_sequence<unsigned, num_member()>()\
-		);\
-	}\
+	static constexpr unsigned num_member = kCounterEnd - kCounterBegin;\
 };
 #ifndef VTYPE
 #  define VTYPE(...) __VA_ARGS__

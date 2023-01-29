@@ -2,7 +2,7 @@
 
 #include "RSATwoPowerMod.h"
 #include "model_rsa.h"
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 
 using namespace std;
 using namespace sc_core;

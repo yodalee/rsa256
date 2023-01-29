@@ -34,19 +34,6 @@ auto get_array_type() {
 	);
 };
 
-template<unsigned ret_bits, typename T, unsigned ...i>
-vint<false, ret_bits> varray_Packed(
-	const T* tp,
-	::std::integer_sequence<unsigned, i...> idx
-) {
-	constexpr unsigned max_idx = idx.size()-1;
-	constexpr unsigned bit_of_T = T::bits();
-	vuint<ret_bits> ret;
-	::std::fill(::std::begin(ret.v), ::std::end(ret.v), 0);
-	(ret.template WriteSliceUnsafe<i*bit_of_T, bit_of_T>(tp[max_idx-i].Packed()), ...);
-	return ret;
-}
-
 } // namespace detail
 
 template <class T, unsigned... dims>
@@ -58,7 +45,6 @@ struct varray {
 	static_assert(sizeof...(dims) > 0);
 	// Make array compatible to dtype
 	static constexpr unsigned dtype_tag = DTYPE_VARRAY;
-	static constexpr unsigned bits() { return T::bits() * asize; }
 
 	// declate the actual data
 	atype v;
@@ -68,12 +54,6 @@ struct varray {
 	const T* begin() const { return reinterpret_cast<const T*>(&v); }
 	const T* end  () const { return begin() + asize; }
 	auto operator[](unsigned i) { return v[i]; }
-	auto Packed() const {
-		return verilog::detail::varray_Packed<bits()>(
-			begin(),
-			::std::make_integer_sequence<unsigned, asize>()
-		);
-	}
 
 	friend ::std::ostream& operator<<(::std::ostream& os, const varray &rhs) {
 		os << "[";
@@ -84,5 +64,24 @@ struct varray {
 		return os;
 	}
 };
+
+namespace detail {
+
+template<typename T, unsigned ...i>
+auto varray_packed(
+	const T &src,
+	::std::integer_sequence<unsigned, i...> idx
+) {
+	typedef typename T::dtype dtype;
+	vint<false, bits<T>()> dst;
+	constexpr unsigned max_idx = idx.size()-1;
+	constexpr unsigned bit_of_T = bits<dtype>();
+	const dtype *tp = src.begin();
+	::std::fill(::std::begin(dst.v), ::std::end(dst.v), 0);
+	(dst.template WriteSliceUnsafe<i*bit_of_T, bit_of_T>(packed(tp[max_idx-i])), ...);
+	return dst;
+}
+
+} // namespace detail
 
 } // namespace verilog

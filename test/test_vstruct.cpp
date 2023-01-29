@@ -23,7 +23,7 @@ END_DEFINE_VSTRUCT(S1)
 TEST(TestVerilogStruct, Pack) {
 	S1 s1;
 	static_assert(is_vstruct_v<S1>);
-	static_assert(S1::bits() == 21);
+	static_assert(bits<S1>() == 21);
 	s1.member1[0][0] = 6;
 	s1.member1[0][1] = 5;
 	s1.member1[0][2] = 4;
@@ -31,6 +31,6 @@ TEST(TestVerilogStruct, Pack) {
 	s1.member1[1][1] = 2;
 	s1.member1[1][2] = 1;
 	s1.member2 = 0;
-	vuint<21> tmp = s1.Packed();
+	vuint<21> tmp = packed(s1);
 	EXPECT_EQ(tmp, 06543210);
 }

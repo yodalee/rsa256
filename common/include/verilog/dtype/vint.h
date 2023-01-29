@@ -90,7 +90,6 @@ struct vint {
 	static_assert(num_bit > 0);
 	// Make vint compatible to dtype
 	static constexpr unsigned dtype_tag = DTYPE_VINT;
-	static constexpr unsigned bits() { return num_bit; }
 
 	// cast to native C++ _d_ata type
 	typedef typename detail::dtype_dict<is_signed, detail::num_bit2dict_key(num_bit)>::dtype dtype;
@@ -841,12 +840,6 @@ struct vint {
 		from_string(*this, s, base);
 	}
 
-	vint<false, num_bit> Packed() const {
-		vint<false, num_bit> ret;
-		::std::copy_n(::std::begin(v), num_word, ::std::begin(ret.v));
-		return ret;
-	}
-
 };
 
 template<unsigned num_bit> using vsint = vint<true, num_bit>;
@@ -869,10 +862,18 @@ auto operator+(
 	return ConcatProxy<cur_ofs + add_num_bit, total_bits>(proxy.target_);
 }
 
+template<typename T>
+auto vint_packed(const T &src) {
+	vint<false, T::num_bit> dst;
+	::std::fill(::std::begin(dst.v), ::std::end(dst.v), 0);
+	::std::copy(::std::begin(src.v), ::std::end(src.v), ::std::begin(dst.v));
+	return dst;
+}
+
 } // detail
 
 template<unsigned...num_bits>
-auto Concat(const vint<false, num_bits>&...values) {
+auto concat(const vint<false, num_bits>&...values) {
 	constexpr unsigned total_bits = (num_bits + ...);
 	vint<false, total_bits> ret;
 	::std::fill(::std::begin(ret.v), ::std::end(ret.v), 0);

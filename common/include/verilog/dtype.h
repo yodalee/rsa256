@@ -8,4 +8,4 @@
 #include "verilog/dtype/vint.h"
 #include "verilog/dtype/varray.h"
 #include "verilog/dtype/vstruct.h"
-// #include "verilog/dtype/vunion.h"
+#include "verilog/dtype/vunion.h"

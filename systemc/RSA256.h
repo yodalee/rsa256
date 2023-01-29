@@ -1,7 +1,7 @@
 #include "RSAMontgomery.h"
 #include "RSATwoPowerMod.h"
 #include "model_rsa.h"
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 #include <systemc>
 
 using namespace std;

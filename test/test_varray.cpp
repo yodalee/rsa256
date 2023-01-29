@@ -63,6 +63,6 @@ TEST(TestVerilogArray, Pack) {
 	v3x2x3[1][0] = 3;
 	v3x2x3[1][1] = 4;
 	v3x2x3[1][2] = 5;
-	vuint<18> tmps = v3x2x3.Packed();
+	vuint<18> tmps = packed(v3x2x3);
 	EXPECT_EQ(tmps, 0012345);
 }
