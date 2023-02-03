@@ -9,3 +9,4 @@ RUN apt install -y libgtest-dev libgmp-dev build-essential cmake libsystemc-dev 
     libgflags-dev libgoogle-glog-dev libprotobuf-dev libboost-all-dev
 COPY . .
 RUN ./install_verilator.sh
+
