@@ -1,5 +1,5 @@
 #pragma once
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 
 constexpr unsigned kBW_RSA = 256;
 typedef verilog::vuint<kBW_RSA> rsa_key_t;

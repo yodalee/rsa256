@@ -1,6 +1,6 @@
 #pragma once
 
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 #include <iostream>
 #include <systemc>
 

@@ -1,5 +1,5 @@
 #include "rsa.h"
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 // #include <iostream>
 // using namespace std;
 

@@ -3,7 +3,7 @@
 #include "assign_port.h"
 #include "model_rsa.h"
 #include "testbench.h"
-#include "verilog_int.h"
+#include "verilog/dtype.h"
 #include <iostream>
 #include <systemc>
 

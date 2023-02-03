@@ -1,6 +1,6 @@
 #include "RSA256.h"
 #include "rsa.h"
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 #include <iostream>
 #include <memory>
 #include <systemc>

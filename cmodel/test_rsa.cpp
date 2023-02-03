@@ -1,4 +1,4 @@
-#include "verilog_int.h"
+#include "verilog/dtype/vint.h"
 #include "rsa.h"
 #include <gtest/gtest.h>
 #include <cassert>
