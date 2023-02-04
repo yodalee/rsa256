@@ -30,8 +30,7 @@ KeyType msg, key, modulus;
 assign i_ready = state == STATE_IDLE;
 
 // update state
-// latch msg, key, modulus
-always_latch @(posedge clk or negedge rst) begin
+always_ff @(posedge clk or negedge rst) begin
   if (!rst) begin
     state <= STATE_IDLE;
   end
@@ -54,6 +53,35 @@ always_latch @(posedge clk or negedge rst) begin
       end
     end
     endcase
+  end
+end
+
+// read input data
+always_ff @( posedge clk or negedge rst ) begin
+  if (!rst) begin
+    msg <= 0;
+    key <= 0;
+    modulus <= 0;
+    two_power_mod_in_valid <= 0;
+  end
+  else if (state == STATE_IDLE && i_valid) begin
+    msg <= i_msg;
+    key <= i_key;
+    modulus <= i_modulus;
+    // kick start the two_power_mod
+    two_power_mod_in_valid <= 1'b1;
+  end
+  else if (state == STATE_WAITDONE) begin
+    msg <= msg;
+    key <= key;
+    modulus <= modulus;
+    two_power_mod_in_valid <= 1'b0;
+  end
+  else begin
+    msg <= msg;
+    key <= key;
+    modulus <= modulus;
+    two_power_mod_in_valid <= two_power_mod_in_valid;
   end
 end
 

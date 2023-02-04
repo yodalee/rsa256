@@ -37,7 +37,7 @@ assign o_valid = state == STATE_WAITDONE;
 assign key_idx = (round_counter - 2) >> 1;
 
 // read input data
-always_latch @( posedge clk or negedge rst ) begin
+always_ff @( posedge clk or negedge rst ) begin
   if (!rst) begin
     base <= 0;
     msg <= 0;
@@ -50,6 +50,12 @@ always_latch @( posedge clk or negedge rst ) begin
       msg <= i_msg;
       key <= i_key;
       modulus <= i_modulus;
+    end
+    else begin
+      base <= base;
+      msg <= msg;
+      key <= key;
+      modulus <= modulus;
     end
   end
 end
@@ -89,12 +95,15 @@ always_comb begin
 end
 
 // round_counter
-always_latch @(posedge clk or negedge rst) begin
+always_ff @(posedge clk or negedge rst) begin
   if (loop_init) begin
     round_counter <= 0;
   end
   else if (loop_next) begin
     round_counter <= round_counter + 1;
+  end
+  else begin
+    round_counter <= round_counter;
   end
 end
 
