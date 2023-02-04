@@ -1,5 +1,5 @@
 #include "verilator_assign_port.h"
-#include "verilog_int.h"
+#include "verilog/dtype.h"
 #include <gtest/gtest.h>
 
 using namespace std;
@@ -7,12 +7,12 @@ using namespace verilog;
 using namespace verilog::verilator;
 
 TEST(TestAssignPort, Read) {
-  VL_IN8(ver5,5,0);
-  VL_IN16(ver10,10,0);
-  VL_IN(ver20,20,0);
-  VL_IN64(ver40,40,0);
-  VL_INW(ver90,90,0,3);
-  VL_INW(ver100,100,0,4);
+  VL_IN8(ver5, 5, 0);
+  VL_IN16(ver10, 10, 0);
+  VL_IN(ver20, 20, 0);
+  VL_IN64(ver40, 40, 0);
+  VL_INW(ver90, 90, 0, 3);
+  VL_INW(ver100, 100, 0, 4);
   vuint<5> v5;
   vuint<10> v10;
   vuint<20> v20;
@@ -47,12 +47,12 @@ TEST(TestAssignPort, Read) {
 };
 
 TEST(TestAssignPort, Write) {
-  VL_IN8(ver5,5,0);
-  VL_IN16(ver10,10,0);
-  VL_IN(ver20,20,0);
-  VL_IN64(ver40,40,0);
-  VL_INW(ver90,90,0,3);
-  VL_INW(ver100,100,0,4);
+  VL_IN8(ver5, 5, 0);
+  VL_IN16(ver10, 10, 0);
+  VL_IN(ver20, 20, 0);
+  VL_IN64(ver40, 40, 0);
+  VL_INW(ver90, 90, 0, 3);
+  VL_INW(ver100, 100, 0, 4);
   vuint<5> v5;
   vuint<10> v10;
   vuint<20> v20;
@@ -84,8 +84,6 @@ TEST(TestAssignPort, Write) {
   EXPECT_EQ(ver100.m_storage[3], 0x1u);
 };
 
-TEST(TestAssignPort, DISABLED_ReadArray) {
-};
+TEST(TestAssignPort, DISABLED_ReadArray){};
 
-TEST(TestAssignPort, DISABLED_WriteArray) {
-};
+TEST(TestAssignPort, DISABLED_WriteArray){};

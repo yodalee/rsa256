@@ -1,7 +1,7 @@
 #include <systemc>
 
 #include "RSAMontgomery.h"
-#include "verilog/dtype/vint.h"
+#include "verilog/dtype.h"
 
 using namespace std;
 using namespace sc_core;

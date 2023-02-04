@@ -36,3 +36,6 @@ jobs:
 
     - name: Running Verilog RSAMontgomery
       run: ${{github.workspace}}/build/verilog/VRSAMontgomery
+
+    - name: Running Verilog RSA
+      run: ${{github.workspace}}/build/verilog/VRSA
