@@ -30,7 +30,10 @@ public:
     SC_THREAD(Executor);
   }
 
-  ~DUTWrapper() { tfp->close(); }
+  ~DUTWrapper() {
+    tfp->flush();
+    tfp->close();
+  }
 
   sc_in_clk clk;
   unique_ptr<VerilatedContext> ctx;
