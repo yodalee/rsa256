@@ -31,8 +31,8 @@ public:
 };
 
 int sc_main(int, char **) {
-  unique_ptr<TestBench_RsaTwoPowerMod> testbench(
-      new TestBench_RsaTwoPowerMod("TestBench_two_power_mod_sv"));
+  unique_ptr<TestBench_RsaTwoPowerMod> testbench(new TestBench_RsaTwoPowerMod(
+      "TestBench_two_power_mod_sv", /*dump=*/true));
   KeyType modulus;
   from_hex(modulus,
            "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");

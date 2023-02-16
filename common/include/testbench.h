@@ -21,10 +21,11 @@ public:
   using InType = In;
   using OutType = Out;
 
-  TestBench(const sc_module_name &name,
+  TestBench(const sc_module_name &name, bool dump_waveform = false,
             BoolPattern *driver_random_policy = nullptr,
             BoolPattern *monitor_random_policy = nullptr)
-      : sc_module(name), clk("clk", 1.0, SC_NS), dut_wrapper("dut_wrapper"),
+      : sc_module(name), clk("clk", 1.0, SC_NS),
+        dut_wrapper("dut_wrapper", dump_waveform),
         score_board(new ScoreBoard<OutType>(KillSimulation)) {
     dut_wrapper.clk(clk);
 

@@ -40,7 +40,8 @@ const char str_ans[] =
     "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
 
 int sc_main(int, char **) {
-  unique_ptr<TestBench_Rsa> testbench(new TestBench_Rsa("testbench_rsa_sv"));
+  unique_ptr<TestBench_Rsa> testbench(
+      new TestBench_Rsa("testbench_rsa_sv", /*dump=*/true));
   // sample in
   RSAModIn in;
   from_hex(in.msg, str_msg);
