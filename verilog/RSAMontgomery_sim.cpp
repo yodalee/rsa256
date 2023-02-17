@@ -33,7 +33,7 @@ public:
 
 int sc_main(int, char **) {
   unique_ptr<TestBench_RsaMontgomery> testbench(
-      new TestBench_RsaMontgomery("testbench_montgomery_sv"));
+      new TestBench_RsaMontgomery("testbench_montgomery_sv", /*dump=*/true));
   KeyType a;
   KeyType b;
   KeyType modulus;
