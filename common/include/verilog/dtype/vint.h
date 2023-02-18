@@ -89,7 +89,7 @@ struct vint {
 	static constexpr bool is_signed = is_signed_;
 	static_assert(num_bit > 0);
 	// Make vint compatible to dtype
-	static constexpr unsigned dtype_tag = DTYPE_VINT;
+	TAG_AS_VINT
 
 	// cast to native C++ _d_ata type
 	typedef typename detail::dtype_dict<is_signed, detail::num_bit2dict_key(num_bit)>::dtype dtype;

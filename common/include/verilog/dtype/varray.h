@@ -44,7 +44,7 @@ struct varray {
 	typedef T dtype;
 	static_assert(sizeof...(dims) > 0);
 	// Make array compatible to dtype
-	static constexpr unsigned dtype_tag = DTYPE_VARRAY;
+	TAG_AS_VARRAY
 
 	// declate the actual data
 	atype v;
