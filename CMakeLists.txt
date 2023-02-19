@@ -1,13 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(RSA)
-
 set(CMAKE_CXX_STANDARD 17)
+if(MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare")
+endif(MSVC)
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+# find_package(glog REQUIRED)
+find_package(GTest REQUIRED)
+find_package(SystemCLanguage CONFIG REQUIRED)
+find_package(Boost REQUIRED)
 
-include_directories(common/include)
+include_directories(common/include cmodel)
+enable_testing()
+add_subdirectory(test)
 add_subdirectory(cmodel)
 add_subdirectory(systemc)
-add_subdirectory(test)
 add_subdirectory(verilog)
