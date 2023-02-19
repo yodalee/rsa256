@@ -18,6 +18,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Sanity file test
+      run: ls /usr/lib/x86_64-linux-gnu/cmake -R
+
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
@@ -25,17 +28,5 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Running vint/varray/vstruct unittests
-      run: ${{github.workspace}}/build/test/test_dtype
-
-    - name: Running RSA unittests
-      run: ${{github.workspace}}/build/cmodel/test_rsa_cmodel
-
-    - name: Running Verilog RSATwoPowerMod
-      run: ${{github.workspace}}/build/verilog/VRSATwoPowerMod
-
-    - name: Running Verilog RSAMontgomery
-      run: ${{github.workspace}}/build/verilog/VRSAMontgomery
-
-    - name: Running Verilog RSA
-      run: ${{github.workspace}}/build/verilog/VRSA
+    - name: Run tests
+      run: make test
