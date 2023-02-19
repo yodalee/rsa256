@@ -3,6 +3,7 @@ name: Build_Docker
 on:
   push:
     paths:
+      - .github/workflows/docker_build.yml
       - docker/**
 
 env:
