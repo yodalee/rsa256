@@ -3,6 +3,7 @@
 // C system headers
 // C++ standard library headers
 #include <type_traits>
+#include <utility>
 // Other libraries' .h files.
 // Your project's .h files.
 
@@ -15,16 +16,17 @@ enum Dtype: unsigned {
 	DTYPE_VUNION,
 	DTYPE_MAX,
 };
+[[maybe_unused]]
 static const char *dtype_names[DTYPE_MAX] = {
 	"vint",
 	"varray",
 	"vstruct",
 	"vunion"
 };
-typedef ::std::integral_constant<unsigned, DTYPE_VINT> vint_tag_t;
-typedef ::std::integral_constant<unsigned, DTYPE_VARRAY> varray_tag_t;
-typedef ::std::integral_constant<unsigned, DTYPE_VSTRUCT> vstruct_tag_t;
-typedef ::std::integral_constant<unsigned, DTYPE_VUNION> vunion_tag_t;
+#define TAG_AS_VINT static constexpr unsigned dtype_tag = DTYPE_VINT;
+#define TAG_AS_VARRAY static constexpr unsigned dtype_tag = DTYPE_VARRAY;
+#define TAG_AS_VSTRUCT static constexpr unsigned dtype_tag = DTYPE_VSTRUCT;
+#define TAG_AS_VUNION static constexpr unsigned dtype_tag = DTYPE_VUNION;
 template <bool is_signed, unsigned num_bit> struct vint;
 template <class T, unsigned... dims> struct varray;
 
@@ -57,6 +59,8 @@ template<typename T>
 inline constexpr bool is_vstruct_v = is_dtype_of_id<T, DTYPE_VSTRUCT>::value;
 template<typename T>
 inline constexpr bool is_vunion_v = is_dtype_of_id<T, DTYPE_VUNION>::value;
+
+// TODO: move this to independent headers
 ///////////////////
 // analog to verilog $bits
 // an abstraction layer to calculate the number of bits of a datatype
@@ -76,7 +80,7 @@ template<typename T_> constexpr unsigned bits() {
 	} else if constexpr (is_varray_v<T>) {
 		return bits<typename T::dtype>() * T::asize;
 	} else if constexpr (is_vstruct_v<T>) {
-		return detail::vstruct_bits<T>(::std::make_integer_sequence<unsigned, T::num_member>());
+		return detail::vstruct_bits<T>(::std::make_integer_sequence<unsigned, T::num_members>());
 //	} else if constexpr (is_vunion_v<T>) {
 //		return detail::vunion_bits<T>(::std::make_integer_sequence<unsigned, T::num_member>());
 	}
@@ -104,7 +108,7 @@ vint<false, bits<T>()> packed(const T& t) {
 	} else if constexpr (is_varray_v<T>) {
 		return detail::varray_packed<T>(t, ::std::make_integer_sequence<unsigned, T::asize>());
 	} else if constexpr (is_vstruct_v<T>) {
-		return detail::vstruct_packed<T>(t, ::std::make_integer_sequence<unsigned, T::num_member>());
+		return detail::vstruct_packed<T>(t, ::std::make_integer_sequence<unsigned, T::num_members>());
 //	} else if constexpr (is_vunion_v<T>) {
 //		return vint<false, 0u>();
 	}

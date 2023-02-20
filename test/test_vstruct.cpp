@@ -15,10 +15,11 @@ using namespace verilog;
 typedef varray<vuint<10>, 5> Arr1;
 typedef varray<vuint<3>, 2, 3> Arr2;
 
-DEFINE_VSTRUCT(S1)
-VSTRUCT_MEMBER(VTYPE(Arr2),     member1);
-VSTRUCT_MEMBER(VTYPE(vuint<3>), member2);
-END_DEFINE_VSTRUCT(S1)
+struct S1 {
+	Arr2     member1;
+	vuint<3> member2;
+	MAKE_VSTRUCT(member1, member2)
+};
 
 TEST(TestVerilogStruct, Pack) {
 	S1 s1;
