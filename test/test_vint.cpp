@@ -379,7 +379,6 @@ TEST(TestVerilogSigned, ToHex) {
 template<template<unsigned> class IntTmpl>
 void CompareTemplate() {
 	IntTmpl<7> a7, b7;
-	IntTmpl<130> a130, b130;
 	constexpr unsigned is_signed = decltype(a7)::is_signed;
 
 	a7 = 7;

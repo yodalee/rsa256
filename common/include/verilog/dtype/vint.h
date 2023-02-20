@@ -767,7 +767,6 @@ struct vint {
 
 		// Handle negative & sign extension for strings started with - or '
 		if (to_put != 0 and s[0] == '\'') {
-			const unsigned to_put_extended = to_put == 1;
 			// fill from current position to the end
 			for (; put_pos < max_len; put_pos += 1) {
 				val.PutStypeAtBitPosUnsafe(put_pos, 0x1);
