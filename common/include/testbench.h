@@ -24,9 +24,9 @@ public:
   TestBench(const sc_module_name &name, bool dump_waveform = false,
             BoolPattern *driver_random_policy = nullptr,
             BoolPattern *monitor_random_policy = nullptr)
-      : sc_module(name), clk("clk", 1.0, SC_NS),
-        dut_wrapper("dut_wrapper", dump_waveform),
-        score_board(new ScoreBoard<OutType>(KillSimulation)) {
+      : sc_module(name), dut_wrapper("dut_wrapper", dump_waveform),
+        score_board(new ScoreBoard<OutType>(KillSimulation)),
+        clk("clk", 1.0, SC_NS) {
     dut_wrapper.clk(clk);
 
     driver = make_shared<Driver<InType>>(
