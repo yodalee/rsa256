@@ -9,3 +9,6 @@
 #include "verilog/dtype/varray.h"
 #include "verilog/dtype/vstruct.h"
 #include "verilog/dtype/vunion.h"
+#include "verilog/operation/bits.h"
+#include "verilog/operation/pack.h"
+#include "verilog/operation/unpack.h"
