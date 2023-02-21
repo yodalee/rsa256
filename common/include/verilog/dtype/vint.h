@@ -861,14 +861,6 @@ auto operator+(
 	return ConcatProxy<cur_ofs + add_num_bit, total_bits>(proxy.target_);
 }
 
-template<typename T>
-auto vint_packed(const T &src) {
-	vint<false, T::num_bit> dst;
-	::std::fill(::std::begin(dst.v), ::std::end(dst.v), 0);
-	::std::copy(::std::begin(src.v), ::std::end(src.v), ::std::begin(dst.v));
-	return dst;
-}
-
 } // detail
 
 template<unsigned...num_bits>

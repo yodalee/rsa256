@@ -1283,7 +1283,7 @@ TEST(TestVerilogUnsigned, Concat) {
 ///////////////////////////
 // Test unpack
 ///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_Unpack) {
+TEST(TestVerilogUnsigned, DISABLED_Unconcat) {
 	/*
 	vuint<68> v68;
 	vuint<60> v60;

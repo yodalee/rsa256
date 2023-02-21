@@ -32,6 +32,6 @@ TEST(TestVerilogStruct, Pack) {
 	s1.member1[1][1] = 2;
 	s1.member1[1][2] = 1;
 	s1.member2 = 0;
-	vuint<21> tmp = packed(s1);
+	vuint<21> tmp = pack(s1);
 	EXPECT_EQ(tmp, 06543210);
 }

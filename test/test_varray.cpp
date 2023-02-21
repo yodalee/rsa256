@@ -9,6 +9,8 @@
 // Other libraries' .h files.
 #include <gtest/gtest.h>
 // Your project's .h files.
+#include "verilog/operation/pack.h"
+#include "verilog/operation/bits.h"
 #include "verilog/dtype/vint.h"
 #include "verilog/dtype/varray.h"
 using namespace std;
@@ -63,6 +65,6 @@ TEST(TestVerilogArray, Pack) {
 	v3x2x3[1][0] = 3;
 	v3x2x3[1][1] = 4;
 	v3x2x3[1][2] = 5;
-	vuint<18> tmps = packed(v3x2x3);
+	vuint<18> tmps = pack(v3x2x3);
 	EXPECT_EQ(tmps, 0012345);
 }

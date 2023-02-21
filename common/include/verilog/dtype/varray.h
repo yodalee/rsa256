@@ -65,23 +65,4 @@ struct varray {
 	}
 };
 
-namespace detail {
-
-template<typename T, unsigned ...i>
-auto varray_packed(
-	const T &src,
-	::std::integer_sequence<unsigned, i...> idx
-) {
-	typedef typename T::dtype dtype;
-	vint<false, bits<T>()> dst;
-	constexpr unsigned max_idx = idx.size()-1;
-	constexpr unsigned bit_of_T = bits<dtype>();
-	const dtype *tp = src.begin();
-	::std::fill(::std::begin(dst.v), ::std::end(dst.v), 0);
-	(dst.template WriteSliceUnsafe<i*bit_of_T, bit_of_T>(packed(tp[max_idx-i])), ...);
-	return dst;
-}
-
-} // namespace detail
-
 } // namespace verilog
