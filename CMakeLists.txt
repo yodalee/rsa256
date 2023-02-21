@@ -12,7 +12,7 @@ find_package(GTest REQUIRED)
 find_package(SystemCLanguage CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 
-include_directories(common/include cmodel)
+include_directories(vtuber include)
 enable_testing()
 add_subdirectory(test)
 add_subdirectory(cmodel)
