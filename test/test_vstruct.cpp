@@ -3,6 +3,7 @@
 // C++ standard library headers
 #include <array>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -19,6 +20,7 @@ struct S1 {
 	Arr2     member1;
 	vuint<3> member2;
 	MAKE_VSTRUCT(member1, member2)
+	VSTRUCT_HAS_PROCESS(S1)
 };
 
 TEST(TestVerilogStruct, Pack) {
@@ -34,4 +36,6 @@ TEST(TestVerilogStruct, Pack) {
 	s1.member2 = 0;
 	vuint<21> tmp = pack(s1);
 	EXPECT_EQ(tmp, 06543210);
+	cout << s1;
+	cout.flush();
 }
