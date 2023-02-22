@@ -10,30 +10,32 @@ module RSAMontgomery #(
 	// input data
 	input i_valid,
 	output i_ready,
-	input [MOD_WIDTH-1:0] i_a,
-	input [MOD_WIDTH-1:0] i_b,
-	input [MOD_WIDTH-1:0] i_modulus,
+	input KeyType i_a,
+	input KeyType i_b,
+	input KeyType i_modulus,
 
 	// output data
 	output o_valid,
 	input o_ready,
-	output [MOD_WIDTH-1:0] o_out
+	output KeyType o_out
 );
 
-logic [MOD_WIDTH + 2 - 1:0] data_a;
-logic [MOD_WIDTH + 2 - 1:0] data_b;
-logic [MOD_WIDTH + 2 - 1:0] data_modulus;
-logic [MOD_WIDTH + 2 - 1:0] round_result;
-logic [MOD_WIDTH + 2 - 1:0] mod_result;
-logic [MOD_WIDTH + 2 - 1:0] round_result_next;
-
-logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
+typedef logic [MOD_WIDTH + 2 - 1:0] ExtendKeyType;
 
 typedef enum logic [1:0] {
   STATE_IDLE  = 0,
   STATE_CALCULATE = 1,
   STATE_WAITDONE = 2
 } State_t;
+
+ExtendKeyType data_a;
+ExtendKeyType data_b;
+ExtendKeyType data_modulus;
+ExtendKeyType round_result;
+ExtendKeyType mod_result;
+ExtendKeyType round_result_next;
+
+logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
 
 State_t state, state_next;
 
