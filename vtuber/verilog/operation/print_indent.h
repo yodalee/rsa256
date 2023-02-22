@@ -14,7 +14,7 @@ template<typename T> void print_indent(const T& t);
 
 namespace detail {
 
-void put_indent(::std::ostream& ost, unsigned level) {
+static inline void put_indent(::std::ostream& ost, unsigned level) {
 	for (unsigned i = 0; i < level; ++i) {
 		ost.put('\t');
 	}
@@ -26,11 +26,6 @@ auto vstruct_print_indent(
 	::std::ostream& ost, unsigned level, const T& t,
 	::std::integer_sequence<unsigned, i...> idx
 );
-// template<typename T, unsigned ...i>
-// auto vunion_pack(
-// 	const T &src,
-// 	::std::integer_sequence<unsigned, i...> idx
-// );
 
 template<typename T, unsigned ...i>
 auto vstruct_print_indent(
