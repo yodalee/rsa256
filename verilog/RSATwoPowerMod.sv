@@ -1,3 +1,6 @@
+
+import RSA_pkg::*;
+
 module RSATwoPowerMod #(
 	parameter MOD_WIDTH = 256,
 	parameter POWER_WIDTH = 32

@@ -1,3 +1,5 @@
+import RSA_pkg::*;
+
 module RSAMontgomery #(
 	parameter MOD_WIDTH = 256
 ) (
