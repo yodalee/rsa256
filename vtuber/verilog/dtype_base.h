@@ -23,10 +23,10 @@ static const char *dtype_names[DTYPE_MAX] = {
 	"vstruct",
 	"vunion"
 };
-#define TAG_AS_VINT static constexpr unsigned dtype_tag = DTYPE_VINT;
-#define TAG_AS_VARRAY static constexpr unsigned dtype_tag = DTYPE_VARRAY;
-#define TAG_AS_VSTRUCT static constexpr unsigned dtype_tag = DTYPE_VSTRUCT;
-#define TAG_AS_VUNION static constexpr unsigned dtype_tag = DTYPE_VUNION;
+#define TAG_AS_VINT static constexpr unsigned dtype_tag = verilog::DTYPE_VINT;
+#define TAG_AS_VARRAY static constexpr unsigned dtype_tag = verilog::DTYPE_VARRAY;
+#define TAG_AS_VSTRUCT static constexpr unsigned dtype_tag = verilog::DTYPE_VSTRUCT;
+#define TAG_AS_VUNION static constexpr unsigned dtype_tag = verilog::DTYPE_VUNION;
 template <bool is_signed, unsigned num_bit> struct vint;
 template <class T, unsigned... dims> struct varray;
 
