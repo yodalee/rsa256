@@ -12,8 +12,8 @@ target_link_libraries(${TWO_POWER_MOD_SIM} PRIVATE SystemC::systemc glog PUBLIC 
 target_link_libraries(${MONTGOMERY_SIM} PRIVATE SystemC::systemc glog PUBLIC RSASystemCModel)
 target_link_libraries(${RSA_SIM} PRIVATE SystemC::systemc glog PUBLIC RSASystemCModel)
 
-verilate(${TWO_POWER_MOD_SIM} TRACE_FST SOURCES RSATwoPowerMod.sv)
-verilate(${MONTGOMERY_SIM} TRACE_FST SOURCES RSAMontgomery.sv)
+verilate(${TWO_POWER_MOD_SIM} TRACE_FST PREFIX VRSATwoPowerMod SOURCES RSA_pkg.sv RSATwoPowerMod.sv)
+verilate(${MONTGOMERY_SIM} TRACE_FST PREFIX VRSAMontgomery SOURCES RSA_pkg.sv RSAMontgomery.sv)
 verilate(${RSA_SIM} TRACE_FST PREFIX VRSA SOURCES RSA_pkg.sv RSA.sv)
 
 add_test(${TWO_POWER_MOD_SIM} ${TWO_POWER_MOD_SIM})

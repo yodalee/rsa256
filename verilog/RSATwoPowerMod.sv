@@ -1,7 +1,7 @@
-module RSATwoPowerMod #(
-	parameter MOD_WIDTH = 256,
-	parameter POWER_WIDTH = 32
-) (
+
+import RSA_pkg::*;
+
+module RSATwoPowerMod (
 	// input
 	input clk,
 	input rst,
@@ -9,26 +9,28 @@ module RSATwoPowerMod #(
 	// input data
 	input i_valid,
 	output i_ready,
-	input [MOD_WIDTH-1:0] i_modulus,
-	input [POWER_WIDTH-1:0] i_power,
+	input KeyType i_modulus,
+	input IntType i_power,
 
 	// output data
 	output o_valid,
 	input o_ready,
-	output [MOD_WIDTH-1:0] o_out
+	output KeyType o_out
 );
 
-logic [MOD_WIDTH:0] data_modulus;
-logic [MOD_WIDTH:0] data_round_result;
-logic [POWER_WIDTH-1:0] data_power;
-logic [POWER_WIDTH-1:0] round_counter;
-logic [1:0] state, state_next;
+typedef logic [MOD_WIDTH:0] ExtendKeyType;
 
-enum logic [1:0] {
+typedef enum logic [1:0] {
   STATE_IDLE  = 0,
   STATE_CALCULATE = 1,
   STATE_WAITDONE = 2
 } State_t;
+
+ExtendKeyType data_modulus;
+ExtendKeyType data_round_result;
+IntType data_power;
+IntType round_counter;
+State_t state, state_next;
 
 assign i_ready = state == STATE_IDLE;
 assign o_valid = state == STATE_WAITDONE;
