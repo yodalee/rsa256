@@ -186,9 +186,7 @@ RSAMontgomery i_montgomery(
   // input data
   .i_valid(loop_ovalid),
   .i_ready(loop_oready),
-  .i_a(montgomery_in_a),
-  .i_b(montgomery_in_b),
-  .i_modulus(modulus),
+  .i_in({montgomery_in_a, montgomery_in_b, modulus}),
 
   // output data
   .o_valid(montgomery_out_valid),
