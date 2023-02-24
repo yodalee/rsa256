@@ -86,6 +86,8 @@ KeyType packed_val;
 
 logic packed_valid;
 logic packed_ready;
+IntType power;
+assign power = MOD_WIDTH * 2;
 
 RSATwoPowerMod i_two_power_mod (
   // input
@@ -95,8 +97,7 @@ RSATwoPowerMod i_two_power_mod (
   // input data
   .i_valid(two_power_mod_in_valid),
   .i_ready(two_power_mod_in_ready),
-  .i_modulus(modulus),
-  .i_power(MOD_WIDTH * 2),
+  .i_in({power, modulus}),
 
   // output data
   .o_valid(packed_valid),

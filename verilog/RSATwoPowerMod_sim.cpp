@@ -19,8 +19,7 @@ public:
   using TestBench::TestBench;
 
   virtual void writer(const InType &in) {
-    write_verilator_port(dut_wrapper.dut->i_power, in.power);
-    write_verilator_port(dut_wrapper.dut->i_modulus, in.modulus);
+    write_verilator_port(dut_wrapper.dut->i_in, verilog::pack(in));
   };
 
   virtual OutType reader() {
