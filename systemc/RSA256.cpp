@@ -8,7 +8,6 @@ using namespace sc_dt;
 using namespace verilog;
 
 void RSA256::Thread() {
-  char str[256];
   while (true) {
     const RSAModIn &in = i_data.read();
     const RSATwoPowerModIn::TwoPowerMod_Power_t vuint512{512};
