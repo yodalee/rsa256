@@ -18,8 +18,8 @@ struct RSAModIn {
 using RSAModOut = KeyType;
 
 struct RSATwoPowerModIn {
-  using TwoPowerMod_Power_t = verilog::vuint<32>;
-  TwoPowerMod_Power_t power;
+  using IntType = verilog::vuint<32>;
+  IntType power;
   KeyType modulus;
   MAKE_VSTRUCT(power, modulus)
   VSTRUCT_HAS_PROCESS(RSATwoPowerModIn)

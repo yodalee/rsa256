@@ -34,7 +34,7 @@ SC_MODULE(Testbench) {
   }
 
   void Driver() {
-    RSATwoPowerModIn::TwoPowerMod_Power_t power(512);
+    RSATwoPowerModIn::IntType power(512);
     KeyType modulus;
     cout << "calculate 2^: " << power << endl;
     cout << "modulus: " << str_modulus << endl;
