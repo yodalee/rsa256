@@ -2,21 +2,19 @@
 import RSA_pkg::*;
 
 module RSA (
-	// input
-	input clk,
-	input rst,
+  // input
+  input clk,
+  input rst,
 
-	// input data
-	input i_valid,
-	output i_ready,
-	input KeyType i_msg,
-	input KeyType i_key,
-	input KeyType i_modulus,
+  // input data
+  input i_valid,
+  output i_ready,
+  input RSAModIn i_in,
 
-	// output data
-	output o_valid,
-	input o_ready,
-	output KeyType o_crypto
+  // output data
+  output o_valid,
+  input o_ready,
+  output RSAModOut o_out
 );
 
 typedef enum logic {
@@ -39,9 +37,6 @@ always_ff @(posedge clk or negedge rst) begin
     STATE_IDLE: begin
       if (i_valid) begin
         state <= STATE_WAITDONE;
-        msg <= i_msg;
-        key <= i_key;
-        modulus <= i_modulus;
         // kick start the two_power_mod
         two_power_mod_in_valid <= 1'b1;
       end
@@ -65,9 +60,9 @@ always_ff @( posedge clk or negedge rst ) begin
     two_power_mod_in_valid <= 0;
   end
   else if (state == STATE_IDLE && i_valid) begin
-    msg <= i_msg;
-    key <= i_key;
-    modulus <= i_modulus;
+    msg <= i_in.msg;
+    key <= i_in.key;
+    modulus <= i_in.modulus;
     // kick start the two_power_mod
     two_power_mod_in_valid <= 1'b1;
   end
@@ -91,6 +86,8 @@ KeyType packed_val;
 
 logic packed_valid;
 logic packed_ready;
+IntType power;
+assign power = MOD_WIDTH * 2;
 
 RSATwoPowerMod i_two_power_mod (
   // input
@@ -100,8 +97,7 @@ RSATwoPowerMod i_two_power_mod (
   // input data
   .i_valid(two_power_mod_in_valid),
   .i_ready(two_power_mod_in_ready),
-  .i_modulus(modulus),
-  .i_power(MOD_WIDTH * 2),
+  .i_in({power, modulus}),
 
   // output data
   .o_valid(packed_valid),
@@ -125,7 +121,7 @@ RSAMont i_RSAMont (
   // output data
   .o_valid(o_valid),
   .o_ready(o_ready),
-  .o_crypto(o_crypto)
+  .o_crypto(o_out)
 );
 
 endmodule

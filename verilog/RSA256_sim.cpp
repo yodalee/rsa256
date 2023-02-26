@@ -19,14 +19,12 @@ public:
   using TestBench::TestBench;
 
   void writer(const InType &in) {
-    write_verilator_port(dut_wrapper.dut->i_msg, in.msg);
-    write_verilator_port(dut_wrapper.dut->i_key, in.key);
-    write_verilator_port(dut_wrapper.dut->i_modulus, in.modulus);
+    write_verilator_port(dut_wrapper.dut->i_in, verilog::pack(in));
   }
 
   OutType reader() {
     OutType out;
-    read_verilator_port(out, dut_wrapper.dut->o_crypto);
+    read_verilator_port(out, dut_wrapper.dut->o_out);
     return out;
   }
 };
