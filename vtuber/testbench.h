@@ -4,6 +4,7 @@
 #include "dut_wrapper.h"
 #include "scoreboard.h"
 
+#include <glog/logging.h>
 #include <memory>
 #include <systemc>
 
@@ -41,11 +42,12 @@ public:
     dut_wrapper.register_callback(monitor);
   }
 
-  void run(int duration, sc_time_unit unit) {
+  int run(int duration, sc_time_unit unit) {
     sc_start(duration, unit);
     if (!score_board->is_pass()) {
       LOG(ERROR) << "Score board result mismatch" << endl;
     }
+    return !score_board->is_pass();
   }
 
   void push_input(const InType &in) { driver->push_back(in); }
