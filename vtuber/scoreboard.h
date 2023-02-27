@@ -9,7 +9,7 @@ template <typename DataType> class ScoreBoard {
 private:
 public:
   ScoreBoard(::std::function<void()> RaiseFailure_)
-      : RaiseFailure(RaiseFailure_) {
+      : RaiseFailure(RaiseFailure_), pass(true) {
     assert(RaiseFailure);
   };
   ~ScoreBoard() = default;
@@ -31,6 +31,7 @@ public:
       if (golden == received) {
       } else {
         LOG(ERROR) << "Golden != Verilog Out: " << golden << " vs " << received;
+        pass = false;
         RaiseFailure();
       }
       goldens.pop_front();
@@ -38,10 +39,11 @@ public:
     }
   }
 
-  bool is_pass() { return goldens.empty() && receiveds.empty(); }
+  bool is_pass() { return pass && goldens.empty() && receiveds.empty(); }
 
 private:
   ::std::deque<DataType> goldens;
   ::std::deque<DataType> receiveds;
   ::std::function<void()> RaiseFailure;
+  bool pass;
 };

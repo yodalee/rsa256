@@ -37,9 +37,8 @@ public:
     sc_start(duration, unit);
     if (!score_board->is_pass()) {
       LOG(ERROR) << "Score board result mismatch" << endl;
-      return 1;
     }
-    return 0;
+    return !score_board->is_pass();
   }
 
   void InputThread() {
