@@ -1,8 +1,8 @@
 
 #include "VRSATwoPowerMod.h"
-#include "verilator_assign.h"
+#include "bridge/verilator/verilator_assign.h"
 #include "model_rsa.h"
-#include "testbench.h"
+#include "bridge/verilator/testbench.h"
 #include "verilog/dtype.h"
 #include <iostream>
 #include <systemc>
