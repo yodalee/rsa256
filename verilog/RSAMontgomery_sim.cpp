@@ -1,6 +1,6 @@
 
 #include "VRSAMontgomery.h"
-#include "assign_port.h"
+#include "verilator_assign.h"
 #include "model_rsa.h"
 #include "testbench.h"
 #include "verilog/dtype.h"
@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace sc_core;
+using namespace verilog::verilator;
 
 using IN = RSAMontgomeryModIn;
 using DUT = VRSAMontgomery;
@@ -19,12 +20,12 @@ public:
   using TestBench::TestBench;
 
   void writer(const InType &in) {
-    write_verilator_port(dut_wrapper.dut->i_in, verilog::pack(in));
+    write_port(dut_wrapper.dut->i_in, verilog::pack(in));
   }
 
   OutType reader() {
     OutType out;
-    read_verilator_port(out, dut_wrapper.dut->o_out);
+    read_port(out, dut_wrapper.dut->o_out);
     return out;
   }
 };
