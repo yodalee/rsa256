@@ -28,22 +28,27 @@ public:
 
   void before_clk() override {
     // last data has been received, pop it out.
-    if (valid == 1 && ready == 1) {
+    if (valid && ready) {
       q_source.pop_front();
     }
+  }
+
+  bool after_clk() override {
     if (!q_source.empty()) {
       const SC_TYPE &data = q_source.front();
-      if (valid == 0) {
-        if (GetRandom()) {
-          valid = 1;
-          write_func(data);
-        }
+      if (valid == 0 && GetRandom()) {
+        valid = true;
+        write_func(data);
+        return true;
       }
     } else {
       // no data to send.
       // bring down valid, otherwise DUT will get garbage
+      const bool prev_valid = valid;
       valid = 0;
+      return prev_valid != valid;
     }
+    return false;
   }
 
   void push_back(const SC_TYPE &data) { this->q_source.push_back(data); }
@@ -77,8 +82,8 @@ public:
     random_policy.reset(new_random_policy_);
   }
 
-  void before_clk() {
-    if (valid == 1) {
+  void before_clk() override {
+    if (valid) {
       const SC_TYPE &out = read_func();
 
       // check output not changed in valid high
@@ -90,13 +95,12 @@ public:
         }
       }
 
-      if (ready == 1) {
-        SC_TYPE out = read_func();
+      if (ready) {
+        // valid && ready, read data out
+        // randomly pull down ready
         notify_func(out);
-        ready = !GetRandom();
         last_data.reset();
-      } else {
-        ready = GetRandom();
+        ready = !GetRandom();
       }
     } else {
       // last_data will have value if valid has been true
@@ -105,6 +109,15 @@ public:
       }
       last_data.reset();
     }
+  }
+
+  bool after_clk() override {
+    // If device has pulled up the valid pin, pull up ready pin.
+    if (valid && !ready) {
+      ready = GetRandom();
+      return ready;
+    }
+    return false;
   }
 
 private:

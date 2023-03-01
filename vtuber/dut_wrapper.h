@@ -57,28 +57,32 @@ public:
       tfp->open(filename.c_str());
     }
 
+    // simulate the initialize value
     dut->clk = 0;
     dut->rst = 1;
     Step();
 
-    dut->rst = 0;
+    // pull down the reset value
     ctx->timeInc(1);
+    dut->rst = 0;
     Step();
 
-    dut->rst = 1;
     ctx->timeInc(1);
+    dut->rst = 1;
     Step();
+
+    ctx->timeInc(1);
   }
 
   void Executor() {
     while (true) {
       wait(this->clk.posedge_event());
+
       for (auto &callback : this->callbacks) {
         callback->before_clk();
       }
-      ctx->timeInc(1);
       dut->clk = true;
-      Step();
+      dut->eval();
 
       bool update = false;
       for (auto &callback : this->callbacks) {
@@ -87,10 +91,15 @@ public:
       if (update) {
         dut->eval();
       }
-
+      if (dump_waveform) {
+        tfp->dump(ctx->time());
+      }
       ctx->timeInc(1);
+
+      // negtive edge of clk
       dut->clk = false;
       Step();
+      ctx->timeInc(1);
     }
   }
 };

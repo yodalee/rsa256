@@ -50,6 +50,5 @@ int sc_main(int, char **) {
   RSAModOut ans;
   from_hex(ans, str_ans);
   testbench->push_golden(ans);
-  testbench->run(160 * 1000, SC_NS);
-  return 0;
+  return testbench->run(180 * 1000, SC_NS);
 }
