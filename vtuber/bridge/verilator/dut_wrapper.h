@@ -1,6 +1,6 @@
 #pragma once
 
-#include "callback.h"
+#include "connector.h"
 #include <functional>
 #include <memory>
 #include <systemc>
@@ -14,11 +14,11 @@ using namespace sc_core;
 
 template <typename DUT> SC_MODULE(DUTWrapper) {
 public:
-  vector<shared_ptr<Callback>> callbacks;
+  vector<shared_ptr<Connector>> connectors;
   bool dump_waveform;
 
-  void register_callback(shared_ptr<Callback> callback) {
-    this->callbacks.push_back(callback);
+  void register_connector(shared_ptr<Connector> connector) {
+    this->connectors.push_back(connector);
   }
 
   SC_HAS_PROCESS(DUTWrapper);
@@ -78,15 +78,15 @@ public:
     while (true) {
       wait(this->clk.posedge_event());
 
-      for (auto &callback : this->callbacks) {
-        callback->before_clk();
+      for (auto &connector : this->connectors) {
+        connector->before_clk();
       }
       dut->clk = true;
       dut->eval();
 
       bool update = false;
-      for (auto &callback : this->callbacks) {
-        update |= callback->after_clk();
+      for (auto &connector : this->connectors) {
+        update |= connector->after_clk();
       }
       if (update) {
         dut->eval();
