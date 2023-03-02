@@ -1,8 +1,8 @@
 
 #include "VRSA.h"
-#include "verilator_assign.h"
+#include "bridge/verilator/verilator_assign.h"
 #include "model_rsa.h"
-#include "testbench.h"
+#include "bridge/verilator/testbench.h"
 #include "verilog/dtype.h"
 #include <iostream>
 #include <systemc>
@@ -51,5 +51,5 @@ int sc_main(int, char **) {
   RSAModOut ans;
   from_hex(ans, str_ans);
   testbench->push_golden(ans);
-  return testbench->run(180 * 1000, SC_NS);
+  return testbench->run(180, SC_US);
 }

@@ -14,7 +14,7 @@ find_package(Boost REQUIRED)
 
 include_directories(vtuber include)
 enable_testing()
-add_subdirectory(test)
+add_subdirectory(vtuber)
 add_subdirectory(cmodel)
 add_subdirectory(systemc)
 add_subdirectory(verilog)

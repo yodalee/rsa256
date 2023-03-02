@@ -1,4 +1,4 @@
-#include "verilator_assign_port.h"
+#include "verilator_assign.h"
 #include "verilog/dtype.h"
 #include <gtest/gtest.h>
 
