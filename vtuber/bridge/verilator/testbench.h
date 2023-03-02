@@ -1,6 +1,6 @@
 #pragma once
 
-#include "callback.h"
+#include "connector.h"
 #include "dut_wrapper.h"
 #include "scoreboard.h"
 
@@ -38,8 +38,8 @@ public:
         [this]() { return this->reader(); },
         [this](const OutType &out) { return this->notify(out); },
         KillSimulation, monitor_random_policy);
-    dut_wrapper.register_callback(driver);
-    dut_wrapper.register_callback(monitor);
+    dut_wrapper.register_connector(driver);
+    dut_wrapper.register_connector(monitor);
   }
 
   int run(int duration, sc_time_unit unit) {

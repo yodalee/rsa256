@@ -4,14 +4,14 @@
 #include <optional>
 #include <verilated.h>
 
-class Callback {
+class Connector {
 public:
-  virtual ~Callback() = default;
+  virtual ~Connector() = default;
   virtual void before_clk() {}
   virtual bool after_clk() { return false; }
 };
 
-template <typename SC_TYPE> class Driver : public Callback {
+template <typename SC_TYPE> class Driver : public Connector {
 public:
   // Write to DUT
   using WriterFunc = ::std::function<void(const SC_TYPE &)>;
@@ -62,7 +62,7 @@ private:
   bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };
 
-template <typename SC_TYPE> class Monitor : public Callback {
+template <typename SC_TYPE> class Monitor : public Connector {
 public:
   // Read from DUT
   using ReaderFunc = ::std::function<SC_TYPE(void)>;
