@@ -36,6 +36,4 @@ TEST(TestVerilogStruct, Pack) {
 	s1.member2 = 0;
 	vuint<21> tmp = pack(s1);
 	EXPECT_EQ(tmp, 06543210);
-	cout << s1;
-	cout.flush();
 }
