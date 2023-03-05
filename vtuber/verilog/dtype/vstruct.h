@@ -13,7 +13,6 @@
 #define MAKE_VSTRUCT(...) MAKE_NAMEDTUPLE(__VA_ARGS__) TAG_AS_VSTRUCT
 #define VSTRUCT_HAS_PROCESS(cls) \
 void print_with_helper(verilog::detail::ost_indent_helper &helper) const {\
-	helper.force_skip_next_new_line();\
 	verilog::detail::vstruct_print_with_helper_expander(\
 		helper, *this,\
 		::std::make_integer_sequence<unsigned, num_members>()\

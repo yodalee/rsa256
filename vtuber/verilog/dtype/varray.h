@@ -89,10 +89,10 @@ struct varray {
 			unsigned num_resulting_trailing_zero;
 			for (unsigned i = 0; i < pending_indent_level; ++i) {
 				const bool inline_mode = (i+1) == pending_indent_level;
-				helper.add_new_item();
+				helper.put_newitem();
 				helper.open_indent('[', inline_mode);
 			}
-			helper.add_new_item();
+			helper.put_newitem();
 			helper << flat_ptr[flat_idx];
 			detail::advance_array_idx(
 				array_idx, array_bound, ndim,

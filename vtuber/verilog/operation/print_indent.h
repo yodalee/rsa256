@@ -17,57 +17,66 @@ namespace detail {
 class ost_indent_helper {
 	::std::ostream &ost;
 	::std::vector<bool> is_first_item_after_indent;
+	bool at_newline;
 	bool inline_mode;
-	bool skip_next_new_line;
-	void add_new_line() {
+	unsigned get_indent_level() {
+		assert(not is_first_item_after_indent.empty());
+		return is_first_item_after_indent.size() - 1;
+	}
+	void ensure_text_indent() {
+		if (at_newline) {
+			const unsigned indent_level = get_indent_level();
+			for (unsigned i = 0; i < indent_level; ++i) {
+				ost << "\t";
+			}
+		}
+		at_newline = false;
+	}
+	void put_newline_if_noinline() {
 		if (inline_mode) {
 			return;
 		}
-		if (skip_next_new_line) {
-			skip_next_new_line = false;
-			return;
-		}
-		ost << "\n";
-		const unsigned indent_level = get_indent_level();
-		for (unsigned i = 0; i < indent_level; ++i) {
-			ost << "\t";
-		}
+		ost << '\n';
+		at_newline = true;
+	}
+	void put_separator() {
+		ost << ',';
+		put_newline_if_noinline();
 	}
 public:
 	ost_indent_helper(::std::ostream &ost_):
 		ost(ost_),
 		is_first_item_after_indent{true},
-		inline_mode(false),
-		skip_next_new_line(true) {}
-	void force_skip_next_new_line() {
-		skip_next_new_line = true;
-	}
-	unsigned get_indent_level() {
-		assert(not is_first_item_after_indent.empty());
-		return is_first_item_after_indent.size() - 1;
+		at_newline(true),
+		inline_mode(false) {}
+	void new_nested_object() {
+		is_first_item_after_indent.back() = true;
 	}
 	void open_indent(const char left_char, bool is_inline=false) {
-		add_new_line();
 		assert(not inline_mode); // inline mode cannot be nested
 		inline_mode = is_inline;
-		is_first_item_after_indent.push_back(true);
+		ensure_text_indent();
 		ost << left_char;
+		put_newline_if_noinline();
+		is_first_item_after_indent.push_back(true);
 	}
-	void add_new_item() {
+	void put_newitem() {
 		if (is_first_item_after_indent.back()) {
 			is_first_item_after_indent.back() = false;
 		} else {
-			ost << ",";
+			put_separator();
 		}
 	}
 	void close_indent(char right_char) {
+		put_newline_if_noinline();
 		is_first_item_after_indent.pop_back();
-		add_new_line();
+		ensure_text_indent();
 		ost << right_char;
 		inline_mode = false;
 	}
 	template<typename T>
 	ost_indent_helper& operator<<(const T& t) {
+		ensure_text_indent();
 		ost << t;
 		return *this;
 	}
@@ -87,7 +96,7 @@ void print_member_recursively(ost_indent_helper& helper, const T_& t) {
 	if constexpr (is_vint_v<T>) {
 		helper << t;
 	} else {
-		helper.force_skip_next_new_line();
+		helper.new_nested_object();
 		t.print_with_helper(helper);
 	}
 }
@@ -100,7 +109,7 @@ void vstruct_print_with_helper_expander(
 	helper.open_indent('{');
 	(
 		[&]() {
-			helper.add_new_item();
+			helper.put_newitem();
 			helper << '"' << T::get_name(i) << "\": ";
 			print_member_recursively(helper, t.template get<i>());
 		}(),
