@@ -21,6 +21,7 @@ add_executable(dtype_test
 	verilog/dtype/varray_test.cpp
 	verilog/dtype/vstruct_test.cpp
 	verilog/operation/print_indent_test.cpp
+	verilog/operation/bit_offset_test.cpp
 #test_vunion.cpp
 #test_dtype_mixed.cpp
 )

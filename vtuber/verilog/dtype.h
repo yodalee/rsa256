@@ -10,5 +10,6 @@
 #include "verilog/dtype/vstruct.h"
 #include "verilog/dtype/vunion.h"
 #include "verilog/operation/bits.h"
+#include "verilog/operation/bit_offset.h"
 #include "verilog/operation/pack.h"
 #include "verilog/operation/unpack.h"
