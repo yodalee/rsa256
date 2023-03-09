@@ -14,9 +14,6 @@ using namespace sc_core;
 
 template <typename DUT> SC_MODULE(DUTWrapper) {
 public:
-  vector<shared_ptr<Connector>> connectors;
-  bool dump_waveform;
-
   void register_connector(shared_ptr<Connector> connector) {
     this->connectors.push_back(connector);
   }
@@ -34,11 +31,6 @@ public:
     tfp->flush();
     tfp->close();
   }
-
-  sc_in_clk clk;
-  unique_ptr<VerilatedContext> ctx;
-  unique_ptr<DUT> dut;
-  unique_ptr<VerilatedFstC> tfp;
 
   void Step() {
     dut->eval();
@@ -102,4 +94,14 @@ public:
       ctx->timeInc(1);
     }
   }
+
+private:
+  vector<shared_ptr<Connector>> connectors;
+  unique_ptr<VerilatedContext> ctx;
+  unique_ptr<VerilatedFstC> tfp;
+  bool dump_waveform;
+
+public:
+  sc_in_clk clk;
+  unique_ptr<DUT> dut;
 };
