@@ -9,10 +9,9 @@ template <typename SC_TYPE, typename DUT>
 class InputConnector : public Connector<DUT> {
 public:
   // Write to DUT
-  using WriterFunc = ::std::function<void(const SC_TYPE &)>;
-  InputConnector(CData &valid_, const CData &ready_, WriterFunc write_func_,
+  InputConnector(CData &valid_, const CData &ready_,
                  BoolPattern *new_random_policy_ = nullptr)
-      : valid(valid_), ready(ready_), write_func(write_func_) {
+      : valid(valid_), ready(ready_) {
     SetRandomValidPolicy(new_random_policy_);
     valid = 0;
   }
@@ -20,6 +19,8 @@ public:
   void SetRandomValidPolicy(BoolPattern *new_random_policy_) {
     random_policy.reset(new_random_policy_);
   }
+
+  virtual void write(DUT *dut, const SC_TYPE &in) = 0;
 
   void before_clk(DUT *dut) override {
     // last data has been received, pop it out.
@@ -33,7 +34,7 @@ public:
       const SC_TYPE &data = q_source.front();
       if (valid == 0 && GetRandom()) {
         valid = true;
-        write_func(data);
+        write(dut, data);
         return true;
       }
     } else {
@@ -53,6 +54,5 @@ private:
   const CData &ready;
   ::std::deque<SC_TYPE> q_source;
   ::std::unique_ptr<BoolPattern> random_policy;
-  WriterFunc write_func;
   bool GetRandom() { return not random_policy or random_policy->operator()(); }
 };
