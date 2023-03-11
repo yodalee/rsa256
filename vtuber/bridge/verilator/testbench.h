@@ -1,9 +1,9 @@
 #pragma once
 
 #include "abstract_random.h"
+#include "dut_wrapper.h"
 #include "input_connector.h"
 #include "output_connector.h"
-#include "dut_wrapper.h"
 #include "scoreboard.h"
 
 #include <glog/logging.h>
@@ -32,10 +32,10 @@ public:
         clk("clk", 1.0, SC_NS) {
     dut_wrapper.clk(clk);
 
-    driver = make_shared<InputConnector<InType>>(
+    driver = make_shared<InputConnector<InType, DUT>>(
         dut_wrapper.dut->i_valid, dut_wrapper.dut->i_ready,
         [this](const InType &in) { this->writer(in); }, driver_random_policy);
-    monitor = make_shared<OutputConnector<OutType>>(
+    monitor = make_shared<OutputConnector<OutType, DUT>>(
         dut_wrapper.dut->o_valid, dut_wrapper.dut->o_ready,
         [this]() { return this->reader(); },
         [this](const OutType &out) { return this->notify(out); },
@@ -61,8 +61,8 @@ public:
 protected:
   std::vector<OutType> golden;
   DUTWrapper<DUT> dut_wrapper;
-  shared_ptr<InputConnector<InType>> driver;
-  shared_ptr<OutputConnector<OutType>> monitor;
+  shared_ptr<InputConnector<InType, DUT>> driver;
+  shared_ptr<OutputConnector<OutType, DUT>> monitor;
   unique_ptr<ScoreBoard<OutType>> score_board;
 
 private:
