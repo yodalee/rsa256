@@ -1,8 +1,8 @@
 
 #include "VRSAMontgomery.h"
+#include "bridge/verilator/testbench.h"
 #include "bridge/verilator/verilator_assign.h"
 #include "model_rsa.h"
-#include "bridge/verilator/testbench.h"
 #include "verilog/dtype.h"
 #include <iostream>
 #include <systemc>
@@ -33,15 +33,10 @@ public:
 int sc_main(int, char **) {
   unique_ptr<TestBench_RsaMontgomery> testbench(
       new TestBench_RsaMontgomery("testbench_montgomery_sv", /*dump=*/true));
-  KeyType a;
-  KeyType b;
-  KeyType modulus;
-  from_hex(a,
-           "6C7DA0B0F70C7D3DFE4EF30ECA54694E68E7AD2A7BD63EDBB71C77B178BEEEF4");
-  from_hex(b,
-           "6C7DA0B0F70C7D3DFE4EF30ECA54694E68E7AD2A7BD63EDBB71C77B178BEEEF4");
-  from_hex(modulus,
-           "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
+  KeyType a("6C7DA0B0F70C7D3DFE4EF30ECA54694E68E7AD2A7BD63EDBB71C77B178BEEEF4");
+  KeyType b("6C7DA0B0F70C7D3DFE4EF30ECA54694E68E7AD2A7BD63EDBB71C77B178BEEEF4");
+  KeyType modulus(
+      "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
   testbench->push_input({.a = a, .b = b, .modulus = modulus});
 
   TestBench_RsaMontgomery::OutType golden;

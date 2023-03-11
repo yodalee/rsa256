@@ -813,11 +813,11 @@ struct vint {
 	friend void from_string(vint &val, ::std::string s, unsigned base=16u) {
 		switch (base) {
 			case 2: {
-				from_bin(val);
+				from_bin(val, s);
 				break;
 			}
 			case 16: {
-				from_hex(val);
+				from_hex(val, s);
 				break;
 			}
 			default: {
