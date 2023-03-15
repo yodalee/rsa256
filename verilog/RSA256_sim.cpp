@@ -1,8 +1,8 @@
 
 #include "VRSA.h"
+#include "bridge/verilator/testbench.h"
 #include "bridge/verilator/verilator_assign.h"
 #include "model_rsa.h"
-#include "bridge/verilator/testbench.h"
 #include "verilog/dtype.h"
 #include <iostream>
 #include <systemc>
@@ -18,14 +18,22 @@ using OUT = RSAModOut;
 class TestBench_Rsa : public TestBench<IN, OUT, DUT> {
 public:
   using TestBench::TestBench;
+};
 
-  void writer(const InType &in) {
-    write_port(dut_wrapper.dut->i_in, verilog::pack(in));
+class Driver : public InputConnector<IN, DUT> {
+public:
+  using InputConnector::InputConnector;
+  void write(DUT *dut, const IN &in) override {
+    write_port(dut->i_in, verilog::pack(in));
   }
+};
 
-  OutType reader() {
-    OutType out;
-    read_port(out, dut_wrapper.dut->o_out);
+class Monitor : public OutputConnector<OUT, DUT> {
+public:
+  using OutputConnector::OutputConnector;
+  OUT read(const DUT *dut) override {
+    OUT out;
+    read_port(out, dut->o_out);
     return out;
   }
 };
@@ -41,15 +49,27 @@ const char str_ans[] =
 int sc_main(int, char **) {
   unique_ptr<TestBench_Rsa> testbench(
       new TestBench_Rsa("testbench_rsa_sv", /*dump=*/true));
+
+  auto driver =
+      make_shared<Driver>(testbench->dut_wrapper.dut->i_valid,
+                          testbench->dut_wrapper.dut->i_ready, nullptr);
+  auto monitor = make_shared<Monitor>(
+      testbench->dut_wrapper.dut->o_valid, testbench->dut_wrapper.dut->o_ready,
+      [&](const OUT &out) { return testbench->notify(out); }, KillSimulation,
+      nullptr);
+  testbench->register_connector(
+      static_cast<shared_ptr<Connector<DUT>>>(driver));
+  testbench->register_connector(
+      static_cast<shared_ptr<Connector<DUT>>>(monitor));
+
   // sample in
   RSAModIn in;
   from_hex(in.msg, str_msg);
   from_hex(in.key, str_key);
   from_hex(in.modulus, str_modulus);
-  testbench->push_input(in);
+  driver->push_back(in);
   // sample out
-  RSAModOut ans;
-  from_hex(ans, str_ans);
+  RSAModOut ans(str_ans);
   testbench->push_golden(ans);
   return testbench->run(180, SC_US);
 }

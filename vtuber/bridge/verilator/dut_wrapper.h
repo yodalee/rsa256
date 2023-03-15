@@ -14,10 +14,10 @@ using namespace sc_core;
 
 template <typename DUT> SC_MODULE(DUTWrapper) {
 public:
-  vector<shared_ptr<Connector>> connectors;
+  vector<shared_ptr<Connector<DUT>>> connectors;
   bool dump_waveform;
 
-  void register_connector(shared_ptr<Connector> connector) {
+  void register_connector(shared_ptr<Connector<DUT>> connector) {
     this->connectors.push_back(connector);
   }
 
@@ -79,14 +79,14 @@ public:
       wait(this->clk.posedge_event());
 
       for (auto &connector : this->connectors) {
-        connector->before_clk();
+        connector->before_clk(dut.get());
       }
       dut->clk = true;
       dut->eval();
 
       bool update = false;
       for (auto &connector : this->connectors) {
-        update |= connector->after_clk();
+        update |= connector->after_clk(dut.get());
       }
       if (update) {
         dut->eval();
