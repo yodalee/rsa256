@@ -33,10 +33,16 @@ public:
 
   int run(int duration, sc_time_unit unit) {
     sc_start(duration, unit);
+    bool is_pass = true;
     if (!score_board->is_pass()) {
       LOG(ERROR) << "Score board result mismatch" << endl;
+      is_pass = false;
     }
-    return !score_board->is_pass();
+    if (!dut_wrapper.is_pass()) {
+      LOG(ERROR) << "DUT Wrapper final check not passed" << endl;
+      is_pass = false;
+    }
+    return !is_pass;
   }
 
   void register_connector(shared_ptr<Connector<DUT>> connector) {

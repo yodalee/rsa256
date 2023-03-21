@@ -2,6 +2,7 @@
 
 #include "connector.h"
 #include <functional>
+#include <glog/logging.h>
 #include <memory>
 #include <systemc>
 #include <vector>
@@ -101,5 +102,13 @@ public:
       Step();
       ctx->timeInc(1);
     }
+  }
+
+  bool is_pass() {
+    bool is_pass = true;
+    for (const auto &connector : this->connectors) {
+      is_pass &= connector->is_pass(dut.get());
+    }
+    return is_pass;
   }
 };

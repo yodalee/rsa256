@@ -47,6 +47,7 @@ public:
     return false;
   }
 
+  bool is_pass(DUT *dut) override { return q_source.empty(); }
   void push_back(const SC_TYPE &data) { this->q_source.push_back(data); }
 
 private:

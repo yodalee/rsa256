@@ -1,6 +1,7 @@
 #pragma once
 #include "abstract_random.h"
 #include <functional>
+#include <glog/logging.h>
 #include <optional>
 #include <verilated.h>
 
@@ -62,6 +63,11 @@ public:
       return ready;
     }
     return false;
+  }
+
+  bool is_pass(DUT *dut) override {
+    LOG(INFO) << "output_connector final_is_pass";
+    return true;
   }
 
 private:
