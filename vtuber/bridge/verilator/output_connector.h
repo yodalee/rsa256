@@ -33,9 +33,10 @@ public:
 
       // check output not changed in valid high
       if (!last_data) {
-        *last_data = out;
+        last_data = out;
       } else {
-        if (out != *last_data) {
+        if (out != last_data.value()) {
+          LOG(ERROR) << "Detect output value changed";
           RaiseFailure();
         }
       }
