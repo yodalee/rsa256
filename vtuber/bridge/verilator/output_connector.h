@@ -45,7 +45,6 @@ public:
         // randomly pull down ready
         notify_func(out);
         last_data.reset();
-        ready = !GetRandom();
       }
     } else {
       // last_data will have value if valid has been true
@@ -58,17 +57,16 @@ public:
 
   bool after_clk(DUT *dut) override {
     // If device has pulled up the valid pin, pull up ready pin.
-    if (valid && !ready) {
-      ready = GetRandom();
-      return ready;
+    if (valid) {
+      bool last_ready = ready;
+      // simplified from ready = !last_ready ? GetRandom() : !GetRandom();
+      ready = last_ready ^ GetRandom();
+      return ready != last_ready;
     }
     return false;
   }
 
-  bool is_pass(DUT *dut) override {
-    LOG(INFO) << "output_connector final_is_pass";
-    return true;
-  }
+  bool is_pass(DUT *dut) override { return true; }
 
 private:
   const CData &valid;
