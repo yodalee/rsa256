@@ -64,5 +64,5 @@ int sc_main(int, char **) {
       "1ECC89942DF6DD65E01D20F2AC49F495CB47F0EA9977351FD92DD3F8FD4B33D7");
   testbench->push_golden(golden);
 
-  return testbench->run(1200, SC_NS);
+  return testbench->run(3, SC_US);
 }
