@@ -71,5 +71,5 @@ int sc_main(int, char **) {
   // sample out
   RSAModOut ans(str_ans);
   testbench->push_golden(ans);
-  return testbench->run(180, SC_US);
+  return testbench->run(400, SC_US);
 }

@@ -15,6 +15,7 @@ using namespace sc_core;
 
 template <typename DUT> SC_MODULE(DUTWrapper) {
 public:
+  const unsigned period_ps = 2;
   vector<shared_ptr<Connector<DUT>>> connectors;
   bool dump_waveform;
 
@@ -64,15 +65,15 @@ public:
     Step();
 
     // pull down the reset value
-    ctx->timeInc(1);
+    ctx->timeInc(period_ps);
     dut->rst = 0;
     Step();
 
-    ctx->timeInc(1);
+    ctx->timeInc(period_ps);
     dut->rst = 1;
     Step();
 
-    ctx->timeInc(1);
+    ctx->timeInc(period_ps);
   }
 
   void Executor() {
@@ -95,12 +96,12 @@ public:
       if (dump_waveform) {
         tfp->dump(ctx->time());
       }
-      ctx->timeInc(1);
+      ctx->timeInc(period_ps);
 
       // negtive edge of clk
       dut->clk = false;
       Step();
-      ctx->timeInc(1);
+      ctx->timeInc(period_ps);
     }
   }
 
