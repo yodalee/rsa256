@@ -18,6 +18,8 @@ module RSA (
 );
 
 KeyType msg, key, modulus;
+logic push_register;
+logic pack_valid, pack_ready;
 
 // read input data
 always_ff @( posedge clk or negedge rst) begin
@@ -27,7 +29,7 @@ always_ff @( posedge clk or negedge rst) begin
     modulus <= 0;
   end
   else begin
-    if (i_valid && i_ready) begin
+    if (push_register) begin
       msg <= i_in.msg;
       key <= i_in.key;
       modulus <= i_in.modulus;
@@ -35,11 +37,21 @@ always_ff @( posedge clk or negedge rst) begin
   end
 end
 
-KeyType packed_val;
-logic packed_valid;
-logic packed_ready;
+Pipeline pipeline (
+  .clk(clk),
+  .rst(rst),
+  .i_valid(i_valid),
+  .i_ready(i_ready),
+  .o_en(push_register),
+  .o_valid(pack_valid),
+  .o_ready(pack_ready)
+);
+
 IntType power;
 assign power = MOD_WIDTH * 2;
+KeyType packed_val;
+logic packed_valid, packed_ready;
+
 
 RSATwoPowerMod i_two_power_mod (
   // input
@@ -47,9 +59,9 @@ RSATwoPowerMod i_two_power_mod (
   .rst(rst),
 
   // input data
-  .i_valid(i_valid),
-  .i_ready(i_ready),
-  .i_in({power, i_in.modulus}),
+  .i_valid(pack_valid),
+  .i_ready(pack_ready),
+  .i_in({power, modulus}),
 
   // output data
   .o_valid(packed_valid),
