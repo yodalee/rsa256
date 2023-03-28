@@ -58,10 +58,16 @@ int sc_main(int, char **) {
       "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
   driver->push_back(
       {.power = RSATwoPowerModIn::IntType(512), .modulus = modulus});
+  driver->push_back(
+      {.power = RSATwoPowerModIn::IntType(256), .modulus = modulus});
 
   TestBench_RsaTwoPowerMod::OutType golden(
       "0AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB");
   testbench->push_golden(golden);
+  from_hex(
+      golden,
+      "0x1f8edd0d5b5617eebe521ae75d328a8b23498f9f4ffa1db99a10acd1f3358c1f");
+  testbench->push_golden(golden);
 
-  return testbench->run(3, SC_US);
+  return testbench->run(1, SC_US);
 }

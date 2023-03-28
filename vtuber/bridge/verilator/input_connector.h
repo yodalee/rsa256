@@ -14,6 +14,7 @@ public:
       : valid(valid_), ready(ready_) {
     SetRandomValidPolicy(new_random_policy_);
     valid = 0;
+    need_write = true;
   }
 
   void SetRandomValidPolicy(BoolPattern *new_random_policy_) {
@@ -23,26 +24,29 @@ public:
   virtual void write(DUT *dut, const SC_TYPE &in) = 0;
 
   void before_clk(DUT *dut) override {
+    if (q_source.empty()) {
+      // no data to send.
+      // bring down valid, otherwise DUT will get garbage
+      valid = 0;
+      return;
+    }
     // last data has been received, pop it out.
     if (valid && ready) {
       q_source.pop_front();
+      need_write = true;
     }
   }
 
   bool after_clk(DUT *dut) override {
-    if (!q_source.empty()) {
+    // only write data when there are data and new_data need to be set
+    if (need_write && !q_source.empty()) {
       const SC_TYPE &data = q_source.front();
-      if (valid == 0 && GetRandom()) {
-        valid = true;
+      valid = GetRandom();
+      if (valid) {
+        need_write = false;
         write(dut, data);
         return true;
       }
-    } else {
-      // no data to send.
-      // bring down valid, otherwise DUT will get garbage
-      const bool prev_valid = valid;
-      valid = 0;
-      return prev_valid != valid;
     }
     return false;
   }
@@ -51,6 +55,7 @@ public:
   void push_back(const SC_TYPE &data) { this->q_source.push_back(data); }
 
 private:
+  bool need_write;
   CData &valid;
   const CData &ready;
   ::std::deque<SC_TYPE> q_source;
