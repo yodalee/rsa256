@@ -36,7 +36,8 @@ public:
         last_data = out;
       } else {
         if (out != last_data.value()) {
-          LOG(ERROR) << "Detect output value changed";
+          LOG(ERROR) << "Detect output value changed: "
+                     << sc_core::sc_time_stamp();
           RaiseFailure();
         }
       }
@@ -50,6 +51,8 @@ public:
     } else {
       // last_data will have value if valid has been true
       if (last_data) {
+        LOG(ERROR) << "Last_data has value when valud is not true: "
+                   << sc_core::sc_time_stamp();
         RaiseFailure();
       }
       last_data.reset();
@@ -60,8 +63,7 @@ public:
     // If device has pulled up the valid pin, pull up ready pin.
     if (valid) {
       bool last_ready = ready;
-      // simplified from ready = !last_ready ? GetRandom() : !GetRandom();
-      ready = last_ready ^ GetRandom();
+      ready = GetRandom();
       return ready != last_ready;
     }
     return false;
