@@ -43,7 +43,6 @@ always_ff @( posedge clk or negedge rst ) begin
   end
 end
 
-logic loop_ivalid;
 logic loop_ovalid, loop_oready;
 logic loop_init, loop_next;
 
@@ -53,8 +52,6 @@ always_ff @(posedge clk or negedge rst) begin
     round_counter <= 0;
   end else if (loop_next) begin
     round_counter <= round_counter + 1;
-  end else if (round_counter == data_power) begin
-    round_counter <= 0;
   end
 end
 
