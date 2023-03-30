@@ -19,3 +19,6 @@ verilate(${RSA_SIM} TRACE_FST PREFIX VRSA SOURCES RSA_pkg.sv RSA.sv)
 add_test(${TWO_POWER_MOD_SIM} ${TWO_POWER_MOD_SIM})
 add_test(${MONTGOMERY_SIM} ${MONTGOMERY_SIM})
 add_test(${RSA_SIM} ${RSA_SIM})
+
+configure_file(RSA256_m.in . COPYONLY)
+configure_file(RSA256_c.in . COPYONLY)
