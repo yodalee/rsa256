@@ -96,14 +96,14 @@ end
 
 // round_counter
 always_ff @(posedge clk or negedge rst) begin
-  if (loop_init) begin
+  if (state != STATE_LOOP) begin
+    round_counter <= 0;
+  end
+  else if (loop_init) begin
     round_counter <= 0;
   end
   else if (loop_next) begin
     round_counter <= round_counter + 1;
-  end
-  else begin
-    round_counter <= round_counter;
   end
 end
 
