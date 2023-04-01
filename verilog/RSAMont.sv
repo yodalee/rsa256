@@ -9,15 +9,12 @@ module RSAMont (
   // input data
   input i_valid,
   output i_ready,
-  input KeyType i_base,    // 2 ^ 2n mod N
-  input KeyType i_msg,     // msg
-  input KeyType i_key,     // key e
-  input KeyType i_modulus, // N
+  input RSAMontModIn i_in,
 
   // output data
   output o_valid,
   input o_ready,
-  output KeyType o_crypto
+  output RSAMontModOut o_out
 );
 
 localparam N_FANOUT = 2;
@@ -28,7 +25,7 @@ KeyType square, multiply;  // calculate result
 logic [$clog2(2 * MOD_WIDTH+1)-1:0] round_counter;
 logic [$clog2(2 * MOD_WIDTH+1)-1:0] key_idx;
 assign key_idx = (round_counter - 2) >> 1;
-assign o_crypto = multiply;
+assign o_out = multiply;
 
 // read input data
 always_ff @( posedge clk or negedge rst ) begin
@@ -39,10 +36,10 @@ always_ff @( posedge clk or negedge rst ) begin
     modulus <= 0;
   end
   else if (i_ready && i_valid) begin
-    base <= i_base;
-    msg <= i_msg;
-    key <= i_key;
-    modulus <= i_modulus;
+    base <= i_in.base;       // 2 ^ 2n mod N
+    msg <= i_in.msg;         // msg
+    key <= i_in.key;         // key
+    modulus <= i_in.modulus; // N
   end
 end
 

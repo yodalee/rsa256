@@ -8,13 +8,6 @@ typedef logic [MOD_WIDTH-1:0] KeyType;
 typedef logic [INT_WIDTH-1:0] IntType;
 
 typedef struct packed {
-  KeyType msg;
-  KeyType key;
-  KeyType modulus;
-} RSAModIn;
-typedef KeyType RSAModOut;
-
-typedef struct packed {
   IntType power;
   KeyType modulus;
 } RSATwoPowerModIn;
@@ -26,6 +19,21 @@ typedef struct packed {
   KeyType modulus;
 } RSAMontgomeryModIn;
 typedef KeyType RSAMontgomeryModOut;
+
+typedef struct packed {
+  KeyType base;
+  KeyType msg;
+  KeyType key;
+  KeyType modulus;
+} RSAMontModIn;
+typedef KeyType RSAMontModOut;
+
+typedef struct packed {
+  KeyType msg;
+  KeyType key;
+  KeyType modulus;
+} RSAModIn;
+typedef KeyType RSAModOut;
 
 
 endpackage

@@ -25,10 +25,7 @@ class Driver : public InputConnector<IN, DUT> {
 public:
   using InputConnector::InputConnector;
   void write(DUT *dut, const IN &in) override {
-    write_port(dut->i_base, in.base);
-    write_port(dut->i_msg, in.msg);
-    write_port(dut->i_key, in.key);
-    write_port(dut->i_modulus, in.modulus);
+    write_port(dut->i_in, verilog::pack(in));
   }
 };
 
@@ -37,7 +34,7 @@ public:
   using OutputConnector::OutputConnector;
   OUT read(const DUT *dut) override {
     OUT out;
-    read_port(out, dut->o_crypto);
+    read_port(out, dut->o_out);
     return out;
   }
 };
