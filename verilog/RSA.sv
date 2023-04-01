@@ -77,15 +77,12 @@ RSAMont i_RSAMont (
   // input data
   .i_valid(packed_valid),
   .i_ready(packed_ready),
-  .i_base(packed_val), // 2 ^ 2n mod N
-  .i_msg(msg), // msg
-  .i_key(key),
-  .i_modulus(modulus),
+  .i_in({packed_val, msg, key, modulus}),
 
   // output data
   .o_valid(o_valid),
   .o_ready(o_ready),
-  .o_crypto(o_out)
+  .o_out(o_out)
 );
 
 endmodule
