@@ -55,22 +55,26 @@ int sc_main(int, char **) {
   testbench->register_connector(
       static_cast<shared_ptr<Connector<DUT>>>(monitor));
 
+  VintLineSource<KeyType> source_m("RSA256_m.in");
+  auto v_m = source_m.get();
+  VintLineSource<RSAModOut> source_c("RSA256_c.in");
+  auto v_c = source_c.get();
+
   // sample in
   RSAMontModIn in;
   from_hex(in.base,
            "0AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB");
-  from_hex(in.msg,
-           "412820616369726641206874756F53202C48544542415A494C452054524F50");
   from_hex(in.key, "10001");
   from_hex(in.modulus,
            "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
-
-  driver->push_back(in);
+  for (const auto &m : v_m) {
+    in.msg = m;
+    driver->push_back(in);
+  }
 
   // sample out
-  RSAMontModOut out;
-  from_hex(out,
-           "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31");
-  testbench->push_golden(out);
+  for (const auto &c : v_c) {
+    testbench->push_golden(c);
+  }
   return testbench->run(400, SC_US);
 }
