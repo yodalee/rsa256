@@ -19,23 +19,32 @@ void RSAMont::Thread() {
     KeyType square{0};
 
     for (int i = 0; i < kBW * 2 + 1; i++) {
+      KeyType mont_in[2];
       if (i == 0) {
         // 2^2n * msg mod N
-        montgomery_in.write({.a = msg, .b = base, .modulus = modulus});
-        square = montgomery_out.read();
+        mont_in[0] = msg;
+        mont_in[1] = base;
       } else if ((i & 1)) {
         // multiply
-        montgomery_in.write({.a = multiple, .b = square, .modulus = modulus});
-        const int key_idx = (i - 1) / 2;
-        if (key.Bit(key_idx)) {
-          multiple = montgomery_out.read();
-        } else {
-          montgomery_out.read();
-        }
+        mont_in[0] = multiple;
+        mont_in[1] = square;
       } else {
         // square
-        montgomery_in.write({.a = square, .b = square, .modulus = modulus});
-        square = montgomery_out.read();
+        mont_in[0] = square;
+        mont_in[1] = square;
+      }
+      montgomery_in.write(
+          {.a = mont_in[0], .b = mont_in[1], .modulus = modulus});
+      KeyType result = montgomery_out.read();
+      if (i == 0) {
+        square = result;
+      } else if ((i & 1)) {
+        const int key_idx = (i - 1) / 2;
+        if (key.Bit(key_idx)) {
+          multiple = result;
+        }
+      } else {
+        square = result;
       }
     }
     data_out.write(static_cast<KeyType>(multiple));
