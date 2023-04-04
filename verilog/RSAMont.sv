@@ -24,7 +24,10 @@ KeyType square, multiply;  // calculate result
 
 logic [$clog2(2 * MOD_WIDTH+1)-1:0] round_counter;
 logic [$clog2(2 * MOD_WIDTH+1)-1:0] key_idx;
-assign key_idx = (round_counter - 2) >> 1;
+assign key_idx = (round_counter - 1) >> 1;
+logic update_multiply;
+assign update_multiply = key[key_idx[$clog2(MOD_WIDTH) - 1:0]] == 1'b1;
+
 assign o_out = multiply;
 
 // read input data
@@ -53,7 +56,7 @@ always_ff @(posedge clk or negedge rst) begin
   end
 end
 
-// data
+// store data
 always_ff @(posedge clk) begin
   if (montgomery_o_valid) begin
     if (round_counter == 1) begin
@@ -61,7 +64,7 @@ always_ff @(posedge clk) begin
       multiply <= 1;
     end
     else if (round_counter[0] == 1'b0) begin
-      multiply <= key[key_idx[$clog2(MOD_WIDTH) - 1:0]] == 1'b1 ? montgomery_out : multiply;
+      multiply <= update_multiply ? montgomery_out : multiply;
       square <= square;
     end
     else begin
@@ -77,8 +80,8 @@ always_comb begin
     montgomery_in_b = msg;
   end
   else if (round_counter[0] == 1'b1) begin
-    montgomery_in_a = square;
-    montgomery_in_b = multiply;
+    montgomery_in_a = montgomery_out; // last round is square round, get square from out
+    montgomery_in_b = round_counter == 1 ? 1 : multiply;
   end
   else begin
     montgomery_in_a = square;
