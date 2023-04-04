@@ -8,14 +8,14 @@
 constexpr int kBW = 256;
 using KeyType = verilog::vuint<kBW>;
 
-struct RSATwoPowerModIn {
+struct TwoPowerIn {
   using IntType = verilog::vuint<32>;
   IntType power;
   KeyType modulus;
   MAKE_VSTRUCT(power, modulus)
-  VSTRUCT_HAS_PROCESS(RSATwoPowerModIn)
+  VSTRUCT_HAS_PROCESS(TwoPowerIn)
 };
-using RSATwoPowerModOut = KeyType;
+using TwoPowerOut = KeyType;
 
 struct RSAMontgomeryModIn {
   KeyType a;

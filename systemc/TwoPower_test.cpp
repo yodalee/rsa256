@@ -2,7 +2,7 @@
 #include <memory>
 #include <systemc>
 
-#include "RSATwoPowerMod.h"
+#include "TwoPower.h"
 #include "model_rsa.h"
 #include "sc_testbench.h"
 #include "verilog/dtype/vint.h"
@@ -12,9 +12,9 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-using IN = RSATwoPowerModIn;
-using OUT = RSATwoPowerModOut;
-using DUT = RSATwoPowerMod;
+using IN = TwoPowerIn;
+using OUT = TwoPowerOut;
+using DUT = TwoPower;
 
 class ScTestbench_TwoPower : public ScTestbench<IN, OUT, DUT> {
 public:
@@ -39,7 +39,7 @@ const char str_ans[] =
 int sc_main(int, char **) {
   unique_ptr<ScTestbench_TwoPower> tb =
       CreateScTestbench<ScTestbench_TwoPower>("TwoPower");
-  RSATwoPowerModIn::IntType power{512};
+  TwoPowerIn::IntType power{512};
   KeyType modulus;
   KeyType ans;
   from_hex(modulus, str_modulus);

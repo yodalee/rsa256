@@ -1,5 +1,5 @@
 #include "RSAMont.h"
-#include "RSATwoPowerMod.h"
+#include "TwoPower.h"
 #include "model_rsa.h"
 #include "verilog/dtype/vint.h"
 #include <systemc>
@@ -14,10 +14,10 @@ SC_MODULE(RSA256) {
   sc_fifo_in<RSAModIn> i_data;
   sc_fifo_out<KeyType> o_crypto;
 
-  RSATwoPowerMod i_two_power_mod;
+  TwoPower i_two_power_mod;
   RSAMont i_mont;
-  sc_fifo<RSATwoPowerModIn> two_power_mod_in;
-  sc_fifo<RSATwoPowerModOut> two_power_mod_out;
+  sc_fifo<TwoPowerIn> two_power_mod_in;
+  sc_fifo<TwoPowerOut> two_power_mod_out;
   sc_fifo<RSAMontModIn> mont_in;
   sc_fifo<RSAMontModOut> mont_out;
 

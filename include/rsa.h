@@ -5,7 +5,7 @@ constexpr unsigned kBW_RSA = 256;
 typedef verilog::vuint<kBW_RSA> rsa_key_t;
 
 // calculate ((2 ** power) mod n)
-void two_power_mod(rsa_key_t &out, const unsigned power, const rsa_key_t &N);
+void twopower(rsa_key_t &out, const unsigned power, const rsa_key_t &N);
 
 // montgomery algorithm
 // Given two numbers A and B, and the mod number N
