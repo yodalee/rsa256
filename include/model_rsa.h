@@ -17,14 +17,14 @@ struct TwoPowerIn {
 };
 using TwoPowerOut = KeyType;
 
-struct RSAMontgomeryModIn {
+struct MontgomeryIn {
   KeyType a;
   KeyType b;
   KeyType modulus;
   MAKE_VSTRUCT(a, b, modulus)
-  VSTRUCT_HAS_PROCESS(RSAMontgomeryModIn)
+  VSTRUCT_HAS_PROCESS(MontgomeryIn)
 };
-using RSAMontgomeryModOut = KeyType;
+using MontgomeryOut = KeyType;
 
 struct RSAMontModIn {
   KeyType base; // 2 ^ 2n mod N

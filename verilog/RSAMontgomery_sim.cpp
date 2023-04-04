@@ -11,9 +11,9 @@ using namespace std;
 using namespace sc_core;
 using namespace verilog::verilator;
 
-using IN = RSAMontgomeryModIn;
+using IN = MontgomeryIn;
 using DUT = VRSAMontgomery;
-using OUT = RSAMontgomeryModOut;
+using OUT = MontgomeryOut;
 
 class TestBench_RsaMontgomery : public TestBench<IN, OUT, DUT> {
 public:

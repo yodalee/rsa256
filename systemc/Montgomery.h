@@ -10,14 +10,14 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-SC_MODULE(RSAMontgomery) {
+SC_MODULE(Montgomery) {
   using ExtendKeyType = vuint<kBW + 2>;
 
   sc_in_clk clk;
-  sc_fifo_in<RSAMontgomeryModIn> data_in;
-  sc_fifo_out<RSAMontgomeryModOut> data_out;
+  sc_fifo_in<MontgomeryIn> data_in;
+  sc_fifo_out<MontgomeryOut> data_out;
 
-  SC_CTOR(RSAMontgomery) { SC_THREAD(Thread); }
+  SC_CTOR(Montgomery) { SC_THREAD(Thread); }
 
   void Thread();
 };
