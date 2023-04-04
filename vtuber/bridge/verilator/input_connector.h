@@ -24,12 +24,6 @@ public:
   virtual void write(DUT *dut, const SC_TYPE &in) = 0;
 
   void before_clk(DUT *dut) override {
-    if (q_source.empty()) {
-      // no data to send.
-      // bring down valid, otherwise DUT will get garbage
-      valid = 0;
-      return;
-    }
     // last data has been received, pop it out.
     if (valid && ready) {
       q_source.pop_front();
@@ -38,6 +32,12 @@ public:
   }
 
   bool after_clk(DUT *dut) override {
+    // no data to send.
+    // bring down valid, otherwise DUT will get garbage
+    if (q_source.empty() && valid) {
+      valid = 0;
+      return true;
+    }
     // only write data when there are data and new_data need to be set
     if (need_write && !q_source.empty()) {
       const SC_TYPE &data = q_source.front();
