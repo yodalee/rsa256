@@ -2,7 +2,7 @@
 
 #include <systemc>
 
-#include "RSAMontgomery.h"
+#include "Montgomery.h"
 #include "model_rsa.h"
 #include "verilog/dtype/vint.h"
 
@@ -16,9 +16,9 @@ SC_MODULE(RSAMont) {
   sc_fifo_in<RSAMontModIn> data_in;
   sc_fifo_out<RSAMontModOut> data_out;
 
-  RSAMontgomery i_montgomery;
-  sc_fifo<RSAMontgomeryModIn> montgomery_in;
-  sc_fifo<RSAMontgomeryModOut> montgomery_out;
+  Montgomery i_montgomery;
+  sc_fifo<MontgomeryIn> montgomery_in;
+  sc_fifo<MontgomeryOut> montgomery_out;
 
   SC_CTOR(RSAMont) : i_montgomery("i_montgomery") {
     i_montgomery.clk(clk);

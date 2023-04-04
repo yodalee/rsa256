@@ -1,6 +1,6 @@
 import RSA_pkg::*;
 
-module RSAMontgomery #(
+module Montgomery #(
 	parameter MOD_WIDTH = 256
 ) (
 	// input
@@ -10,12 +10,12 @@ module RSAMontgomery #(
 	// input data
 	input i_valid,
 	output i_ready,
-	input RSAMontgomeryModIn i_in,
+	input MontgomeryIn i_in,
 
 	// output data
 	output o_valid,
 	input o_ready,
-	output RSAMontgomeryModOut o_out
+	output MontgomeryOut o_out
 );
 
 typedef logic [MOD_WIDTH + 2 - 1:0] ExtendKeyType;

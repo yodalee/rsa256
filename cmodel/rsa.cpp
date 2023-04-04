@@ -3,7 +3,7 @@
 // #include <iostream>
 // using namespace std;
 
-void two_power_mod(rsa_key_t &out, const unsigned power, const rsa_key_t &N) {
+void twopower(rsa_key_t &out, const unsigned power, const rsa_key_t &N) {
   using extend_key_t = verilog::vuint<kBW_RSA + 1>;
   extend_key_t base{1};
   extend_key_t extend_N = static_cast<extend_key_t>(N);
@@ -62,7 +62,7 @@ void rsa(rsa_key_t &crypto, const rsa_key_t &msg, const rsa_key_t &key,
          const rsa_key_t &N) {
   rsa_key_t pack_value;
   rsa_key_t packed_msg;
-  two_power_mod(pack_value, 512, N);
+  twopower(pack_value, 512, N);
   montgomery_base2(packed_msg, msg, pack_value, N);
   lsb_modular_exponentiation(crypto, packed_msg, key, N);
 }

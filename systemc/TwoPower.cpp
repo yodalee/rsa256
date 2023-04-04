@@ -1,6 +1,6 @@
 #include <systemc>
 
-#include "RSATwoPowerMod.h"
+#include "TwoPower.h"
 #include "model_rsa.h"
 #include "verilog/dtype/vint.h"
 
@@ -9,11 +9,11 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-void RSATwoPowerMod::Thread() {
+void TwoPower::Thread() {
   using ExtendKeyType = vuint<kBW + 1>;
   ExtendKeyType round_result;
   while (true) {
-    RSATwoPowerModIn in = data_in.read();
+    TwoPowerIn in = data_in.read();
     int power = in.power.value();
     ExtendKeyType modulus = static_cast<ExtendKeyType>(in.modulus);
 

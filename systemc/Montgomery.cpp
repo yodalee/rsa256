@@ -1,6 +1,6 @@
 #include <systemc>
 
-#include "RSAMontgomery.h"
+#include "Montgomery.h"
 #include "verilog/dtype.h"
 
 using namespace std;
@@ -8,9 +8,9 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-void RSAMontgomery::Thread() {
+void Montgomery::Thread() {
   while (true) {
-    RSAMontgomeryModIn in = data_in.read();
+    MontgomeryIn in = data_in.read();
     KeyType a = in.a;
     ExtendKeyType b = static_cast<ExtendKeyType>(in.b);
     ExtendKeyType modulus = static_cast<ExtendKeyType>(in.modulus);

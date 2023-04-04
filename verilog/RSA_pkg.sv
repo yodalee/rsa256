@@ -10,15 +10,15 @@ typedef logic [INT_WIDTH-1:0] IntType;
 typedef struct packed {
   IntType power;
   KeyType modulus;
-} RSATwoPowerModIn;
-typedef KeyType RSATwoPowerModOut;
+} TwoPowerIn;
+typedef KeyType TwoPowerOut;
 
 typedef struct packed {
   KeyType a;
   KeyType b;
   KeyType modulus;
-} RSAMontgomeryModIn;
-typedef KeyType RSAMontgomeryModOut;
+} MontgomeryIn;
+typedef KeyType MontgomeryOut;
 
 typedef struct packed {
   KeyType base;

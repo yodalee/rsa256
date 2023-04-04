@@ -1,5 +1,5 @@
 
-#include "VRSAMontgomery.h"
+#include "VMontgomery.h"
 #include "bridge/verilator/testbench.h"
 #include "bridge/verilator/verilator_assign.h"
 #include "model_rsa.h"
@@ -11,11 +11,11 @@ using namespace std;
 using namespace sc_core;
 using namespace verilog::verilator;
 
-using IN = RSAMontgomeryModIn;
-using DUT = VRSAMontgomery;
-using OUT = RSAMontgomeryModOut;
+using IN = MontgomeryIn;
+using DUT = VMontgomery;
+using OUT = MontgomeryOut;
 
-class TestBench_RsaMontgomery : public TestBench<IN, OUT, DUT> {
+class TestBench_Montgomery : public TestBench<IN, OUT, DUT> {
 public:
   using TestBench::TestBench;
 };
@@ -39,8 +39,8 @@ public:
 };
 
 int sc_main(int, char **) {
-  unique_ptr<TestBench_RsaMontgomery> testbench(
-      new TestBench_RsaMontgomery("testbench_montgomery_sv", /*dump=*/true));
+  unique_ptr<TestBench_Montgomery> testbench(
+      new TestBench_Montgomery("testbench_montgomery_sv", /*dump=*/true));
 
   auto driver =
       make_shared<Driver>(testbench->dut_wrapper.dut->i_valid,
@@ -63,7 +63,7 @@ int sc_main(int, char **) {
   from_hex(b, "10001");
   driver->push_back({.a = a, .b = b, .modulus = modulus});
 
-  TestBench_RsaMontgomery::OutType golden(
+  TestBench_Montgomery::OutType golden(
       "1ECC89942DF6DD65E01D20F2AC49F495CB47F0EA9977351FD92DD3F8FD4B33D7");
   testbench->push_golden(golden);
   from_hex(golden,

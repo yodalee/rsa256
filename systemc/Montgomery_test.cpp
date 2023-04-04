@@ -2,7 +2,7 @@
 #include <memory>
 #include <systemc>
 
-#include "RSAMontgomery.h"
+#include "Montgomery.h"
 #include "model_rsa.h"
 #include "sc_testbench.h"
 #include "verilog/dtype/vint.h"
@@ -12,9 +12,9 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-using IN = RSAMontgomeryModIn;
-using OUT = RSAMontgomeryModOut;
-using DUT = RSAMontgomery;
+using IN = MontgomeryIn;
+using OUT = MontgomeryOut;
+using DUT = Montgomery;
 
 class ScTestbench_Montgomery : public ScTestbench<IN, OUT, DUT> {
 public:

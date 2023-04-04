@@ -16,7 +16,7 @@ TEST(RsaTest, test_two_power_mod) {
   from_hex(gold, str_gold);
 
   // run and check
-  two_power_mod(out, 512, in1);
+  twopower(out, 512, in1);
   EXPECT_EQ(out, gold);
 }
 
@@ -31,7 +31,7 @@ TEST(RsaTest, test_montgomery_to_self) {
   from_hex(N, str_N);
 
   // run and check
-  two_power_mod(B, 256, N);
+  twopower(B, 256, N);
   montgomery_base2(out, A, B, N);
   EXPECT_EQ(out, A);
 }

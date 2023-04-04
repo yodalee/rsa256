@@ -10,12 +10,14 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-SC_MODULE(RSATwoPowerMod) {
-  sc_in_clk clk;
-  sc_fifo_in<RSATwoPowerModIn> data_in;
-  sc_fifo_out<RSATwoPowerModOut> data_out;
+SC_MODULE(Montgomery) {
+  using ExtendKeyType = vuint<kBW + 2>;
 
-  SC_CTOR(RSATwoPowerMod) { SC_THREAD(Thread); }
+  sc_in_clk clk;
+  sc_fifo_in<MontgomeryIn> data_in;
+  sc_fifo_out<MontgomeryOut> data_out;
+
+  SC_CTOR(Montgomery) { SC_THREAD(Thread); }
 
   void Thread();
 };
