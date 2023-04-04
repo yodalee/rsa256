@@ -17,8 +17,8 @@ typedef struct packed {
   KeyType a;
   KeyType b;
   KeyType modulus;
-} RSAMontgomeryModIn;
-typedef KeyType RSAMontgomeryModOut;
+} MontgomeryIn;
+typedef KeyType MontgomeryOut;
 
 typedef struct packed {
   KeyType base;

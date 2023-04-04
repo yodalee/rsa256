@@ -121,7 +121,7 @@ PipelineDistribute #(.N(N_FANOUT)) i_dist (
   .o_ready(dist_o_ready)
 );
 
-RSAMontgomery i_montgomery(
+Montgomery i_montgomery(
   // input
   .clk(clk),
   .rst(rst),

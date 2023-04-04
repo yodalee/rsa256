@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 set(TWO_POWER_SIM VTwoPower)
-set(MONTGOMERY_SIM VRSAMontgomery)
+set(MONTGOMERY_SIM VMontgomery)
 set(RSAMONT_SIM VRSAMont)
 set(RSA_SIM VRSA)
 
 add_executable(${TWO_POWER_SIM} TwoPower_sim.cpp)
-add_executable(${MONTGOMERY_SIM} RSAMontgomery_sim.cpp)
+add_executable(${MONTGOMERY_SIM} Montgomery_sim.cpp)
 add_executable(${RSAMONT_SIM} RSAMont_sim.cpp)
 add_executable(${RSA_SIM} RSA256_sim.cpp)
 
@@ -17,7 +17,7 @@ target_link_libraries(${RSAMONT_SIM} ${LINKME})
 target_link_libraries(${RSA_SIM} ${LINKME})
 
 verilate(${TWO_POWER_SIM} TRACE_FST PREFIX VTwoPower SOURCES RSA_pkg.sv TwoPower.sv)
-verilate(${MONTGOMERY_SIM} TRACE_FST PREFIX VRSAMontgomery SOURCES RSA_pkg.sv RSAMontgomery.sv)
+verilate(${MONTGOMERY_SIM} TRACE_FST PREFIX VMontgomery SOURCES RSA_pkg.sv Montgomery.sv)
 verilate(${RSAMONT_SIM} TRACE_FST PREFIX VRSAMont SOURCES RSA_pkg.sv RSAMont.sv)
 verilate(${RSA_SIM} TRACE_FST PREFIX VRSA SOURCES RSA_pkg.sv RSA.sv)
 
