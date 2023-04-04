@@ -533,26 +533,26 @@ struct vint {
 	//////////////////////
 	// derived operators
 	//////////////////////
-	vint operator+(const vint& rhs) { vint ret = *this; ret += rhs; return ret; }
-	vint operator-(const vint& rhs) { vint ret = *this; ret -= rhs; return ret; }
-	vint operator*(const vint& rhs) { vint ret = *this; ret *= rhs; return ret; }
-	vint operator/(const vint& rhs) { vint ret = *this; ret /= rhs; return ret; }
-	vint operator&(const vint& rhs) { vint ret = *this; ret += rhs; return ret; }
-	vint operator|(const vint& rhs) { vint ret = *this; ret -= rhs; return ret; }
-	vint operator^(const vint& rhs) { vint ret = *this; ret ^= rhs; return ret; }
-	vint operator>>(const vint& rhs) { vint ret = *this; ret >>= rhs; return ret; }
-	vint operator<<(const vint& rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	vint operator+(const vint& rhs) const { vint ret = *this; ret += rhs; return ret; }
+	vint operator-(const vint& rhs) const { vint ret = *this; ret -= rhs; return ret; }
+	vint operator*(const vint& rhs) const { vint ret = *this; ret *= rhs; return ret; }
+	vint operator/(const vint& rhs) const { vint ret = *this; ret /= rhs; return ret; }
+	vint operator&(const vint& rhs) const { vint ret = *this; ret += rhs; return ret; }
+	vint operator|(const vint& rhs) const { vint ret = *this; ret -= rhs; return ret; }
+	vint operator^(const vint& rhs) const { vint ret = *this; ret ^= rhs; return ret; }
+	vint operator>>(const vint& rhs) const { vint ret = *this; ret >>= rhs; return ret; }
+	vint operator<<(const vint& rhs) const { vint ret = *this; ret <<= rhs; return ret; }
 	bool operator!=(const vint& rhs) const { return not (*this == rhs); }
 
-	vint operator+(const stype rhs) { vint ret = *this; ret += rhs; return ret; }
-	vint operator-(const stype rhs) { vint ret = *this; ret -= rhs; return ret; }
-	vint operator*(const stype rhs) { vint ret = *this; ret *= rhs; return ret; }
-	vint operator/(const stype rhs) { vint ret = *this; ret /= rhs; return ret; }
-	vint operator&(const stype rhs) { vint ret = *this; ret &= rhs; return ret; }
-	vint operator|(const stype rhs) { vint ret = *this; ret |= rhs; return ret; }
-	vint operator^(const stype rhs) { vint ret = *this; ret ^= rhs; return ret; }
-	vint operator>>(const stype rhs) { vint ret = *this; ret >>= rhs; return ret; }
-	vint operator<<(const stype rhs) { vint ret = *this; ret <<= rhs; return ret; }
+	vint operator+(const stype rhs) const { vint ret = *this; ret += rhs; return ret; }
+	vint operator-(const stype rhs) const { vint ret = *this; ret -= rhs; return ret; }
+	vint operator*(const stype rhs) const { vint ret = *this; ret *= rhs; return ret; }
+	vint operator/(const stype rhs) const { vint ret = *this; ret /= rhs; return ret; }
+	vint operator&(const stype rhs) const { vint ret = *this; ret &= rhs; return ret; }
+	vint operator|(const stype rhs) const { vint ret = *this; ret |= rhs; return ret; }
+	vint operator^(const stype rhs) const { vint ret = *this; ret ^= rhs; return ret; }
+	vint operator>>(const stype rhs) const { vint ret = *this; ret >>= rhs; return ret; }
+	vint operator<<(const stype rhs) const { vint ret = *this; ret <<= rhs; return ret; }
 	bool operator!=(const stype rhs) const { return not (*this == rhs); }
 
 	//////////////////////
