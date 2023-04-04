@@ -1,4 +1,4 @@
-#include "RSA256.h"
+#include "RSA.h"
 #include "rsa.h"
 #include "sc_testbench.h"
 #include "verilog/dtype/vint.h"
@@ -12,7 +12,7 @@ using namespace verilog;
 
 using IN = RSAModIn;
 using OUT = RSAModOut;
-using DUT = RSA256;
+using DUT = RSA;
 
 class ScTestbench_RSA256 : public ScTestbench<IN, OUT, DUT> {
 public:
@@ -39,7 +39,7 @@ const char str_ans[] =
 
 int sc_main(int, char **) {
   unique_ptr<ScTestbench_RSA256> tb =
-      CreateScTestbench<ScTestbench_RSA256>("RSA256");
+      CreateScTestbench<ScTestbench_RSA256>("RSA");
   RSAModIn in;
   from_hex(in.msg, str_msg);
   from_hex(in.key, str_key);
