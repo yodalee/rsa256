@@ -1,4 +1,4 @@
-#include "RSA256.h"
+#include "RSA.h"
 #include "rsa.h"
 #include <systemc>
 
@@ -7,7 +7,7 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-void RSA256::Thread() {
+void RSA::Thread() {
   while (true) {
     const RSAModIn &in = i_data.read();
     const TwoPowerIn::IntType vuint512{512};

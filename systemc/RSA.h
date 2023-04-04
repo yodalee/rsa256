@@ -9,7 +9,7 @@ using namespace sc_core;
 using namespace sc_dt;
 using namespace verilog;
 
-SC_MODULE(RSA256) {
+SC_MODULE(RSA) {
   sc_in_clk clk;
   sc_fifo_in<RSAModIn> i_data;
   sc_fifo_out<KeyType> o_crypto;
@@ -21,7 +21,7 @@ SC_MODULE(RSA256) {
   sc_fifo<RSAMontModIn> mont_in;
   sc_fifo<RSAMontModOut> mont_out;
 
-  SC_CTOR(RSA256) : i_two_power_mod("i_two_power_mod"), i_mont("i_mont") {
+  SC_CTOR(RSA) : i_two_power_mod("i_two_power_mod"), i_mont("i_mont") {
     i_two_power_mod.clk(clk);
     i_two_power_mod.data_in(two_power_mod_in);
     i_two_power_mod.data_out(two_power_mod_out);
