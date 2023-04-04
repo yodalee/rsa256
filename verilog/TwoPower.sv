@@ -1,7 +1,7 @@
 
 import RSA_pkg::*;
 
-module RSATwoPowerMod (
+module TwoPower (
   // input
   input clk,
   input rst,
@@ -9,12 +9,12 @@ module RSATwoPowerMod (
   // input data
   input i_valid,
   output i_ready,
-  input RSATwoPowerModIn i_in,
+  input TwoPowerIn i_in,
 
   // output data
   output o_valid,
   input o_ready,
-  output RSATwoPowerModOut o_out
+  output TwoPowerOut o_out
 );
 
 typedef logic [MOD_WIDTH:0] ExtendKeyType;

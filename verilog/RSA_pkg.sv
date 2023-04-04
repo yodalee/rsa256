@@ -10,8 +10,8 @@ typedef logic [INT_WIDTH-1:0] IntType;
 typedef struct packed {
   IntType power;
   KeyType modulus;
-} RSATwoPowerModIn;
-typedef KeyType RSATwoPowerModOut;
+} TwoPowerIn;
+typedef KeyType TwoPowerOut;
 
 typedef struct packed {
   KeyType a;

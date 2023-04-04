@@ -1,5 +1,5 @@
 
-#include "VRSATwoPowerMod.h"
+#include "VTwoPower.h"
 #include "bridge/verilator/testbench.h"
 #include "bridge/verilator/verilator_assign.h"
 #include "model_rsa.h"
@@ -12,10 +12,10 @@ using namespace sc_core;
 using namespace verilog::verilator;
 
 using IN = TwoPowerIn;
-using DUT = VRSATwoPowerMod;
+using DUT = VTwoPower;
 using OUT = TwoPowerOut;
 
-class TestBench_RsaTwoPowerMod : public TestBench<IN, OUT, DUT> {
+class TestBench_TwoPower : public TestBench<IN, OUT, DUT> {
 public:
   using TestBench::TestBench;
 };
@@ -39,8 +39,8 @@ public:
 };
 
 int sc_main(int, char **) {
-  unique_ptr<TestBench_RsaTwoPowerMod> testbench(new TestBench_RsaTwoPowerMod(
-      "TestBench_two_power_mod_sv", /*dump=*/true));
+  unique_ptr<TestBench_TwoPower> testbench(
+      new TestBench_TwoPower("TestBench_two_power_mod_sv", /*dump=*/true));
 
   auto driver =
       make_shared<Driver>(testbench->dut_wrapper.dut->i_valid,
@@ -59,7 +59,7 @@ int sc_main(int, char **) {
   driver->push_back({.power = TwoPowerIn::IntType(512), .modulus = modulus});
   driver->push_back({.power = TwoPowerIn::IntType(256), .modulus = modulus});
 
-  TestBench_RsaTwoPowerMod::OutType golden(
+  TestBench_TwoPower::OutType golden(
       "0AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB");
   testbench->push_golden(golden);
   from_hex(

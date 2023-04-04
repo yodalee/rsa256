@@ -53,7 +53,7 @@ KeyType packed_val;
 logic packed_valid, packed_ready;
 
 
-RSATwoPowerMod i_two_power_mod (
+TwoPower i_twopower (
   // input
   .clk(clk),
   .rst(rst),
