@@ -37,6 +37,35 @@ void montgomery_base2(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B,
   out = static_cast<rsa_key_t>(round);
 }
 
+void montgomery_base4(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B,
+                      const rsa_key_t &N) {
+  using extend_key_t = verilog::vuint<kBW_RSA + 3>;
+  extend_key_t round{0};
+  const extend_key_t extend_B = static_cast<extend_key_t>(B);
+  extend_key_t extend_N = static_cast<extend_key_t>(N);
+  for (int i = 0; i < 128; ++i) {
+    if (A.Bit(i * 2)) {
+      round += extend_B;
+    }
+    if (A.Bit(i * 2 + 1)) {
+      round += (extend_B << 1);
+    }
+
+    // Make round mod 4 == 0
+    if (round.Bit(0)) {
+      round += extend_N;
+    }
+    if (round.Bit(1)) {
+      round += (extend_N << 1);
+    }
+    round >>= 2;
+    if (round > extend_N) {
+      round -= extend_N;
+    }
+  }
+  out = static_cast<rsa_key_t>(round);
+}
+
 void lsb_modular_exponentiation(rsa_key_t &out, const rsa_key_t &A,
                                 const rsa_key_t &B, const rsa_key_t &N) {
   int src_idx = 0;
@@ -63,6 +92,6 @@ void rsa(rsa_key_t &crypto, const rsa_key_t &msg, const rsa_key_t &key,
   rsa_key_t pack_value;
   rsa_key_t packed_msg;
   twopower(pack_value, 512, N);
-  montgomery_base2(packed_msg, msg, pack_value, N);
+  montgomery_base4(packed_msg, msg, pack_value, N);
   lsb_modular_exponentiation(crypto, packed_msg, key, N);
 }

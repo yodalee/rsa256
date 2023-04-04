@@ -13,6 +13,12 @@ void twopower(rsa_key_t &out, const unsigned power, const rsa_key_t &N);
 void montgomery_base2(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B,
                       const rsa_key_t &N);
 
+// montgomery algorithm
+// Given two numbers A and B, and the mod number N
+// calculate (A * B * (2 ** -256)) mod N, 1 bit per round
+void montgomery_base4(rsa_key_t &out, const rsa_key_t &A, const rsa_key_t &B,
+                      const rsa_key_t &N);
+
 // modular_exponentiation by least-significant-bit (LSB) multiplication
 // Given two numbers A and B, and the mod number N
 // calculate  A ** B mod N
