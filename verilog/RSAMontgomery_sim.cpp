@@ -59,10 +59,16 @@ int sc_main(int, char **) {
   KeyType modulus(
       "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
   driver->push_back({.a = a, .b = b, .modulus = modulus});
+  from_hex(a, "412820616369726641206874756F53202C48544542415A494C452054524F50");
+  from_hex(b, "10001");
+  driver->push_back({.a = a, .b = b, .modulus = modulus});
 
   TestBench_RsaMontgomery::OutType golden(
       "1ECC89942DF6DD65E01D20F2AC49F495CB47F0EA9977351FD92DD3F8FD4B33D7");
   testbench->push_golden(golden);
+  from_hex(golden,
+           "314f8acb18e57c4b2fa37adefa7964711b8dcdb7aac7514c78d97cf4d4121426");
+  testbench->push_golden(golden);
 
-  return testbench->run(3, SC_US);
+  return testbench->run(750, SC_NS);
 }
