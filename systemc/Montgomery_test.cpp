@@ -41,7 +41,7 @@ const char str_ans[] =
 
 int sc_main(int, char **) {
   unique_ptr<ScTestbench_Montgomery> tb =
-      CreateScTestbench<ScTestbench_Montgomery>("montgomery");
+      CreateScTestbench<ScTestbench_Montgomery>("Montgomery");
   KeyType a, b, modulus, ans;
   from_hex(a, str_A);
   from_hex(b, str_B);

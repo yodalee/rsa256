@@ -33,7 +33,7 @@ private:
 
 int sc_main(int, char **) {
   unique_ptr<ScTestbench_RSAMont> tb =
-      CreateScTestbench<ScTestbench_RSAMont>("montgomery");
+      CreateScTestbench<ScTestbench_RSAMont>("RSAMont");
   KeyType packed, msg, key, modulus, ans;
   from_hex(packed,
            "0AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB");
