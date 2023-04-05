@@ -14,7 +14,7 @@ using IN = RSAModIn;
 using OUT = RSAModOut;
 using DUT = RSA;
 
-class ScTestbench_RSA256 : public ScTestbench<IN, OUT, DUT> {
+class ScTestbench_RSA : public ScTestbench<IN, OUT, DUT> {
 public:
   using ScTestbench::ScTestbench;
   virtual void Connect() override {
@@ -38,8 +38,8 @@ const char str_ans[] =
     "0D41B183313D306ADCA09126F3FED6CDEC7DCDCE49DB5C85CB2A37F08C0F2E31";
 
 int sc_main(int, char **) {
-  unique_ptr<ScTestbench_RSA256> tb =
-      CreateScTestbench<ScTestbench_RSA256>("RSA");
+  unique_ptr<ScTestbench_RSA> tb =
+      CreateScTestbench<ScTestbench_RSA>("RSA");
   RSAModIn in;
   from_hex(in.msg, str_msg);
   from_hex(in.key, str_key);
