@@ -7,11 +7,12 @@ module PipelineDistribute
     input rst,
     input i_valid,
     output logic i_ready,
-    output logic [N-1:0] o_valid,
-    input [N-1:0] o_ready
+    output logic o_valid [N],
+    input o_ready [N]
 );
 
-logic [N-1:0] o_sent; // whether output [i] is being sent
+logic o_sent[N]; // whether output [i] is being sent
+logic ready_sent[N];
 
 // o_valid should be set:
 // 1. when input is valid
@@ -24,12 +25,15 @@ end
 // i_ready should be set:
 // 1. all next modules are ready
 // 2. no un-sent output
-assign i_ready = &(o_ready | o_sent);
+always_comb begin
+  foreach(ready_sent[i]) ready_sent[i] = o_ready[i] | o_sent[i];
+end
+assign i_ready = ready_sent.and();
 
 always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin o_sent <= 0; end
+  if (!rst) begin o_sent <= '{N{'0}}; end
   else if (i_valid && i_ready) begin // transaction
-    o_sent <= 0;
+    o_sent <= '{N{'0}};
   end
   else begin
     for (int i = 0; i < N; i++) begin

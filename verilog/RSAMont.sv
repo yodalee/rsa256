@@ -92,7 +92,7 @@ end
 logic montgomery_o_valid;
 KeyType montgomery_in_a, montgomery_in_b, montgomery_out;
 
-logic [N_FANOUT-1:0] dist_o_valid, dist_o_ready;
+logic  dist_o_valid [N_FANOUT], dist_o_ready [N_FANOUT];
 logic loop_i_valid, loop_i_ready, loop_o_valid, loop_o_ready;
 logic loop_init, loop_next, loop_done;
 // check stop condition:
