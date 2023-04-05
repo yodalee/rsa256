@@ -55,9 +55,9 @@ int sc_main(int, char **) {
   testbench->register_connector(
       static_cast<shared_ptr<Connector<DUT>>>(monitor));
 
-  VintLineSource<KeyType> source_m("RSA256_m.in");
+  VintLineSource<KeyType> source_m("RSA_m.in");
   auto v_m = source_m.get();
-  VintLineSource<RSAModOut> source_c("RSA256_c.in");
+  VintLineSource<RSAModOut> source_c("RSA_c.in");
   auto v_c = source_c.get();
 
   // sample in
