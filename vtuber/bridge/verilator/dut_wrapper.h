@@ -61,16 +61,16 @@ public:
 
     // simulate the initialize value
     dut->clk = 0;
-    dut->rst = 1;
+    dut->rst_n = 1;
     Step();
 
     // pull down the reset value
     ctx->timeInc(period_ps);
-    dut->rst = 0;
+    dut->rst_n = 0;
     Step();
 
     ctx->timeInc(period_ps);
-    dut->rst = 1;
+    dut->rst_n = 1;
     Step();
 
     ctx->timeInc(period_ps);

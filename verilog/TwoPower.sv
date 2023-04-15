@@ -4,7 +4,7 @@ import RSA_pkg::*;
 module TwoPower (
   // input
   input clk,
-  input rst,
+  input rst_n,
 
   // input data
   input i_valid,
@@ -30,8 +30,8 @@ ExtendKeyType round_result;
 assign o_out = round_result[MOD_WIDTH-1:0];
 
 // read input data
-always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin
+always_ff @( posedge clk or negedge rst_n ) begin
+  if (!rst_n) begin
     data_power <= 0;
     data_modulus <= 0;
   end
@@ -47,7 +47,7 @@ logic loop_ovalid, loop_oready;
 logic loop_init, loop_next;
 
 // round_counter
-always_ff @(posedge clk or negedge rst) begin
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_counter <= 0;
   end else if (loop_next) begin
@@ -56,7 +56,7 @@ always_ff @(posedge clk or negedge rst) begin
 end
 
 // round_result
-always_ff @(posedge clk or negedge rst) begin
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_result <= 'b1;
   end
@@ -69,7 +69,7 @@ end
 
 PipelineLoop i_loop(
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
   .i_valid(i_valid),
   .i_ready(i_ready),
   .i_cen(loop_init),

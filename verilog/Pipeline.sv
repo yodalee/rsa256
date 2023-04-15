@@ -1,6 +1,6 @@
 module Pipeline (
     input clk,
-    input rst,
+    input rst_n,
     input i_valid,
     output logic i_ready,
     output logic o_en,
@@ -20,8 +20,8 @@ assign o_valid_w = o_en || (o_valid && !o_ready);
 assign i_ready = !o_valid && o_ready;
 assign o_en = i_ready && i_valid;
 
-always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin o_valid <= 1'b0; end
+always_ff @( posedge clk or negedge rst_n ) begin
+  if (!rst_n) begin o_valid <= 1'b0; end
   else begin o_valid <= o_valid_w; end
 end
 

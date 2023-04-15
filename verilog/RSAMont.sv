@@ -4,7 +4,7 @@ import RSA_pkg::*;
 module RSAMont (
   // input
   input clk,
-  input rst,
+  input rst_n,
 
   // input data
   input i_valid,
@@ -31,8 +31,8 @@ assign update_multiply = key[key_idx[$clog2(MOD_WIDTH) - 1:0]] == 1'b1;
 assign o_out = multiply;
 
 // read input data
-always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin
+always_ff @( posedge clk or negedge rst_n ) begin
+  if (!rst_n) begin
     base <= 0;
     msg <= 0;
     key <= 0;
@@ -47,7 +47,7 @@ always_ff @( posedge clk or negedge rst ) begin
 end
 
 // round_counter
-always_ff @(posedge clk or negedge rst) begin
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_counter <= 0;
   end
@@ -102,7 +102,7 @@ assign loop_done = round_counter == MOD_WIDTH * 2 + 2;
 
 PipelineLoop i_loop(
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
   .i_valid(i_valid),
   .i_ready(i_ready),
   .i_cen(loop_init),
@@ -114,7 +114,7 @@ PipelineLoop i_loop(
 
 PipelineDistribute #(.N(N_FANOUT)) i_dist (
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
   .i_valid(loop_o_valid),
   .i_ready(loop_o_ready),
   .o_valid(dist_o_valid),
@@ -124,7 +124,7 @@ PipelineDistribute #(.N(N_FANOUT)) i_dist (
 Montgomery i_montgomery(
   // input
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
 
   // input data
   .i_valid(dist_o_valid[0]),

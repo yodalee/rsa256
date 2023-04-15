@@ -5,7 +5,7 @@ module Montgomery #(
 ) (
 	// input
 	input clk,
-	input rst,
+	input rst_n,
 
 	// input data
 	input i_valid,
@@ -33,8 +33,8 @@ assign mod_result = round_result > data_modulus ? round_result - data_modulus : 
 assign o_out = mod_result[MOD_WIDTH - 1 : 0];
 
 // read input data
-always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin
+always_ff @( posedge clk or negedge rst_n ) begin
+  if (!rst_n) begin
     data_a <= 0;
     data_b <= 0;
     data_modulus <= 0;
@@ -49,7 +49,7 @@ always_ff @( posedge clk or negedge rst ) begin
 end
 
 // round_counter
-always_ff @(posedge clk or negedge rst) begin
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_counter <= 0;
   end
@@ -59,7 +59,7 @@ always_ff @(posedge clk or negedge rst) begin
 end
 
 // round_result
-always_ff @(posedge clk or negedge rst) begin
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_result <= 0;
   end
@@ -89,7 +89,7 @@ logic loop_done = round_counter == MOD_WIDTH;
 
 PipelineLoop i_loop(
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
   .i_valid(i_valid),
   .i_ready(i_ready),
   .i_cen(loop_init),
