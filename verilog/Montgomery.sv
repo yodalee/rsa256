@@ -28,7 +28,7 @@ assign mod_result = round_result > data_modulus ? round_result - data_modulus : 
 assign o_out = mod_result[MOD_WIDTH - 1 : 0];
 
 // loop variable
-logic loop_ovalid, loop_oready;
+logic loop_o_valid, loop_o_ready;
 logic loop_init, loop_next;
 logic loop_done = round_counter == MOD_WIDTH;
 
@@ -90,15 +90,15 @@ PipelineLoop i_loop(
   .i_valid(i_valid),
   .i_ready(i_ready),
   .i_cen(loop_init),
-  .o_valid(loop_ovalid),
-  .o_ready(loop_oready),
+  .o_valid(loop_o_valid),
+  .o_ready(loop_o_ready),
   .o_done(loop_done),
   .o_cen(loop_next)
 );
 
 PipelineFilter i_filter(
-  .i_valid(loop_ovalid),
-  .i_ready(loop_oready),
+  .i_valid(loop_o_valid),
+  .i_ready(loop_o_ready),
   .i_pass(loop_done),
   .o_valid(o_valid),
   .o_ready(o_ready)
