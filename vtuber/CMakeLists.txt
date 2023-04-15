@@ -25,9 +25,6 @@ add_executable(dtype_test
 #test_vunion.cpp
 #test_dtype_mixed.cpp
 )
-add_executable(vint2_test
-	verilog/dtype/vint2_test.cpp
-)
 add_executable(operation_test
 	verilog/operation/print_indent_test.cpp
 )
@@ -40,7 +37,6 @@ add_executable(verilator_assign_port_test
 
 foreach(target_test IN ITEMS
 	dtype_test
-	vint2_test
 	abstract_random_test
 	verilator_assign_port_test
 	operation_test
