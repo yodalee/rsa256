@@ -20,17 +20,17 @@ module Montgomery #(
 
 typedef logic [MOD_WIDTH + 2 - 1:0] ExtendKeyType;
 
-ExtendKeyType data_a;
-ExtendKeyType data_b;
-ExtendKeyType data_modulus;
-ExtendKeyType round_result;
+ExtendKeyType data_a, data_b, data_modulus;
+ExtendKeyType round_result, round_result_next;
+
 ExtendKeyType mod_result;
-ExtendKeyType round_result_next;
-
-logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
-
 assign mod_result = round_result > data_modulus ? round_result - data_modulus : round_result;
 assign o_out = mod_result[MOD_WIDTH - 1 : 0];
+
+// loop variable
+logic loop_ovalid, loop_oready;
+logic loop_init, loop_next;
+logic loop_done = round_counter == MOD_WIDTH;
 
 // read input data
 always_ff @( posedge clk or negedge rst_n ) begin
@@ -49,6 +49,8 @@ always_ff @( posedge clk or negedge rst_n ) begin
 end
 
 // round_counter
+logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
+
 always_ff @(posedge clk) begin
   if (loop_init) begin
     round_counter <= 0;
@@ -81,11 +83,6 @@ always_comb begin
     round_result_next >>= 1;
   end
 end
-
-logic loop_ovalid, loop_oready;
-logic loop_init, loop_next;
-
-logic loop_done = round_counter == MOD_WIDTH;
 
 PipelineLoop i_loop(
   .clk(clk),

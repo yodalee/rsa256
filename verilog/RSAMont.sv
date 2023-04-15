@@ -19,14 +19,25 @@ module RSAMont (
 
 localparam N_FANOUT = 2;
 
+// data register
 KeyType base, msg, key, modulus; // input
 KeyType square, multiply;  // calculate result
 
 logic [$clog2(2 * MOD_WIDTH+1)-1:0] round_counter;
 logic [$clog2(2 * MOD_WIDTH+1)-1:0] key_idx;
-assign key_idx = (round_counter - 1) >> 1;
 logic update_multiply;
+logic loop_init, loop_next, loop_done;
+
+assign key_idx = (round_counter - 1) >> 1;
 assign update_multiply = key[key_idx[$clog2(MOD_WIDTH) - 1:0]] == 1'b1;
+// check stop condition:
+// 1 round for packed message
+// 256 * 2 round: odd round for multiply, even round for square
+assign loop_done = round_counter == MOD_WIDTH * 2 + 2;
+
+// inter-module connection
+logic dist_o_valid [N_FANOUT], dist_o_ready [N_FANOUT];
+logic loop_o_valid, loop_o_ready;
 
 assign o_out = multiply;
 
@@ -55,6 +66,9 @@ always_ff @(posedge clk) begin
     round_counter <= round_counter + 1;
   end
 end
+
+logic montgomery_o_valid;
+KeyType montgomery_in_a, montgomery_in_b, montgomery_out;
 
 // store data
 always_ff @(posedge clk) begin
@@ -88,17 +102,6 @@ always_comb begin
     montgomery_in_b = square;
   end
 end
-
-logic montgomery_o_valid;
-KeyType montgomery_in_a, montgomery_in_b, montgomery_out;
-
-logic  dist_o_valid [N_FANOUT], dist_o_ready [N_FANOUT];
-logic loop_i_valid, loop_i_ready, loop_o_valid, loop_o_ready;
-logic loop_init, loop_next, loop_done;
-// check stop condition:
-// 1 round for packed message
-// 256 * 2 round: odd round for multiply, even round for square
-assign loop_done = round_counter == MOD_WIDTH * 2 + 2;
 
 PipelineLoop i_loop(
   .clk(clk),
@@ -138,11 +141,11 @@ Montgomery i_montgomery(
 );
 
 PipelineFilter i_filter(
-    .i_valid(dist_o_valid[1]),
-    .i_ready(dist_o_ready[1]),
-    .i_pass(loop_done),
-    .o_valid(o_valid),
-    .o_ready(o_ready)
+  .i_valid(dist_o_valid[1]),
+  .i_ready(dist_o_ready[1]),
+  .i_pass(loop_done),
+  .o_valid(o_valid),
+  .o_ready(o_ready)
 );
 
 endmodule
