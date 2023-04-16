@@ -5,7 +5,7 @@ module Montgomery #(
 ) (
 	// input
 	input clk,
-	input rst,
+	input rst_n,
 
 	// input data
 	input i_valid,
@@ -20,21 +20,21 @@ module Montgomery #(
 
 typedef logic [MOD_WIDTH + 2 - 1:0] ExtendKeyType;
 
-ExtendKeyType data_a;
-ExtendKeyType data_b;
-ExtendKeyType data_modulus;
-ExtendKeyType round_result;
+ExtendKeyType data_a, data_b, data_modulus;
+ExtendKeyType round_result, round_result_next;
+
 ExtendKeyType mod_result;
-ExtendKeyType round_result_next;
-
-logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
-
 assign mod_result = round_result > data_modulus ? round_result - data_modulus : round_result;
 assign o_out = mod_result[MOD_WIDTH - 1 : 0];
 
+// loop variable
+logic loop_o_valid, loop_o_ready;
+logic loop_init, loop_next;
+logic loop_done = round_counter == MOD_WIDTH;
+
 // read input data
-always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin
+always_ff @( posedge clk or negedge rst_n ) begin
+  if (!rst_n) begin
     data_a <= 0;
     data_b <= 0;
     data_modulus <= 0;
@@ -49,7 +49,9 @@ always_ff @( posedge clk or negedge rst ) begin
 end
 
 // round_counter
-always_ff @(posedge clk or negedge rst) begin
+logic [$clog2(MOD_WIDTH+1)-1:0] round_counter;
+
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_counter <= 0;
   end
@@ -59,7 +61,7 @@ always_ff @(posedge clk or negedge rst) begin
 end
 
 // round_result
-always_ff @(posedge clk or negedge rst) begin
+always_ff @(posedge clk) begin
   if (loop_init) begin
     round_result <= 0;
   end
@@ -82,26 +84,21 @@ always_comb begin
   end
 end
 
-logic loop_ovalid, loop_oready;
-logic loop_init, loop_next;
-
-logic loop_done = round_counter == MOD_WIDTH;
-
 PipelineLoop i_loop(
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
   .i_valid(i_valid),
   .i_ready(i_ready),
   .i_cen(loop_init),
-  .o_valid(loop_ovalid),
-  .o_ready(loop_oready),
+  .o_valid(loop_o_valid),
+  .o_ready(loop_o_ready),
   .o_done(loop_done),
   .o_cen(loop_next)
 );
 
 PipelineFilter i_filter(
-  .i_valid(loop_ovalid),
-  .i_ready(loop_oready),
+  .i_valid(loop_o_valid),
+  .i_ready(loop_o_ready),
   .i_pass(loop_done),
   .o_valid(o_valid),
   .o_ready(o_ready)

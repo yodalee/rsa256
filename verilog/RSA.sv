@@ -4,7 +4,7 @@ import RSA_pkg::*;
 module RSA (
   // input
   input clk,
-  input rst,
+  input rst_n,
 
   // input data
   input i_valid,
@@ -22,8 +22,8 @@ logic push_register;
 logic pack_valid, pack_ready;
 
 // read input data
-always_ff @( posedge clk or negedge rst) begin
-  if (!rst) begin
+always_ff @( posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
     msg <= 0;
     key <= 0;
     modulus <= 0;
@@ -39,7 +39,7 @@ end
 
 Pipeline pipeline (
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
   .i_valid(i_valid),
   .i_ready(i_ready),
   .o_en(push_register),
@@ -56,7 +56,7 @@ logic packed_valid, packed_ready;
 TwoPower i_twopower (
   // input
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
 
   // input data
   .i_valid(pack_valid),
@@ -72,7 +72,7 @@ TwoPower i_twopower (
 RSAMont i_RSAMont (
   // input
   .clk(clk),
-  .rst(rst),
+  .rst_n(rst_n),
 
   // input data
   .i_valid(packed_valid),

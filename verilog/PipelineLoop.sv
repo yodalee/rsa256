@@ -1,6 +1,6 @@
 module PipelineLoop (
     input clk,
-    input rst,
+    input rst_n,
     input i_valid,
     output logic i_ready,
     output logic i_cen,
@@ -19,8 +19,8 @@ always_comb begin
 end
 assign o_valid_w = i_valid || o_valid && !(o_ready && o_done);
 
-always_ff @(posedge clk or negedge rst) begin
-    if(!rst) begin o_valid <= 1'b0; end
+always_ff @(posedge clk or negedge rst_n) begin
+    if(!rst_n) begin o_valid <= 1'b0; end
     else begin o_valid <= o_valid_w; end
 end
 

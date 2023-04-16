@@ -4,7 +4,7 @@
 module PipelineDistribute
   # (parameter N = 2) (
     input clk,
-    input rst,
+    input rst_n,
     input i_valid,
     output logic i_ready,
     output logic o_valid [N],
@@ -30,8 +30,8 @@ always_comb begin
 end
 assign i_ready = ready_sent.and();
 
-always_ff @( posedge clk or negedge rst ) begin
-  if (!rst) begin o_sent <= '{N{'0}}; end
+always_ff @( posedge clk or negedge rst_n ) begin
+  if (!rst_n) begin o_sent <= '{N{'0}}; end
   else if (i_valid && i_ready) begin // transaction
     o_sent <= '{N{'0}};
   end
