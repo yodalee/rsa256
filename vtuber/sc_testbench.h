@@ -1,7 +1,9 @@
 #pragma once
 
 #include "scoreboard.h"
+#include "verilog/serialize.h"
 
+#include <fstream>
 #include <glog/logging.h>
 #include <memory>
 #include <systemc>
@@ -22,16 +24,43 @@ public:
   using OutType = Out;
 
   SC_HAS_PROCESS(ScTestbench);
-  ScTestbench(const sc_module_name &name)
+  ScTestbench(const sc_module_name &name, const bool dump_)
       : sc_module(name), clk("clk", 1, SC_NS), dut("dut"),
-        score_board(new ScoreBoard<OutType>(&KillSimulation)) {
+        score_board(new ScoreBoard<OutType>(&KillSimulation)), dump(dump_) {
     dut.clk(clk);
     SC_THREAD(InputThread);
     SC_THREAD(OutputThread);
   }
 
-  void push_golden(const OutType &out) { score_board->push_golden(out); }
+  void push_golden(const OutType &out) {
+    if (dump) {
+      data_out.push_back(out);
+    }
+    score_board->push_golden(out);
+  }
   void push_input(const InType &in) { data_in.push_back(in); }
+
+  void end_of_elaboration() override {
+    if (!dump) {
+      return;
+    }
+
+    // dump input and output to file "module_name.in" and "module_name.out"
+    std::fstream f_data_in, f_data_out;
+    std::string module_name(name());
+
+    f_data_in.open(module_name + ".in", std::fstream::out);
+    for (const auto &in : data_in) {
+      SaveContent(f_data_in, in);
+    }
+    f_data_in.close();
+
+    f_data_out.open(module_name + ".out", std::fstream::out);
+    for (const auto &out : data_out) {
+      SaveContent(f_data_out, out);
+    }
+    f_data_out.close();
+  }
 
   int run(int duration, sc_time_unit unit) {
     sc_start(duration, unit);
@@ -61,13 +90,16 @@ public:
 protected:
   sc_clock clk;
   std::vector<InType> data_in;
+  std::vector<OutType> data_out;
   DUT dut;
   unique_ptr<ScoreBoard<OutType>> score_board;
+  bool dump;
 };
 
 template <typename TB>
-unique_ptr<TB> CreateScTestbench(const sc_module_name &name) {
-  unique_ptr<TB> tb{new TB(name)};
+unique_ptr<TB> CreateScTestbench(const sc_module_name &name,
+                                 const bool dump = false) {
+  unique_ptr<TB> tb{new TB(name, dump)};
   tb->Connect();
   return tb;
 }
