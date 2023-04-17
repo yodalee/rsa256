@@ -324,21 +324,21 @@ struct vint {
 	//////////////////////
 	vint& operator&=(const vint& rhs) {
 		for (unsigned i = 0; i < num_word; ++i) {
-			v[i] &= rhs[i];
+			v[i] &= rhs.v[i];
 		}
 		return *this;
 	}
 
 	vint& operator|=(const vint& rhs) {
 		for (unsigned i = 0; i < num_word; ++i) {
-			v[i] |= rhs[i];
+			v[i] |= rhs.v[i];
 		}
 		return *this;
 	}
 
 	vint& operator^=(const vint& rhs) {
 		for (unsigned i = 0; i < num_word; ++i) {
-			v[i] ^= rhs[i];
+			v[i] ^= rhs.v[i];
 		}
 		return *this;
 	}
