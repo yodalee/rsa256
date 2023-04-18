@@ -29,7 +29,7 @@ public:
       const DataType &received = receiveds.front();
       const DataType &golden = goldens.front();
 
-      if (golden == received) {
+      if (memcmp(&golden, &received, sizeof(DataType)) == 0) {
       } else {
         LOG(ERROR) << "Golden != Verilog Out: " << golden << " vs " << received;
         pass = false;
