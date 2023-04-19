@@ -78,8 +78,8 @@ struct varray {
 	T* end  () { return begin() + asize; }
 	const T* begin() const { return reinterpret_cast<const T*>(&v); }
 	const T* end  () const { return begin() + asize; }
-	auto operator[](unsigned i) const { return v[i]; }
-	auto &operator[](unsigned i) { return v[i]; }
+	auto& operator[](unsigned i) { return v[i]; }
+	const auto &operator[](unsigned i) const { return v[i]; }
 
 	void print_with_helper(detail::ost_indent_helper &helper) const {
 		static const unsigned array_bound[ndim] { dims... };
