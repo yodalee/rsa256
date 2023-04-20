@@ -537,8 +537,8 @@ struct vint {
 	vint operator-(const vint& rhs) const { vint ret = *this; ret -= rhs; return ret; }
 	vint operator*(const vint& rhs) const { vint ret = *this; ret *= rhs; return ret; }
 	vint operator/(const vint& rhs) const { vint ret = *this; ret /= rhs; return ret; }
-	vint operator&(const vint& rhs) const { vint ret = *this; ret += rhs; return ret; }
-	vint operator|(const vint& rhs) const { vint ret = *this; ret -= rhs; return ret; }
+	vint operator&(const vint& rhs) const { vint ret = *this; ret &= rhs; return ret; }
+	vint operator|(const vint& rhs) const { vint ret = *this; ret |= rhs; return ret; }
 	vint operator^(const vint& rhs) const { vint ret = *this; ret ^= rhs; return ret; }
 	vint operator>>(const vint& rhs) const { vint ret = *this; ret >>= rhs; return ret; }
 	vint operator<<(const vint& rhs) const { vint ret = *this; ret <<= rhs; return ret; }
