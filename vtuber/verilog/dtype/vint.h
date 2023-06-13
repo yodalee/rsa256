@@ -556,6 +556,29 @@ struct vint {
 	bool operator!=(const stype rhs) const { return not (*this == rhs); }
 
 	//////////////////////
+	// derived operators
+	//////////////////////
+	vint RotateRight(const vint& rhs) const {
+		static_assert(!is_signed);
+		return *this;
+	}
+
+	vint RotateRight(const stype rhs) const {
+		static_assert(!is_signed);
+		return *this;
+	}
+
+	vint RotateLeft(const vint& rhs) const {
+		static_assert(!is_signed);
+		return *this;
+	}
+
+	vint RotateLeft(const stype rhs) const {
+		static_assert(!is_signed);
+		return *this;
+	}
+
+	//////////////////////
 	// slice
 	//////////////////////
 	bool Bit(unsigned pos) const {

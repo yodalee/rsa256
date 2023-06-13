@@ -987,6 +987,87 @@ TEST(TestVerilogSigned, Shift) {
 }
 
 ///////////////////////////
+// Test rotate
+///////////////////////////
+static const tuple<array<uint16_t, 2>, unsigned> rotate_ru10[] {
+	{{0x1a5, 0x51a}, 4u},
+	{{0x3a5, 0x3a5}, 0u},
+	{{0x3a5, 0x3d2}, 1u},
+	{{0x3a5, 0x53a}, 4u},
+	{{0x3a5, 0x34b}, 9u}
+};
+
+static const tuple<array<uint64_t, 6>, unsigned> rotate_ru136[] {
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+	}, 0u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00fallu, 0xbcde'f012'3456'7890llu, 0xf0f0'f0f0'f0f0'f0ffllu,
+	}, 4u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00abllu, 0xcdef'0123'4567'890fllu, 0x0f0f'0f0f'0f0f'0fffllu,
+	}, 8u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00dellu, 0xdef0'1234'5678'90f0llu, 0xf0f0'f0f0'f0f0'fffallu,
+	}, 12u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0089llu, 0x0f0f'0f0f'0f0f'0f0fllu, 0xffab'cdef'0123'4567llu,
+	}, 64u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'0090llu, 0xf0f0'f0f0'f0f0'f0ffllu, 0xfabc'def0'1234'5678llu,
+	}, 68u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'000fllu, 0x0f0f'0f0f'0f0f'0fffllu, 0xabcd'ef01'2345'6789llu,
+	}, 72u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'000fllu, 0xffab'cdef'0123'4567llu, 0x890f'0f0f'0f0f'0f0fllu,
+	}, 128u },
+	{{
+		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
+		0x0000'0000'0000'00ffllu, 0xfabc'def0'1234'5678llu, 0x90f0'f0f0'f0f0'f0f0llu,
+	}, 132u }
+};
+
+TEST(TestVerilogUnsigned, DISABLED_Rotate) {
+	vuint<10> v10;
+	for (auto &p: rotate_ru10) {
+		const auto &test_data = get<0>(p);
+		const unsigned nrotate = get<1>(p);
+		v10.v[0] = test_data[0];
+		// default unsigned
+		v10.RotateRight(nrotate);
+		EXPECT_EQ(v10.v[0], test_data[1]);
+		v10.RotateLeft(nrotate);
+		EXPECT_EQ(v10.v[0], test_data[0]);
+	}
+
+	vuint<136> v136;
+	for (auto &p: rotate_ru136) {
+		const auto &test_data = get<0>(p);
+		const unsigned nrotate = get<1>(p);
+		v136.v[0] = test_data[2];
+		v136.v[1] = test_data[1];
+		v136.v[2] = test_data[0];
+		v136.RotateLeft(nrotate);
+		EXPECT_EQ(v136.v[0], test_data[5]);
+		EXPECT_EQ(v136.v[1], test_data[4]);
+		EXPECT_EQ(v136.v[2], test_data[3]);
+		v136.RotateRight(nrotate);
+		EXPECT_EQ(v136.v[0], test_data[2]);
+		EXPECT_EQ(v136.v[1], test_data[1]);
+		EXPECT_EQ(v136.v[2], test_data[0]);
+	}
+}
+
+///////////////////////////
 // Test negate
 ///////////////////////////
 static const array<uint8_t, 2> pattern_neg7[]{
