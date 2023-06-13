@@ -990,10 +990,8 @@ TEST(TestVerilogSigned, Shift) {
 // Test rotate
 ///////////////////////////
 static const tuple<array<uint16_t, 2>, unsigned> rotate_ru10[] {
-	{{0x1a5, 0x51a}, 4u},
 	{{0x3a5, 0x3a5}, 0u},
 	{{0x3a5, 0x3d2}, 1u},
-	{{0x3a5, 0x53a}, 4u},
 	{{0x3a5, 0x34b}, 9u}
 };
 
@@ -1010,10 +1008,6 @@ static const tuple<array<uint64_t, 6>, unsigned> rotate_ru136[] {
 		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
 		0x0000'0000'0000'00abllu, 0xcdef'0123'4567'890fllu, 0x0f0f'0f0f'0f0f'0fffllu,
 	}, 8u },
-	{{
-		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
-		0x0000'0000'0000'00dellu, 0xdef0'1234'5678'90f0llu, 0xf0f0'f0f0'f0f0'fffallu,
-	}, 12u },
 	{{
 		0x0000'0000'0000'00ffllu, 0xabcd'ef01'2345'6789llu, 0x0f0f'0f0f'0f0f'0f0fllu,
 		0x0000'0000'0000'0089llu, 0x0f0f'0f0f'0f0f'0f0fllu, 0xffab'cdef'0123'4567llu,
@@ -1036,7 +1030,7 @@ static const tuple<array<uint64_t, 6>, unsigned> rotate_ru136[] {
 	}, 132u }
 };
 
-TEST(TestVerilogUnsigned, DISABLED_Rotate) {
+TEST(TestVerilogUnsigned, Rotate) {
 	vuint<10> v10;
 	for (auto &p: rotate_ru10) {
 		const auto &test_data = get<0>(p);
@@ -1044,9 +1038,9 @@ TEST(TestVerilogUnsigned, DISABLED_Rotate) {
 		v10.v[0] = test_data[0];
 		// default unsigned
 		v10.RotateRight(nrotate);
-		EXPECT_EQ(v10.v[0], test_data[1]);
+		EXPECT_EQ(v10.v[0], test_data[1]) << nrotate;
 		v10.RotateLeft(nrotate);
-		EXPECT_EQ(v10.v[0], test_data[0]);
+		EXPECT_EQ(v10.v[0], test_data[0]) << nrotate;
 	}
 
 	vuint<136> v136;
@@ -1057,13 +1051,13 @@ TEST(TestVerilogUnsigned, DISABLED_Rotate) {
 		v136.v[1] = test_data[1];
 		v136.v[2] = test_data[0];
 		v136.RotateLeft(nrotate);
-		EXPECT_EQ(v136.v[0], test_data[5]);
-		EXPECT_EQ(v136.v[1], test_data[4]);
-		EXPECT_EQ(v136.v[2], test_data[3]);
+		EXPECT_EQ(v136.v[0], test_data[5]) << nrotate;
+		EXPECT_EQ(v136.v[1], test_data[4]) << nrotate;
+		EXPECT_EQ(v136.v[2], test_data[3]) << nrotate;
 		v136.RotateRight(nrotate);
-		EXPECT_EQ(v136.v[0], test_data[2]);
-		EXPECT_EQ(v136.v[1], test_data[1]);
-		EXPECT_EQ(v136.v[2], test_data[0]);
+		EXPECT_EQ(v136.v[0], test_data[2]) << nrotate;
+		EXPECT_EQ(v136.v[1], test_data[1]) << nrotate;
+		EXPECT_EQ(v136.v[2], test_data[0]) << nrotate;
 	}
 }
 

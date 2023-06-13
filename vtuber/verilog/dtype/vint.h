@@ -558,23 +558,23 @@ struct vint {
 	//////////////////////
 	// derived operators
 	//////////////////////
-	vint RotateRight(const vint& rhs) const {
-		static_assert(!is_signed);
+	vint& RotateRight(const unsigned rhs) {
+		static_assert(not is_signed);
+		if (rhs != 0) {
+			auto tmp = (*this) >> rhs;
+			*this <<= (num_bit-rhs);
+			*this |= tmp;
+		}
 		return *this;
 	}
 
-	vint RotateRight(const stype rhs) const {
-		static_assert(!is_signed);
-		return *this;
-	}
-
-	vint RotateLeft(const vint& rhs) const {
-		static_assert(!is_signed);
-		return *this;
-	}
-
-	vint RotateLeft(const stype rhs) const {
-		static_assert(!is_signed);
+	vint& RotateLeft(const unsigned rhs) {
+		static_assert(not is_signed);
+		if (rhs != 0) {
+			auto tmp = (*this) << rhs;
+			*this >>= (num_bit-rhs);
+			*this |= tmp;
+		}
 		return *this;
 	}
 
