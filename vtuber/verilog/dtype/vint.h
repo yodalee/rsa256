@@ -560,6 +560,7 @@ struct vint {
 	//////////////////////
 	vint& RotateRight(const unsigned rhs) {
 		static_assert(not is_signed);
+		assert(rhs < num_bit);
 		if (rhs != 0) {
 			auto tmp = (*this) >> rhs;
 			*this <<= (num_bit-rhs);
@@ -570,6 +571,7 @@ struct vint {
 
 	vint& RotateLeft(const unsigned rhs) {
 		static_assert(not is_signed);
+		assert(rhs < num_bit);
 		if (rhs != 0) {
 			auto tmp = (*this) << rhs;
 			*this >>= (num_bit-rhs);
