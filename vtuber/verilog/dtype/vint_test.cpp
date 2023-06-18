@@ -1061,6 +1061,18 @@ TEST(TestVerilogUnsigned, Rotate) {
 	}
 }
 
+TEST(TestVerilogUnsigned, DeathRotate) {
+	vuint<10> v10(0x3a5);
+	vuint<136> v136;
+	v136.v[0] = 0x8C17378EEE08E2A3;
+	v136.v[1] = 0xA6C1298488B890AC;
+	v136.v[2] = 0x60;
+	ASSERT_DEATH(v10.RotateLeft(11), "rhs < num_bit' failed");
+	ASSERT_DEATH(v10.RotateRight(11), "rhs < num_bit' failed");
+	ASSERT_DEATH(v136.RotateLeft(137), "rhs < num_bit' failed");
+	ASSERT_DEATH(v136.RotateRight(137), "rhs < num_bit' failed");
+}
+
 ///////////////////////////
 // Test negate
 ///////////////////////////
@@ -1353,27 +1365,4 @@ TEST(TestVerilogUnsigned, Concat) {
 		EXPECT_EQ(v88.v[1], 0x1'ef123);
 		EXPECT_EQ(v88.v[0], 0x45678'abcdabcd'abcllu);
 	}
-}
-
-///////////////////////////
-// Test unpack
-///////////////////////////
-TEST(TestVerilogUnsigned, DISABLED_Unconcat) {
-	/*
-	vuint<68> v68;
-	vuint<60> v60;
-	vuint<8> v8;
-	vuint<12> v12;
-	v8 = 0xff;
-	v12 = 0xaaa;
-	v60 = 0x234567812345678;
-	{
-		vuint<80> all;
-		vuint<68> v68;
-		vuint<60> v60;
-		vuint<8> v8;
-		vuint<12> v12;
-		Unpack(v80, v68, v12);
-	}
-	*/
 }
