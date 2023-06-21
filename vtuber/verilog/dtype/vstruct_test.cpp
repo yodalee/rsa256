@@ -45,30 +45,30 @@ TEST(TestVerilogStruct, Pack) {
 	EXPECT_EQ(tmp, 06543210);
 }
 
-TEST(TestVerilogStruct, DISABLED_Unpack) {
+TEST(TestVerilogStruct, Unpack) {
 	vuint<21> v21;
 	v21 = 0x57B3DC;
 	{
 		S1 s1;
-		// unpack(s1, v21);
-		EXPECT_EQ(s1.member1[0][0], 05);
-		EXPECT_EQ(s1.member1[0][1], 07);
-		EXPECT_EQ(s1.member1[0][2], 03);
-		EXPECT_EQ(s1.member1[1][0], 01);
-		EXPECT_EQ(s1.member1[1][1], 07);
-		EXPECT_EQ(s1.member1[1][2], 03);
-		EXPECT_EQ(s1.member2, 04);
+		unpack(s1, v21);
+		EXPECT_EQ(s1.member1[0][0], 0x5);
+		EXPECT_EQ(s1.member1[0][1], 0x7);
+		EXPECT_EQ(s1.member1[0][2], 0x3);
+		EXPECT_EQ(s1.member1[1][0], 0x1);
+		EXPECT_EQ(s1.member1[1][1], 0x7);
+		EXPECT_EQ(s1.member1[1][2], 0x3);
+		EXPECT_EQ(s1.member2, 0x4);
 	}
 	{
 		rS1 s1;
-		// unpack(s1, v21);
-		EXPECT_EQ(s1.member1, 05);
-		EXPECT_EQ(s1.member2[0][0], 07);
-		EXPECT_EQ(s1.member2[0][1], 03);
-		EXPECT_EQ(s1.member2[0][2], 01);
-		EXPECT_EQ(s1.member2[1][0], 07);
-		EXPECT_EQ(s1.member2[1][1], 03);
-		EXPECT_EQ(s1.member2[1][2], 04);
+		unpack(s1, v21);
+		EXPECT_EQ(s1.member1, 0x5);
+		EXPECT_EQ(s1.member2[0][0], 0x7);
+		EXPECT_EQ(s1.member2[0][1], 0x3);
+		EXPECT_EQ(s1.member2[0][2], 0x1);
+		EXPECT_EQ(s1.member2[1][0], 0x7);
+		EXPECT_EQ(s1.member2[1][1], 0x3);
+		EXPECT_EQ(s1.member2[1][2], 0x4);
 	}
 }
 
