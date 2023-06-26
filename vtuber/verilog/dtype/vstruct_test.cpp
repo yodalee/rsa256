@@ -23,6 +23,13 @@ struct S1 {
 	VSTRUCT_HAS_PROCESS(S1)
 };
 
+struct rS1 {
+	vuint<3> member1;
+	Arr2     member2;
+	MAKE_VSTRUCT(member1, member2)
+	VSTRUCT_HAS_PROCESS(rS1)
+};
+
 TEST(TestVerilogStruct, Pack) {
 	S1 s1;
 	static_assert(is_vstruct_v<S1>);
@@ -36,6 +43,33 @@ TEST(TestVerilogStruct, Pack) {
 	s1.member2 = 0;
 	vuint<21> tmp = pack(s1);
 	EXPECT_EQ(tmp, 06543210);
+}
+
+TEST(TestVerilogStruct, Unpack) {
+	vuint<21> v21;
+	v21 = 0x57B3DC;
+	{
+		S1 s1;
+		unpack(s1, v21);
+		EXPECT_EQ(s1.member1[0][0], 0x5);
+		EXPECT_EQ(s1.member1[0][1], 0x7);
+		EXPECT_EQ(s1.member1[0][2], 0x3);
+		EXPECT_EQ(s1.member1[1][0], 0x1);
+		EXPECT_EQ(s1.member1[1][1], 0x7);
+		EXPECT_EQ(s1.member1[1][2], 0x3);
+		EXPECT_EQ(s1.member2, 0x4);
+	}
+	{
+		rS1 s1;
+		unpack(s1, v21);
+		EXPECT_EQ(s1.member1, 0x5);
+		EXPECT_EQ(s1.member2[0][0], 0x7);
+		EXPECT_EQ(s1.member2[0][1], 0x3);
+		EXPECT_EQ(s1.member2[0][2], 0x1);
+		EXPECT_EQ(s1.member2[1][0], 0x7);
+		EXPECT_EQ(s1.member2[1][1], 0x3);
+		EXPECT_EQ(s1.member2[1][2], 0x4);
+	}
 }
 
 typedef varray<vuint<64>, 5> Arr3;
