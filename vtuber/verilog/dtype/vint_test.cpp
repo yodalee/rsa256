@@ -373,6 +373,46 @@ TEST(TestVerilogSigned, ToHex) {
 }
 
 ///////////////////////////
+// Test from bytes array
+///////////////////////////
+template<template<unsigned> class IntTmpl>
+void FromBytesTemplate() {
+	uint8_t b8[] = {0x5A};
+	uint8_t b16[] = {0xA5, 0x5A};
+	uint8_t b32[] = {0x87, 0x65, 0x43, 0x21};
+	uint8_t b128[] = {0xc3, 0x71, 0x5f, 0x07, 0x9b, 0xca, 0x23, 0x4f, 0xd7, 0x59, 0x8c, 0x70, 0x00, 0x1b, 0xc5, 0x3c};
+	IntTmpl<8> v8;
+	// from_bytes(v8, b8, 1);
+	EXPECT_EQ(v8.v[0], 0x5A);
+	// Assign value from start of bytes array
+	// from_bytes(v8, b16, 1);
+	EXPECT_EQ(v8.v[0], 0xA5);
+
+	IntTmpl<13> v13;
+	// from_bytes(v13, b16, 2);
+	EXPECT_EQ(v13.v[0], 0x55A);
+	// from_bytes(v13, b32, 3);
+	EXPECT_EQ(v13.v[0], 0x765);
+
+	IntTmpl<127> v127;
+	// from_bytes(v127, b128, 16);
+	EXPECT_EQ(v127.v[0], 0x43715f079bca234fllu);
+	EXPECT_EQ(v127.v[1], 0xd7598c70001bc53cllu);
+}
+
+TEST(TestVerilogUnsigned, DISABLED_FromBytes) {
+	FromBytesTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, DISABLED_FromBytes) {
+	FromBytesTemplate<vsint>();
+}
+
+///////////////////////////
+// Test to bytes array
+///////////////////////////
+
+///////////////////////////
 // Test comparison
 // NOTE: This test is more difficult than others, it mixes more arith, assign...
 ///////////////////////////
