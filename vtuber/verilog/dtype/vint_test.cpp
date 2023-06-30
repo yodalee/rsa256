@@ -348,7 +348,7 @@ void ToHexTemplate() {
 
 	IntTmpl<13> v13;
 	v13.v[0] = 0x1a2a;
-	v8.ClearUnusedBits();
+	v13.ClearUnusedBits();
 	EXPECT_EQ(to_hex(v13), "1A2A");
 
 	IntTmpl<66> v66;
