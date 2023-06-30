@@ -411,6 +411,70 @@ TEST(TestVerilogSigned, DISABLED_FromBytes) {
 ///////////////////////////
 // Test to bytes array
 ///////////////////////////
+template<template<unsigned> class IntTmpl>
+void ToBytesTemplate() {
+	uint8_t b8[1] = {0xff};
+	uint8_t b16[2] = {0xff, 0xff};
+	uint8_t b32[4] = {0xff, 0xff, 0xff, 0xff};
+	uint8_t b128[16] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+	IntTmpl<8> v8;
+	v8.v[0] = 0x2a;
+	v8.ClearUnusedBits();
+	// to_bytes(b8, 1, v8);
+	EXPECT_EQ(b8[0], 0x2A);
+
+	// to_bytes(b16, 2, v8);   // Align on LSB if bytes is longer
+	EXPECT_EQ(b16[1], 0x0);
+	EXPECT_EQ(b16[0], 0x2A);
+
+	IntTmpl<13> v13;
+	v13.v[0] = 0x1a2a;
+	v13.ClearUnusedBits();
+	// to_bytes(b8, 1, v13);
+	EXPECT_EQ(b8[0], 0x2A);
+
+	// to_bytes(b16, 2, v13);
+	EXPECT_EQ(b16[1], 0x1A);
+	EXPECT_EQ(b16[0], 0x2A);
+
+	IntTmpl<66> v66;
+	v66.v[1] = 0x2;
+	v66.v[0] = 0x0123456789abcdefllu;
+	v66.ClearUnusedBits();
+	// to_bytes(b32, 4, v66);
+	EXPECT_EQ(b32[3], 0x89);
+	EXPECT_EQ(b32[2], 0xab);
+	EXPECT_EQ(b32[1], 0xcd);
+	EXPECT_EQ(b32[0], 0xef);
+
+	// to_bytes(b128, 16, v66)
+	EXPECT_EQ(b32[15], 0x00);
+	EXPECT_EQ(b32[14], 0x00);
+	EXPECT_EQ(b32[13], 0x00);
+	EXPECT_EQ(b32[12], 0x00);
+	EXPECT_EQ(b32[11], 0x00);
+	EXPECT_EQ(b32[10], 0x00);
+	EXPECT_EQ(b32[9], 0x00);
+	EXPECT_EQ(b32[8], 0x02);
+	EXPECT_EQ(b32[7], 0x01);
+	EXPECT_EQ(b32[6], 0x23);
+	EXPECT_EQ(b32[5], 0x45);
+	EXPECT_EQ(b32[4], 0x67);
+	EXPECT_EQ(b32[3], 0x89);
+	EXPECT_EQ(b32[2], 0xab);
+	EXPECT_EQ(b32[1], 0xcd);
+	EXPECT_EQ(b32[0], 0xef);
+}
+
+TEST(TestVerilogUnsigned, ToBytes) {
+	ToHexTemplate<vuint>();
+}
+
+TEST(TestVerilogSigned, ToBytes) {
+	ToHexTemplate<vsint>();
+}
+
 
 ///////////////////////////
 // Test comparison
