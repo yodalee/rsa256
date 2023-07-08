@@ -10,7 +10,7 @@ struct BoolPattern {
 };
 
 struct RandomBool: public BoolPattern {
-	RandomBool(float possibility1):
+	RandomBool(double possibility1):
 		gen_(1),
 		dist_(possibility1) {}
 	bool operator()() override {
@@ -18,6 +18,9 @@ struct RandomBool: public BoolPattern {
 	}
 	void seed(unsigned s) override {
 		gen_.seed(s);
+	}
+	void get_possibility(float& possibility) const {
+		possibility = dist_.p();
 	}
 private:
 	::std::default_random_engine gen_;
@@ -40,6 +43,10 @@ struct RepeatBool: public BoolPattern {
 	void seed(unsigned s) override {
 		current_ = s % ::std::max(ratio0_, ratio1_+1u);
 	}
+	void get_ratio(unsigned& ratio1, unsigned& ratio0) const {
+		ratio1 = ratio1_;
+		ratio0 = ratio0_;
+	}
 private:
 	const unsigned ratio1_, ratio0_;
 	unsigned current_;
@@ -48,20 +55,20 @@ private:
 namespace random_factory {
 
 // Note: you shall store them by unique_ptr
-BoolPattern* AlwaysOne() {
+static inline BoolPattern* AlwaysOne() {
 	return new RepeatBool(1, 0);
 }
 
-BoolPattern* AlwaysZero() {
+static inline BoolPattern* AlwaysZero() {
 	return new RepeatBool(0, 1);
 }
 
-BoolPattern* OneEvery(unsigned x) {
+static inline BoolPattern* OneEvery(unsigned x) {
 	x = std::max(1u, x);
 	return new RepeatBool(1, x-1);
 }
 
-BoolPattern* Bernoulli(float p) {
+static inline BoolPattern* Bernoulli(float p) {
 	return new RandomBool(p);
 }
 
