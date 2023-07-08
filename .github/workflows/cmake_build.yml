@@ -10,7 +10,7 @@ jobs:
   build_cmake:
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/yodalee/rsa256
+      image: ghcr.io/yodalee/rsa256:master
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
