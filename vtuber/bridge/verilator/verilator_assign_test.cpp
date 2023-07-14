@@ -84,7 +84,7 @@ TEST(TestAssignPort, Write) {
   EXPECT_EQ(ver100.m_storage[3], 0x1u);
 };
 
-TEST(TestAssignPort, DISABLED_ReadArray){
+TEST(TestAssignPort, ReadArray){
   // source
   VL_INW(ver100, 100, 0, 4);
   ver100.m_storage[0] = 0x12345678u;
@@ -94,13 +94,13 @@ TEST(TestAssignPort, DISABLED_ReadArray){
   // destination
   varray<vuint<20>, 5> a20_5;
   varray<vuint<25>, 2, 2> a25_2_2;
-  // read_port(a20_5, ver100);
-  // read_port(a25_2_2, ver100);
-  EXPECT_EQ(a20_5[0], 0x45678);
-  EXPECT_EQ(a20_5[1], 0x66123);
+  read_port(a20_5, ver100);
+  read_port(a25_2_2, ver100);
+  EXPECT_EQ(a20_5[4], 0x45678);
+  EXPECT_EQ(a20_5[3], 0x66123);
   EXPECT_EQ(a20_5[2], 0x56655);
-  EXPECT_EQ(a20_5[3], 0xffff5);
-  EXPECT_EQ(a20_5[4], 0x1ffff);
+  EXPECT_EQ(a20_5[1], 0xffff5);
+  EXPECT_EQ(a20_5[0], 0x1ffff);
   // python
   // b = "000" + bin(0x1ffffffff5566556612345678)[2:]
   // [hex(int(b[i:i+25], 2)) for i in range(0, len(b), 25)]
