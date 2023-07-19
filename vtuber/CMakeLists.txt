@@ -39,6 +39,9 @@ add_executable(abstract_random_yaml_test
 add_executable(verilator_assign_port_test
 	bridge/verilator/verilator_assign_test.cpp
 )
+add_executable(cmodule_test
+	modellib/cmodule_test.cpp
+)
 
 foreach(target_test IN ITEMS
 	dtype_test
@@ -46,6 +49,7 @@ foreach(target_test IN ITEMS
 	abstract_random_yaml_test
 	verilator_assign_port_test
 	operation_test
+	cmodule_test
 )
 	target_link_libraries(${target_test} PRIVATE GTest::gtest_main GTest::gtest glog yaml-cpp)
 	add_test(${target_test} ${target_test})
