@@ -35,12 +35,8 @@ void write_port_scalar(verilator_wdtype<num_bit> &dst, const vint<false, num_bit
 template <typename Dst, typename Src>
 void write_port(Dst& dst, const Src& src) {
   static_assert(is_dtype_v<Src>, "Only works for Src is a verilog type");
-  if constexpr (is_dtype_of_id_v<Dst, DTYPE_VINT>) {
-    read_port_scalar(dst, src);
-  } else {
-    auto tmp = pack(src);
-    write_port_scalar(dst, tmp);
-  }
+  auto tmp = pack(src);
+  write_port_scalar(dst, tmp);
 }
 
 // read vuint from verilator port
