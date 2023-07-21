@@ -4,6 +4,7 @@
 #include "verilog/dtype/vint.h"
 #include "verilog/operation/bits.h"
 #include "verilog/operation/unpack.h"
+#include "verilog/operation/pack.h"
 
 namespace verilog {
 namespace verilator {
@@ -15,12 +16,12 @@ template<unsigned num_bit> using verilator_wdtype = VlWide<to_verilator_num_word
 
 // write vuint to verilator port
 template <unsigned num_bit>
-void write_port(verilator_dtype<num_bit> &dst, const vint<false, num_bit> &src) {
+void write_port_scalar(verilator_dtype<num_bit> &dst, const vint<false, num_bit> &src) {
   dst = src.value();
 }
 
 template <unsigned num_bit>
-void write_port(verilator_wdtype<num_bit> &dst, const vint<false, num_bit> &src) {
+void write_port_scalar(verilator_wdtype<num_bit> &dst, const vint<false, num_bit> &src) {
   const size_t verilator_num_word = to_verilator_num_word(num_bit);
   for (size_t i = 0; i < (verilator_num_word/2); ++i) {
     dst.m_storage[i*2  ] = WData(src.v[i]      );
@@ -29,6 +30,13 @@ void write_port(verilator_wdtype<num_bit> &dst, const vint<false, num_bit> &src)
   if constexpr ((verilator_num_word%2) == 1) {
     dst.m_storage[verilator_num_word-1] = WData(src.v[verilator_num_word/2]);
   }
+}
+
+template <typename Dst, typename Src>
+void write_port(Dst& dst, const Src& src) {
+  static_assert(is_dtype_v<Src>, "Only works for Src is a verilog type");
+  auto tmp = pack(src);
+  write_port_scalar(dst, tmp);
 }
 
 // read vuint from verilator port
@@ -52,7 +60,7 @@ void read_port_scalar(vint<false, num_bit> &dst, const verilator_wdtype<num_bit>
 }
 
 template <typename Dst, typename Src>
-void read_port(Dst& dst, Src& src) {
+void read_port(Dst& dst, const Src& src) {
   static_assert(is_dtype_v<Dst>, "Only works for Dst is a verilog type");
   if constexpr (is_dtype_of_id_v<Dst, DTYPE_VINT>) {
     read_port_scalar(dst, src);

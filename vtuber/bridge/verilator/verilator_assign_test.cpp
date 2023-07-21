@@ -111,7 +111,7 @@ TEST(TestAssignPort, ReadArray){
 };
 
 
-TEST(TestAssignPort, DISABLED_WriteArrayToNonWide){
+TEST(TestAssignPort, WriteArrayToNonWide){
   typedef varray<vuint<15>, 4> A60;
   typedef varray<vuint<5>, 2, 2> A20;
   // source
@@ -131,14 +131,14 @@ TEST(TestAssignPort, DISABLED_WriteArrayToNonWide){
     *it = (1 << i);
   }
 
-  // write_port(ver60, a60)
-  // write_port(ver20, a20);
+  write_port(ver60, a60);
+  write_port(ver20, a20);
   // python [bin(x)[2:][-15:].rjust(15,'0') for x in [0x0123, 0x4567, 0x89ab, 0xcdef]]
   EXPECT_EQ(ver60, 0x247159c4d5cdef);
   EXPECT_EQ(ver20, 0b00001000100010001000);
 };
 
-TEST(TestAssignPort, DISABLED_WriteArrayToWide){
+TEST(TestAssignPort, WriteArrayToWide){
   // source
   varray<vuint<20>, 5> a20_5;
   varray<vuint<25>, 2, 2> a25_2_2;
@@ -150,17 +150,17 @@ TEST(TestAssignPort, DISABLED_WriteArrayToWide){
   a20_5[2] = 0x1e167;
   a20_5[3] = 0x8dcd2;
   a20_5[4] = 0x28e00;
-  // write_port(ver100, a20_5);
+  write_port(ver100, a20_5);
   EXPECT_EQ(ver100.m_storage[0], 0xcd228e00u);
   EXPECT_EQ(ver100.m_storage[1], 0x61e1678du);
   EXPECT_EQ(ver100.m_storage[2], 0x9f9ead57u);
   EXPECT_EQ(ver100.m_storage[3], 0x6u);
-
+  // test
   a25_2_2[0][0] = 0x345678;
   a25_2_2[0][1] = 0x1559848;
   a25_2_2[1][0] = 0x1feaacc;
   a25_2_2[1][1] = 0x1ffffff;
-  // write_port(ver100, a25_2_2);
+  write_port(ver100, a25_2_2);
   ver100.m_storage[0] = 0x12345678u;
   ver100.m_storage[1] = 0x55665566u;
   ver100.m_storage[2] = 0xffffffffu;
