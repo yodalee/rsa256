@@ -42,6 +42,9 @@ add_executable(verilator_assign_port_test
 add_executable(cmodule_test
 	modellib/cmodule_test.cpp
 )
+add_executable(cfifo_test
+	modellib/cfifo_test.cpp
+)
 
 foreach(target_test IN ITEMS
 	dtype_test
@@ -50,6 +53,7 @@ foreach(target_test IN ITEMS
 	verilator_assign_port_test
 	operation_test
 	cmodule_test
+	cfifo_test
 )
 	target_link_libraries(${target_test} PRIVATE GTest::gtest_main GTest::gtest glog yaml-cpp)
 	add_test(${target_test} ${target_test})
