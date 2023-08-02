@@ -60,9 +60,9 @@ int sc_main(int, char **) {
       static_cast<shared_ptr<Connector<DUT>>>(monitor));
 
   VintLineSource<KeyType> source_m("RSA_m.in");
-  auto v_m = source_m.get();
+  auto v_m = source_m.get().value();
   VintLineSource<RSAModOut> source_c("RSA_c.in");
-  auto v_c = source_c.get();
+  auto v_c = source_c.get().value();
 
   // sample in
   RSAModIn in;
