@@ -39,7 +39,7 @@ const char str_ans[] =
 int sc_main(int, char **) {
   unique_ptr<ScTestbench_TwoPower> tb =
       CreateScTestbench<ScTestbench_TwoPower>("TwoPower");
-  TwoPowerIn::IntType power{512};
+  IntType power{512};
   KeyType modulus;
   KeyType ans;
   from_hex(modulus, str_modulus);
