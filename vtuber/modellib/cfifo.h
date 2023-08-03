@@ -1,7 +1,8 @@
 #pragma once
 #include <boost/circular_buffer.hpp>
-#include <glog/logging.h>
 #include "modellib/cmodule.h"
+#include "modellib/cport.h"
+#include "modellib/cvalidready.h"
 
 namespace verilog {
 
@@ -14,42 +15,41 @@ class cfifo : public Module<cfifo<T>> {
 		num_can_read_ = buf_.size();
 		num_can_write_ = buf_.capacity() - buf_.size();
 	}
-public:
-	cfifo() { UpdateNum(); }
-	cfifo(unsigned s) : buf_(s) {
-		UpdateNum();
+	bool write(T& t) {
+		if (full()) {
+			return false;
+		}
+		--num_can_write_;
+		buf_.push_back(std::move(t));
+		return true;
 	}
-	void resize(unsigned s) {
-		buf_.resize(s);
+public:
+	vrslave<T> in;
+	vrmaster<T> out;
+	cfifo(unsigned s = 0) {
+		set_capacity(s);
+		in->write_func = [this](T& t){ return write(t); };
+	}
+	void set_capacity(unsigned s) {
+		buf_.set_capacity(s);
 		UpdateNum();
 	}
 	bool empty() { return num_can_read_ == 0; }
 	bool full() { return num_can_write_ == 0; }
-	T read() {
-		DCHECK(not empty());
+	void ClockComb0() {
+		if (empty()) {
+			return;
+		}
+		const bool write_ok = out->write(buf_.front());
+		if (not write_ok) {
+			return;
+		}
 		--num_can_read_;
-		T ret = std::move(buf_.front());
 		buf_.pop_front();
-		return ret;
-	}
-	void write(const T& t) {
-		DCHECK(not full());
-		--num_can_write_;
-		buf_.push_back(t);
-	}
-	void write(T&& t) {
-		DCHECK(not full());
-		--num_can_write_;
-		buf_.push_back(std::move(t));
 	}
 	void ClockSeq0() {
 		UpdateNum();
 	}
 };
-
-template<typename T> using cfifo_in = cfifo<T>*;
-template<typename T> using cfifo_out = cfifo<T>*;
-template<typename T> using cfifo_in_export = cfifo<T>**;
-template<typename T> using cfifo_out_export = cfifo<T>**;
 
 } // namespace verilog

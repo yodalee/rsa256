@@ -45,6 +45,9 @@ add_executable(cmodule_test
 add_executable(cfifo_test
 	modellib/cfifo_test.cpp
 )
+add_executable(cport_test
+	modellib/cport_test.cpp
+)
 
 foreach(target_test IN ITEMS
 	dtype_test
@@ -54,6 +57,7 @@ foreach(target_test IN ITEMS
 	operation_test
 	cmodule_test
 	cfifo_test
+	cport_test
 )
 	target_link_libraries(${target_test} PRIVATE GTest::gtest_main GTest::gtest glog yaml-cpp)
 	add_test(${target_test} ${target_test})
