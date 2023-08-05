@@ -1,6 +1,7 @@
 #pragma once
 
-#include <fstream>
+#include "verilog/dtype.h"
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -8,30 +9,23 @@ template <typename T> class Source {
 public:
   Source() {}
   virtual ~Source() = default;
-  virtual ::std::vector<T> get() = 0;
+  virtual ::std::vector<T> get(::std::istream &ist) = 0;
 };
 
-template <typename T> class VintLineSource : public Source<T> {
-  static_assert(verilog::is_vint_v<T>,
-                "T must be a vint type, not array, struct, or union");
+template <typename T> class VintHexSource : public Source<T> {
+  static_assert(verilog::is_dtype_v<T>, "T must be a verilog type");
 
 public:
-  VintLineSource(const ::std::string &filename_) : Source<T>() {
-    filename = filename_;
-  }
-
-  ::std::vector<T> get() override {
+  ::std::vector<T> get(::std::istream &ist) override {
+    verilog::vuint<verilog::bits<T>()> buf;
     ::std::vector<T> data;
     ::std::string line;
-    ::std::ifstream inputFile(filename);
-    while (std::getline(inputFile, line)) {
-      T t(line, 16);
+    while (::std::getline(ist, line)) {
+      from_string(buf, line, 16);
+      T t;
+      verilog::unpack(t, buf);
       data.push_back(t);
     }
-    inputFile.close();
     return data;
   }
-
-private:
-  ::std::string filename;
 };
