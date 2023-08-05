@@ -5,6 +5,7 @@
 #include "model_rsa.h"
 #include "source.h"
 #include "verilog/dtype.h"
+#include <fstream>
 #include <iostream>
 #include <systemc>
 
@@ -59,10 +60,12 @@ int sc_main(int, char **) {
   testbench->register_connector(
       static_cast<shared_ptr<Connector<DUT>>>(monitor));
 
-  VintLineSource<KeyType> source_m("RSA_m.in");
-  auto v_m = source_m.get();
-  VintLineSource<RSAModOut> source_c("RSA_c.in");
-  auto v_c = source_c.get();
+  ifstream ifm("RSA_m.in");
+  ifstream ifc("RSA_c.in");
+  VintHexSource<KeyType> source_m;
+  auto v_m = source_m.get(ifm);
+  VintHexSource<RSAModOut> source_c;
+  auto v_c = source_c.get(ifc);
 
   // sample in
   RSAModIn in;
