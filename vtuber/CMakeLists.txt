@@ -23,6 +23,7 @@ add_executable(dtype_test
 	verilog/operation/print_indent_test.cpp
 	verilog/operation/bit_offset_test.cpp
 	abstract_random_yaml.cpp
+	testbench_config_yaml.cpp
 #test_vunion.cpp
 #test_dtype_mixed.cpp
 )
@@ -35,6 +36,10 @@ add_executable(abstract_random_test
 add_executable(abstract_random_yaml_test
 	abstract_random_yaml_test.cpp
 	abstract_random_yaml.cpp
+)
+add_executable(testbench_config_yaml_test
+  testbench_config_yaml_test.cpp
+	testbench_config_yaml.cpp
 )
 add_executable(source_test
 	source_test.cpp
@@ -55,6 +60,7 @@ add_executable(cport_test
 foreach(target_test IN ITEMS
 	abstract_random_test
 	abstract_random_yaml_test
+	testbench_config_yaml_test
 	cfifo_test
 	cport_test
 	cmodule_test
