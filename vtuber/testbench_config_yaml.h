@@ -1,7 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <yaml-cpp/yaml.h>
+
+namespace YAML {
+class Node;
+}
 
 namespace testbench_config {
 
