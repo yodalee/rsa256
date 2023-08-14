@@ -33,6 +33,14 @@ struct TwoPower_NSC : public Module<TwoPower_NSC> {
 		};
 	}
 
+  void Reset() {
+    LOG(INFO) << "Reset";
+    running_r = false;
+    power_r = 0;
+    modulus_r = 0;
+    round_result_r = 0;
+  }
+
 	void ClockComb0() {
 		if (not running_r) {
 			return;
@@ -99,6 +107,7 @@ struct TwoPower_TB : public Module<TwoPower_TB> {
 			testdata_out.push_back(x);
 			return true;
 		};
+    Connect(dut, ModuleEventId::kReset, ModuleEventId::kReset);
 		Connect(dut, ModuleEventId::kClockComb0, ModuleEventId::kClockComb0);
 		Connect(dut, ModuleEventId::kClockSeq0, ModuleEventId::kClockSeq0);
 	}
