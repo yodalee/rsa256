@@ -10,7 +10,7 @@ using namespace verilog;
 void RSA::Thread() {
   while (true) {
     const RSAModIn &in = i_data.read();
-    const TwoPowerIn::IntType vuint512{512};
+    const IntType vuint512{512};
     two_power_mod_in.write({.power = vuint512, .modulus = in.modulus});
 
     auto pack_value = two_power_mod_out.read();

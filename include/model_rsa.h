@@ -2,14 +2,12 @@
 
 #include "verilog/dtype/vint.h"
 #include "verilog/dtype/vstruct.h"
-#include <iostream>
-#include <systemc>
 
 constexpr int kBW = 256;
 using KeyType = verilog::vuint<kBW>;
+using IntType = verilog::vuint<32>;
 
 struct TwoPowerIn {
-  using IntType = verilog::vuint<32>;
   IntType power;
   KeyType modulus;
   MAKE_VSTRUCT(power, modulus)

@@ -13,3 +13,8 @@ add_test(TwoPower_test TwoPower_test)
 add_test(Montgomery_test Montgomery_test)
 add_test(RSAMont_test RSAMont_test)
 add_test(RSA_test RSA_test)
+
+# v2
+add_test(nosysc nosysc)
+add_executable(nosysc NoSysC_test.cpp)
+target_link_libraries(nosysc glog gtest_main gtest)

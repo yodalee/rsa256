@@ -56,8 +56,8 @@ int sc_main(int, char **) {
 
   KeyType modulus(
       "E07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1");
-  driver->push_back({.power = TwoPowerIn::IntType(512), .modulus = modulus});
-  driver->push_back({.power = TwoPowerIn::IntType(256), .modulus = modulus});
+  driver->push_back({.power = IntType(512), .modulus = modulus});
+  driver->push_back({.power = IntType(256), .modulus = modulus});
 
   TestBench_TwoPower::OutType golden(
       "0AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB");
