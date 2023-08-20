@@ -13,6 +13,8 @@ using namespace verilog;
 using namespace std;
 
 struct TwoPower_NSC : public Module<TwoPower_NSC> {
+	using ExtendKeyType = verilog::vuint<kBW + 1>;
+
 	vrslave<TwoPowerIn> data_in;
 	vrmaster<TwoPowerOut> data_out;
 

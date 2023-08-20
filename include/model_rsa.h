@@ -5,7 +5,6 @@
 
 constexpr int kBW = 256;
 using KeyType = verilog::vuint<kBW>;
-using ExtendKeyType = verilog::vuint<kBW + 1>;
 using IntType = verilog::vuint<32>;
 
 struct TwoPowerIn {
