@@ -18,4 +18,8 @@ TEST(TestParser, ReadDump) {
   unique_ptr<TestbenchConfig> dump_false(FromYamlNode(YAML::Load(kDump[1])));
   ASSERT_TRUE(dump_true->dump);
   ASSERT_FALSE(dump_false->dump);
+  ASSERT_FALSE(dump_true->input_pattern);
+  ASSERT_FALSE(dump_true->output_pattern);
+  ASSERT_FALSE(dump_false->input_pattern);
+  ASSERT_FALSE(dump_false->output_pattern);
 }
