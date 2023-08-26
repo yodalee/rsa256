@@ -40,6 +40,7 @@ add_executable(abstract_random_yaml_test
 add_executable(testbench_config_yaml_test
   testbench_config_yaml_test.cpp
 	testbench_config_yaml.cpp
+	abstract_random_yaml.cpp
 )
 add_executable(source_test
 	source_test.cpp

@@ -1,2 +1,7 @@
 # whether to dump the waveform
 dump: false
+# random pattern. Available options:
+# RandomBool possibility 
+# RepeatBool ratio1 ratio0
+input_pattern: "null"
+output_pattern: "null"
