@@ -18,3 +18,7 @@ add_test(RSA_test RSA_test)
 add_test(nsc_twopower nsc_twopower)
 add_executable(nsc_twopower TwoPower_NSC.cpp)
 target_link_libraries(nsc_twopower glog gtest_main gtest)
+
+add_test(nsc_montgomery nsc_montgomery)
+add_executable(nsc_montgomery Montgomery_NSC.cpp)
+target_link_libraries(nsc_montgomery glog gtest_main gtest)
