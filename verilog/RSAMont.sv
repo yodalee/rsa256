@@ -49,7 +49,7 @@ always_ff @( posedge clk or negedge rst_n ) begin
     key <= 0;
     modulus <= 0;
   end
-  else if (i_ready && i_valid) begin
+  else if (loop_init) begin
     base <= i_in.base;       // 2 ^ 2n mod N
     msg <= i_in.msg;         // msg
     key <= i_in.key;         // key

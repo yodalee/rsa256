@@ -36,7 +36,7 @@ always_ff @( posedge clk or negedge rst_n ) begin
     data_modulus <= 0;
   end
   else begin
-    if (i_ready && i_valid) begin
+    if (loop_init) begin
       data_power <= i_in.power;
       data_modulus <= {1'b0, i_in.modulus};
     end
