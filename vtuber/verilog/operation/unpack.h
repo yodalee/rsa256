@@ -48,7 +48,7 @@ void varray_unpack(
 	((
 		unpack_nocheck(
 			t_ptr[i],
-			u.template Slice<(T::asize-1-i)*num_bit_element, num_bit_element>()
+			u.template Slice<(i)*num_bit_element, num_bit_element>()
 		)
 	),...);
 }

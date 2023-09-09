@@ -96,18 +96,18 @@ TEST(TestAssignPort, ReadArray){
   varray<vuint<25>, 2, 2> a25_2_2;
   read_port(a20_5, ver100);
   read_port(a25_2_2, ver100);
-  EXPECT_EQ(a20_5[4], 0x45678);
-  EXPECT_EQ(a20_5[3], 0x66123);
+  EXPECT_EQ(a20_5[4], 0x1ffff);
+  EXPECT_EQ(a20_5[3], 0xffff5);
   EXPECT_EQ(a20_5[2], 0x56655);
-  EXPECT_EQ(a20_5[1], 0xffff5);
-  EXPECT_EQ(a20_5[0], 0x1ffff);
+  EXPECT_EQ(a20_5[1], 0x66123);
+  EXPECT_EQ(a20_5[0], 0x45678);
   // python
   // b = "000" + bin(0x1ffffffff5566556612345678)[2:]
   // [hex(int(b[i:i+25], 2)) for i in range(0, len(b), 25)]
-  EXPECT_EQ(a25_2_2[1][1], 0x345678);
-  EXPECT_EQ(a25_2_2[1][0], 0x12ab309);
-  EXPECT_EQ(a25_2_2[0][1], 0x1ffd559);
-  EXPECT_EQ(a25_2_2[0][0], 0x3fffff);
+  EXPECT_EQ(a25_2_2[1][1], 0x3fffff);
+  EXPECT_EQ(a25_2_2[1][0], 0x1ffd559);
+  EXPECT_EQ(a25_2_2[0][1], 0x12ab309);
+  EXPECT_EQ(a25_2_2[0][0], 0x345678);
 };
 
 
