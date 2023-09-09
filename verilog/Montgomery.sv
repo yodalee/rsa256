@@ -40,7 +40,7 @@ always_ff @( posedge clk or negedge rst_n ) begin
     data_modulus <= 0;
   end
   else begin
-    if (i_ready && i_valid) begin
+    if (loop_init) begin
       data_a <= {2'b0, i_in.a};
       data_b <= {2'b0, i_in.b};
       data_modulus <= {2'b0, i_in.modulus};
