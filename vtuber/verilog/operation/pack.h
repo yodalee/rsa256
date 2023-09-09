@@ -52,11 +52,10 @@ auto varray_pack(
 ) {
 	typedef typename T::dtype dtype;
 	vint<false, bits<T>()> dst;
-	constexpr unsigned max_idx = idx.size()-1;
 	constexpr unsigned bit_of_T = bits<dtype>();
 	const dtype *tp = src.begin();
 	::std::fill(::std::begin(dst.v), ::std::end(dst.v), 0);
-	(dst.template WriteSliceUnsafe<i*bit_of_T, bit_of_T>(pack(tp[max_idx-i])), ...);
+	(dst.template WriteSliceUnsafe<i*bit_of_T, bit_of_T>(pack(tp[i])), ...);
 	return dst;
 }
 
