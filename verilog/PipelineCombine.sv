@@ -9,10 +9,14 @@ module PipelineCombine
     input o_ready
 );
 
-
 // o_valid should be set:
 // 1. when all inputs are valid
-assign o_valid = i_valid.and();
+always_comb begin
+  o_valid = 1'b1;
+  for (int i = 0; i < N; i++) begin
+    o_valid = o_valid & i_valid[i];
+  end
+end
 
 // i_ready reflect o_ready in-time
 always_comb begin
