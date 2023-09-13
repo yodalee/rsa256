@@ -29,8 +29,8 @@ assign o_out = mod_result[MOD_WIDTH - 1 : 0];
 
 // loop variable
 logic loop_o_valid, loop_o_ready;
-logic loop_init, loop_next;
-logic loop_done = round_counter == MOD_WIDTH;
+logic loop_init, loop_next, loop_done;
+assign loop_done = round_counter == MOD_WIDTH;
 
 // read input data
 always_ff @( posedge clk or negedge rst_n ) begin

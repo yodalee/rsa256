@@ -28,7 +28,12 @@ end
 always_comb begin
   foreach(ready_sent[i]) ready_sent[i] = o_ready[i] | o_sent[i];
 end
-assign i_ready = ready_sent.and();
+always_comb begin
+  i_ready = 1'b1;
+  foreach(ready_sent[i]) begin
+    i_ready = i_ready && ready_sent[i];
+  end
+end
 
 always_ff @( posedge clk or negedge rst_n ) begin
   if (!rst_n) begin o_sent <= '{N{'0}}; end
