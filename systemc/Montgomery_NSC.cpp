@@ -1,4 +1,5 @@
 #include "model_rsa.h"
+#include "modellib/cfifo.h"
 #include "modellib/cmodule.h"
 #include "modellib/cport.h"
 #include "modellib/cvalidready.h"
@@ -12,73 +13,93 @@
 using namespace verilog;
 using namespace std;
 
-struct Montgomery_NSC : public Module<Montgomery_NSC> {
+namespace _Montgomery_NSC {
   using ExtendKeyType = verilog::vuint<kBW + 2>;
+  struct Stage1To2Type {
+    KeyType a;
+    ExtendKeyType b, modulus;
+  };
+};
 
+struct Montgomery_NSC : public Module<Montgomery_NSC> {
+
+private:
+  using ExtendKeyType = _Montgomery_NSC::ExtendKeyType;
+  using Stage1To2Type = _Montgomery_NSC::Stage1To2Type;
+
+public:
   vrslave<MontgomeryIn> data_in;
+private:
+  cfifo<Stage1To2Type> fifo_io;
+  // this one is a bit stupid, we cannot read fifo_io.out directly
+  // must create a pseudo connection instead
+  vrslave<Stage1To2Type> fifo_io_rx;
+public:
   vrmaster<MontgomeryOut> data_out;
 
-  KeyType a_r;
-  ExtendKeyType b_r, result_r, modulus_r;
-  int idx = 0;
-  bool running_r, running_up_w, running_down_w;
+  // stage local registers
+  struct {
+    bool first;
+    int idx;
+    ExtendKeyType result;
+  } HandleStage2Local;
 
-  Montgomery_NSC() {
+  Montgomery_NSC(): fifo_io(1) {
+    Connect(fifo_io, verilog::ModuleEventId::kClockComb0, verilog::ModuleEventId::kClockComb0);
+    Connect(fifo_io, verilog::ModuleEventId::kClockSeq0, verilog::ModuleEventId::kClockSeq0);
+
     data_in->write_func = [this](const MontgomeryIn &in) {
-      if (running_r or running_up_w) {
-        return false;
-      }
-      running_up_w = true;
-      a_r = in.a;
-      b_r = static_cast<ExtendKeyType>(in.b);
-      modulus_r = static_cast<ExtendKeyType>(in.modulus);
-      result_r = ExtendKeyType(0);
-      idx = 0;
-      return true;
+      return HandleStage1(in);
+    };
+    fifo_io_rx(fifo_io.out);
+    fifo_io_rx->write_func = [this](const Stage1To2Type &in) {
+      return HandleStage2(in);
     };
   }
 
   void Reset() {
-    LOG(INFO) << "Reset";
-    running_r = false;
-    a_r = 0;
-    b_r = 0;
-    result_r = 0;
-    modulus_r = 0;
-    idx = 0;
+    auto &ls2 = HandleStage2Local;
+    ls2.first = true;
+    ls2.result = 0;
+    ls2.idx = 0;
   }
 
-  void ClockComb0() {
-    if (not running_r) {
-      return;
+  bool HandleStage1(const MontgomeryIn &in) {
+    if (fifo_io.full()) {
+      return false;
     }
+    Stage1To2Type data_1to2;
+    data_1to2.a = in.a;
+    data_1to2.b = static_cast<ExtendKeyType>(in.b);
+    data_1to2.modulus = static_cast<ExtendKeyType>(in.modulus);
+    fifo_io.in->write(data_1to2);
+    return true;
+  }
 
-    if (idx == kBW) {
-      if (data_out->write(KeyType(result_r))) {
+  bool HandleStage2(const Stage1To2Type &in) {
+    auto &local = HandleStage2Local;
+    // loop initialization
+    if (local.first) {
+      local.result = ExtendKeyType(0);
+      local.idx = 0;
+      local.first = false;
+    }
+    if (local.idx == kBW) {
+      if (data_out->write(KeyType(local.result))) {
         LOG(INFO) << "Sent";
-        running_down_w = true;
+        return true;
       }
+      local.first = true;
     } else {
-      if (a_r.Bit(idx++)) {
-        result_r += b_r;
+      if (in.a.Bit(local.idx++)) {
+        local.result += in.b;
       }
-      if (result_r.Bit(0)) {
-        result_r += modulus_r;
+      if (local.result.Bit(0)) {
+        local.result += in.modulus;
       }
-      result_r >>= 1;
+      local.result >>= 1;
     }
-  }
-
-  void ClockSeq0() {
-    CHECK(not(running_up_w and running_down_w));
-    if (running_up_w) {
-      LOG(INFO) << "up";
-      running_r = true;
-    } else if (running_down_w) {
-      running_r = false;
-    }
-    running_up_w = false;
-    running_down_w = false;
+    return false;
   }
 };
 
