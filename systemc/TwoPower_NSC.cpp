@@ -7,71 +7,93 @@
 #include "verilog/dtype/vint.h"
 #include "modellib/cport.h"
 #include "modellib/cvalidready.h"
+#include "modellib/cfifo.h"
 #include "modellib/cmodule.h"
 
 using namespace verilog;
 using namespace std;
 
-struct TwoPower_NSC : public Module<TwoPower_NSC> {
+namespace _TwoPower_NSC {
 	using ExtendKeyType = verilog::vuint<kBW + 1>;
+	struct Stage1To2Type {
+		ExtendKeyType modulus;
+		IntType power;
+	};
+};
 
+struct TwoPower_NSC : public Module<TwoPower_NSC> {
+private:
+	using ExtendKeyType = _TwoPower_NSC::ExtendKeyType;
+	using Stage1To2Type = _TwoPower_NSC::Stage1To2Type;
+
+public:
 	vrslave<TwoPowerIn> data_in;
+private:
+	cfifo<Stage1To2Type> fifo_io;
+	// this one is a bit stupid, we cannot read fifo_io.out directly
+	// must create a pseudo connection instead
+	vrslave<Stage1To2Type> fifo_io_rx;
+	// stage local registers
+	struct {
+		bool first;
+		IntType counter;
+		ExtendKeyType round_result;
+	} HandleStage2Local;
+public:
 	vrmaster<TwoPowerOut> data_out;
 
-	ExtendKeyType round_result_r, modulus_r;
-	IntType power_r;
-	bool running_r, running_up_w, running_down_w;
+	TwoPower_NSC() : fifo_io(1) {
+		Connect(fifo_io, verilog::ModuleEventId::kClockComb0, verilog::ModuleEventId::kClockComb0);
+		Connect(fifo_io, verilog::ModuleEventId::kClockSeq0, verilog::ModuleEventId::kClockSeq0);
 
-	TwoPower_NSC() {
-		data_in->write_func = [this](const TwoPowerIn& x) {
-			if (running_r or running_up_w) {
-				return false;
-			}
-			running_up_w = true;
-			power_r = x.power;
-			modulus_r = ExtendKeyType(x.modulus);
-			round_result_r = ExtendKeyType(1);
-			return true;
+		data_in->write_func = [this](const TwoPowerIn &in) {
+			return HandleStage1(in);
+		};
+		fifo_io_rx(fifo_io.out);
+		fifo_io_rx->write_func = [this](const Stage1To2Type &in) {
+			return HandleStage2(in);
 		};
 	}
 
-  void Reset() {
-    LOG(INFO) << "Reset";
-    running_r = false;
-    power_r = 0;
-    modulus_r = 0;
-    round_result_r = 0;
-  }
-
-	void ClockComb0() {
-		if (not running_r) {
-			return;
-		}
-		if (bool(power_r)) {
-			LOG(INFO) << "--";
-			round_result_r <<= 1;
-			if (round_result_r > modulus_r) {
-				round_result_r -= modulus_r;
-			}
-			power_r -= 1;
-		} else {
-			if (data_out->write(KeyType(round_result_r))) {
-				LOG(INFO) << "Sent";
-				running_down_w = true;
-			}
-		}
+	void Reset() {
+		LOG(INFO) << "Reset";
+		auto &ls2 = HandleStage2Local;
+		ls2.first = true;
+		ls2.counter = 0;
+		ls2.round_result = 0;
 	}
 
-	void ClockSeq0() {
-		CHECK(not (running_up_w and running_down_w));
-		if (running_up_w) {
-			LOG(INFO) << "up";
-			running_r = true;
-		} else if (running_down_w) {
-			running_r = false;
+	bool HandleStage1(const TwoPowerIn &in) {
+		if (fifo_io.full()) {
+			return false;
 		}
-		running_up_w = false;
-		running_down_w = false;
+		Stage1To2Type data_1to2;
+		data_1to2.modulus = static_cast<ExtendKeyType>(in.modulus);
+		data_1to2.power = in.power;
+		fifo_io.in->write(data_1to2);
+		return true;
+	}
+
+	bool HandleStage2(const Stage1To2Type &in) {
+		auto &local = HandleStage2Local;
+		if (local.first) {
+			local.first = false;
+			local.counter = 0;
+			local.round_result = 1;
+		}
+		if (in.power == local.counter) {
+			if (data_out->write(KeyType(local.round_result))) {
+				return true;
+			}
+			local.first = true;
+		} else {
+			local.round_result <<= 1;
+			if (local.round_result > in.modulus) {
+				local.round_result -= in.modulus;
+			}
+			local.counter += 1;
+		}
+		return false;
 	}
 };
 
@@ -109,7 +131,7 @@ struct TwoPower_TB : public Module<TwoPower_TB> {
 			testdata_out.push_back(x);
 			return true;
 		};
-    Connect(dut, ModuleEventId::kReset, ModuleEventId::kReset);
+		Connect(dut, ModuleEventId::kReset, ModuleEventId::kReset);
 		Connect(dut, ModuleEventId::kClockComb0, ModuleEventId::kClockComb0);
 		Connect(dut, ModuleEventId::kClockSeq0, ModuleEventId::kClockSeq0);
 	}
