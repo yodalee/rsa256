@@ -9,6 +9,7 @@
 #include "modellib/cvalidready.h"
 #include "modellib/cfifo.h"
 #include "modellib/cmodule.h"
+#include "modellib/ctestbench.h"
 
 using namespace verilog;
 using namespace std;
@@ -97,86 +98,39 @@ public:
 	}
 };
 
-struct TwoPower_TB : public Module<TwoPower_TB> {
-	vrmaster<TwoPowerIn> data_in;
-	vrslave<TwoPowerOut> data_out;
-	TwoPower_NSC dut;
-
-	TwoPowerIn testdata_in;
-	vector<TwoPowerOut> testdata_out;
-	TwoPowerOut testdata_gold;
-
-	unsigned sent, received;
-	bool finished;
-
-	TwoPower_TB() {
-		sent = 0;
-		received = 0;
-		finished = false;
-
-		// create data
-		const char str_modulus[] =
-			"0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
-		const char str_ans[] =
-			"AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB";
-		testdata_in.power = 512;
-		from_hex(testdata_in.modulus, str_modulus);
-		from_hex(testdata_gold, str_ans);
-
-		// connect submodule
-		data_in(dut.data_in);
-		data_out(dut.data_out);
-		data_out->write_func = [this](const TwoPowerOut& x) {
-			++received;
-			testdata_out.push_back(x);
-			return true;
-		};
-		Connect(dut, ModuleEventId::kReset, ModuleEventId::kReset);
-		Connect(dut, ModuleEventId::kClockComb0, ModuleEventId::kClockComb0);
-		Connect(dut, ModuleEventId::kClockSeq0, ModuleEventId::kClockSeq0);
-	}
-
-	void ClockComb0() {
-		if (sent == 0) {
-			if (data_in->write(testdata_in)) {
-				++sent;
-			}
-		}
-	}
-
-	void ClockSeq0() {
-		if (received != 0) {
-			finished = true;
-		}
-	}
-
-	void Verify() {
-		ASSERT_EQ(testdata_out.size(), 1);
-		EXPECT_EQ(testdata_out[0], testdata_gold);
-	}
-};
-
 TEST(NoSysC, TwoPower) {
-	unique_ptr<TwoPower_TB> tb(new TwoPower_TB);
+  unique_ptr<CTestbench<TwoPower_NSC, TwoPowerIn, TwoPowerOut>> tb(
+      new CTestbench<TwoPower_NSC, TwoPowerIn, TwoPowerOut>);
 
-	// simulate
-	const unsigned kTimeout = 1000, kRemain = 10;
-	unsigned i, stop_at = kTimeout;
-	tb->NotifySlot(ModuleEventId::kReset);
-	for (i = 0; i < stop_at; ++i) {
-		tb->NotifySlot(ModuleEventId::kClockComb0);
-		tb->NotifySlot(ModuleEventId::kClockSeq0);
-		if (tb->finished) {
-			stop_at = i+kRemain;
-			break;
-		}
-	}
-	ASSERT_NE(i, kTimeout) << "Timeout";
-	for (; i <= stop_at; ++i) {
-		tb->NotifySlot(ModuleEventId::kClockComb0);
-		tb->NotifySlot(ModuleEventId::kClockSeq0);
-	}
-	LOG(INFO) << "Done @" << i;
-	tb->Verify();
+  TwoPowerIn in;
+  TwoPowerOut gold;
+  const char str_modulus[] =
+      "0xE07122F2A4A9E81141ADE518A2CD7574DCB67060B005E24665EF532E0CCA73E1";
+  const char str_ans[] =
+      "AF39E1F831CB4FCD92B17F61F473735C687593A931C97D2B60AD6C7443F09FDB";
+  in.power = 512;
+  from_hex(in.modulus, str_modulus);
+  from_hex(gold, str_ans);
+  tb->testdata_gold.push_back(gold);
+  tb->testdata_in.push_back(in);
 
+  // simulate
+  const unsigned kTimeout = 1000, kRemain = 10;
+  unsigned i, stop_at = kTimeout;
+  tb->NotifySlot(ModuleEventId::kReset);
+  for (i = 0; i < stop_at; ++i) {
+    tb->NotifySlot(ModuleEventId::kClockComb0);
+    tb->NotifySlot(ModuleEventId::kClockSeq0);
+    if (tb->finished) {
+      stop_at = i + kRemain;
+      break;
+    }
+  }
+  ASSERT_NE(i, kTimeout) << "Timeout";
+  for (; i <= stop_at; ++i) {
+    tb->NotifySlot(ModuleEventId::kClockComb0);
+    tb->NotifySlot(ModuleEventId::kClockSeq0);
+  }
+  LOG(INFO) << "Done @" << i;
+  tb->IsPass();
 }
