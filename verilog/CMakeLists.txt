@@ -1,30 +1,31 @@
 cmake_minimum_required(VERSION 3.16)
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
-set(TWO_POWER_SIM VTwoPower)
-set(MONTGOMERY_SIM VMontgomery)
-set(RSAMONT_SIM VRSAMont)
-set(RSA_SIM VRSA)
-
-add_executable(${TWO_POWER_SIM} TwoPower_sim.cpp)
-add_executable(${MONTGOMERY_SIM} Montgomery_sim.cpp)
-add_executable(${RSAMONT_SIM} RSAMont_sim.cpp)
-add_executable(${RSA_SIM} RSA_sim.cpp)
-
+set(VERILATEOPT TRACE_FST)
 set(LINKME PRIVATE SystemC::systemc glog RSASystemCModel)
-target_link_libraries(${TWO_POWER_SIM} ${LINKME})
-target_link_libraries(${MONTGOMERY_SIM} ${LINKME})
-target_link_libraries(${RSAMONT_SIM} ${LINKME})
-target_link_libraries(${RSA_SIM} ${LINKME})
 
-verilate(${TWO_POWER_SIM} TRACE_FST PREFIX VTwoPower SOURCES RSA_pkg.sv TwoPower.sv)
-verilate(${MONTGOMERY_SIM} TRACE_FST PREFIX VMontgomery SOURCES RSA_pkg.sv Montgomery.sv)
-verilate(${RSAMONT_SIM} TRACE_FST PREFIX VRSAMont SOURCES RSA_pkg.sv RSAMont.sv)
-verilate(${RSA_SIM} TRACE_FST PREFIX VRSA SOURCES RSA_pkg.sv RSA.sv)
+set(TwoPower TwoPower_sim)
+set(Montgomery Montgomery_sim)
+set(RSAMont RSAMont_sim)
+set(RSA RSA_sim)
 
-add_test(${TWO_POWER_SIM} ${TWO_POWER_SIM})
-add_test(${MONTGOMERY_SIM} ${MONTGOMERY_SIM})
-add_test(${RSAMONT_SIM} ${RSAMONT_SIM})
-add_test(${RSA_SIM} ${RSA_SIM})
+set(MODULES
+  TwoPower
+  Montgomery
+  RSAMont
+  RSA
+)
+
+foreach(LIB ${MODULES})
+  # build library
+  add_library(${LIB})
+  verilate(${LIB} ${VERILATEOPT} PREFIX V${LIB} SOURCES RSA_pkg.sv ${LIB}.sv)
+
+  foreach(EXE ${${LIB}})
+    add_executable(${EXE} ${EXE}.cpp)
+    target_link_libraries(${EXE} ${LINKME} ${LIB})
+    add_test(V${EXE} ${EXE})
+  endforeach()
+endforeach()
 
 configure_file(RSA_m.in . COPYONLY)
 configure_file(RSA_c.in . COPYONLY)
