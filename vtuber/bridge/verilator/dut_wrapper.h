@@ -6,9 +6,7 @@
 #include <memory>
 #include <systemc>
 #include <vector>
-#if VM_TRACE
 #include <verilated_fst_c.h>
-#endif
 
 using namespace std;
 using namespace sc_core;
