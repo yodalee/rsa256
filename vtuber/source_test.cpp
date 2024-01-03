@@ -38,10 +38,10 @@ TEST(TestSource, HexSourceArray) {
   unique_ptr<Source<A32>> s(new VintHexSource<A32>());
   auto a32 = s->get(hex);
   EXPECT_EQ(a32.size(), 2);
-  EXPECT_EQ(a32[0][0].value(), 0xafadaba9);
-  EXPECT_EQ(a32[0][1].value(), 0xa7a5a3a1);
-  EXPECT_EQ(a32[1][0].value(), 0xeacaaa8a);
-  EXPECT_EQ(a32[1][1].value(), 0x6a4a2a0a);
+  EXPECT_EQ(a32[0][1].value(), 0xafadaba9);
+  EXPECT_EQ(a32[0][0].value(), 0xa7a5a3a1);
+  EXPECT_EQ(a32[1][1].value(), 0xeacaaa8a);
+  EXPECT_EQ(a32[1][0].value(), 0x6a4a2a0a);
 }
 
 TEST(TestSource, HexSourceStruct) {

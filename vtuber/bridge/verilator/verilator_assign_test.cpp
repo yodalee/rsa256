@@ -96,18 +96,18 @@ TEST(TestAssignPort, ReadArray){
   varray<vuint<25>, 2, 2> a25_2_2;
   read_port(a20_5, ver100);
   read_port(a25_2_2, ver100);
-  EXPECT_EQ(a20_5[4], 0x45678);
-  EXPECT_EQ(a20_5[3], 0x66123);
+  EXPECT_EQ(a20_5[4], 0x1ffff);
+  EXPECT_EQ(a20_5[3], 0xffff5);
   EXPECT_EQ(a20_5[2], 0x56655);
-  EXPECT_EQ(a20_5[1], 0xffff5);
-  EXPECT_EQ(a20_5[0], 0x1ffff);
+  EXPECT_EQ(a20_5[1], 0x66123);
+  EXPECT_EQ(a20_5[0], 0x45678);
   // python
   // b = "000" + bin(0x1ffffffff5566556612345678)[2:]
   // [hex(int(b[i:i+25], 2)) for i in range(0, len(b), 25)]
-  EXPECT_EQ(a25_2_2[1][1], 0x345678);
-  EXPECT_EQ(a25_2_2[1][0], 0x12ab309);
-  EXPECT_EQ(a25_2_2[0][1], 0x1ffd559);
-  EXPECT_EQ(a25_2_2[0][0], 0x3fffff);
+  EXPECT_EQ(a25_2_2[1][1], 0x3fffff);
+  EXPECT_EQ(a25_2_2[1][0], 0x1ffd559);
+  EXPECT_EQ(a25_2_2[0][1], 0x12ab309);
+  EXPECT_EQ(a25_2_2[0][0], 0x345678);
 };
 
 
@@ -133,9 +133,11 @@ TEST(TestAssignPort, WriteArrayToNonWide){
 
   write_port(ver60, a60);
   write_port(ver20, a20);
-  // python [bin(x)[2:][-15:].rjust(15,'0') for x in [0x0123, 0x4567, 0x89ab, 0xcdef]]
-  EXPECT_EQ(ver60, 0x247159c4d5cdef);
-  EXPECT_EQ(ver20, 0b00001000100010001000);
+  // python 
+  // arr = [bin(x)[2:][-15:].rjust(15,'0') for x in [0x0123, 0x4567, 0x89ab, 0xcdef]]
+  // hex(int("".join(reversed(arr)), 2))
+  EXPECT_EQ(ver60, 0x9bde26ae2b38123);
+  EXPECT_EQ(ver20, 0b01000001000001000001);
 };
 
 TEST(TestAssignPort, WriteArrayToWide){
@@ -151,10 +153,10 @@ TEST(TestAssignPort, WriteArrayToWide){
   a20_5[3] = 0x8dcd2;
   a20_5[4] = 0x28e00;
   write_port(ver100, a20_5);
-  EXPECT_EQ(ver100.m_storage[0], 0xcd228e00u);
-  EXPECT_EQ(ver100.m_storage[1], 0x61e1678du);
-  EXPECT_EQ(ver100.m_storage[2], 0x9f9ead57u);
-  EXPECT_EQ(ver100.m_storage[3], 0x6u);
+  EXPECT_EQ(ver100.m_storage[0], 0x57669f9eu);
+  EXPECT_EQ(ver100.m_storage[1], 0x21e167adu);
+  EXPECT_EQ(ver100.m_storage[2], 0x8e008dcdu);
+  EXPECT_EQ(ver100.m_storage[3], 0x2u);
   // test
   a25_2_2[0][0] = 0x345678;
   a25_2_2[0][1] = 0x1559848;
