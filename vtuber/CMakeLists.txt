@@ -36,16 +36,20 @@ add_executable(abstract_random_yaml_test
 	abstract_random_yaml_test.cpp
 	abstract_random_yaml.cpp
 )
+add_executable(source_test
+	source_test.cpp
+)
 add_executable(verilator_assign_port_test
 	bridge/verilator/verilator_assign_test.cpp
 )
 
 foreach(target_test IN ITEMS
-	dtype_test
 	abstract_random_test
 	abstract_random_yaml_test
 	verilator_assign_port_test
 	operation_test
+	dtype_test
+	source_test
 )
 	target_link_libraries(${target_test} PRIVATE GTest::gtest_main GTest::gtest glog yaml-cpp)
 	add_test(${target_test} ${target_test})
