@@ -11,12 +11,12 @@ TEST(TestAccessorCreation, TestPortVariant) {
   ::std::unique_ptr<VPortVariant> dut = make_unique<VPortVariant>();
 
   // bit test
+  // Note that write_port/read_port are limited to use vint
   using Bit = verilog::vuint<1>;
-  ::std::unique_ptr<Accessor<Bit>> bit_in = make_unique<VerilatorAccessor<
-      ::std::remove_reference<decltype(dut->bit_in)>::type, Bit>>(dut->bit_in);
-  ::std::unique_ptr<Accessor<Bit>> bit_out = make_unique<VerilatorAccessor<
-      ::std::remove_reference<decltype(dut->bit_out)>::type, Bit>>(
-      dut->bit_out);
+  ::std::unique_ptr<Accessor<Bit>> bit_in =
+      make_unique<VerilatorAccessor<decltype(dut->bit_in), Bit>>(dut->bit_in);
+  ::std::unique_ptr<Accessor<Bit>> bit_out =
+      make_unique<VerilatorAccessor<decltype(dut->bit_out), Bit>>(dut->bit_out);
   bit_in->write(Bit(1));
   dut->eval();
   EXPECT_TRUE(bit_out->read().value());

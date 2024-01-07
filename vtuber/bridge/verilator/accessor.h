@@ -11,21 +11,21 @@ template <typename T> struct Accessor {
 template <typename PortType, typename DataType>
 class VerilatorAccessor : public Accessor<DataType> {
 private:
-  PortType *ptr;
+  PortType &ptr;
 
 public:
   // Constructor
-  VerilatorAccessor(PortType &t) : ptr(&t) {}
+  VerilatorAccessor(PortType &t) : ptr(t) {}
 
   // Write to the pointer
   void write(const DataType &value) override {
-    verilog::verilator::write_port(*ptr, value);
+    verilog::verilator::write_port(ptr, value);
   }
 
   // Read from the pointer
   DataType read() const override {
     DataType t;
-    verilog::verilator::read_port(t, *ptr);
+    verilog::verilator::read_port(t, ptr);
     return t;
   }
 };
