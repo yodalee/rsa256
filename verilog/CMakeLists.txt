@@ -29,3 +29,27 @@ endforeach()
 
 configure_file(RSA_m.in . COPYONLY)
 configure_file(RSA_c.in . COPYONLY)
+
+##################################################
+# Non-SystemC
+##################################################
+
+set(LINKME PRIVATE glog RSASystemCModel gtest gtest_main)
+
+set(PipelineTest PipelineTest_sim)
+
+set(MODULES
+  PipelineTest
+)
+
+foreach(LIB ${MODULES})
+  # build library
+  add_library(${LIB})
+  verilate(${LIB} ${VERILATEOPT} PREFIX V${LIB} SOURCES RSA_pkg.sv ${LIB}.sv)
+
+  foreach(EXE ${${LIB}})
+    add_executable(${EXE} ${EXE}.cpp)
+    target_link_libraries(${EXE} ${LINKME} ${LIB})
+    add_test(V${EXE} ${EXE})
+  endforeach()
+endforeach()
