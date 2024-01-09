@@ -1,9 +1,11 @@
 
 #include "VPipelineTest.h"
+#include "bridge/verilator/accessor.h"
 #include "bridge/verilator/c_dut_wrapper.h"
 #include "bridge/verilator/verilator_assign.h"
 #include "verilog/dtype.h"
 #include <iostream>
+#include <memory>
 
 #include <gtest/gtest.h>
 
@@ -31,8 +33,14 @@ protected:
 };
 
 // Example test case using the fixture
-TEST_F(PipelineTester, SimpleCase) {
-  dut->Run(100);
-  LOG(INFO) << "Done";
-  EXPECT_TRUE(dut->is_pass());
+TEST_F(PipelineTester, CheckReset) {
+  auto i_ready =
+      make_shared<VerilatorAccessor<decltype(dut->dut->i_ready), vuint<1>>>(
+          dut->dut->i_ready);
+  auto o_valid =
+      make_shared<VerilatorAccessor<decltype(dut->dut->o_valid), vuint<1>>>(
+          dut->dut->o_valid);
+  dut->Init();
+  EXPECT_TRUE(i_ready->read().value());
+  EXPECT_FALSE(o_valid->read().value());
 }
