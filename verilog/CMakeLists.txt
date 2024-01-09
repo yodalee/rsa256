@@ -3,10 +3,10 @@ find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 set(VERILATEOPT TRACE_FST)
 set(LINKME PRIVATE SystemC::systemc glog RSASystemCModel)
 
-set(TwoPower TwoPower_sim)
-set(Montgomery Montgomery_sim)
-set(RSAMont RSAMont_sim)
-set(RSA RSA_sim)
+set(TwoPower)
+set(Montgomery)
+set(RSAMont)
+set(RSA)
 
 set(MODULES
   TwoPower
