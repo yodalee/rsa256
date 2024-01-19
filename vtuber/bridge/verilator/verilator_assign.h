@@ -34,9 +34,14 @@ void write_port_scalar(verilator_wdtype<num_bit> &dst, const vint<false, num_bit
 
 template <typename Dst, typename Src>
 void write_port(Dst& dst, const Src& src) {
-  static_assert(is_dtype_v<Src>, "Only works for Src is a verilog type");
-  auto tmp = pack(src);
-  write_port_scalar(dst, tmp);
+  static_assert(is_dtype_v<Src> || std::is_integral_v<Src>, 
+    "Only works for Src is a verilog type or integral type");
+  if constexpr (is_dtype_v<Src>) {
+    auto tmp = pack(src);
+    write_port_scalar(dst, tmp);
+  } else {
+    dst = src;
+  }
 }
 
 // read vuint from verilator port
@@ -61,13 +66,18 @@ void read_port_scalar(vint<false, num_bit> &dst, const verilator_wdtype<num_bit>
 
 template <typename Dst, typename Src>
 void read_port(Dst& dst, const Src& src) {
-  static_assert(is_dtype_v<Dst>, "Only works for Dst is a verilog type");
-  if constexpr (is_dtype_of_id_v<Dst, DTYPE_VINT>) {
-    read_port_scalar(dst, src);
+  static_assert(is_dtype_v<Dst> || std::is_integral_v<Dst>,
+    "Only works for Dst is a verilog type or integral type");
+  if constexpr (is_dtype_v<Dst>) {
+    if constexpr (is_vint_v<Dst>) {
+      read_port_scalar(dst, src);
+    } else {
+      vint<false, verilog::bits_v<Dst>> tmp;
+      read_port_scalar(tmp, src);
+      unpack(dst, tmp);
+    }
   } else {
-    vint<false, verilog::bits_v<Dst>> tmp;
-    read_port_scalar(tmp, src);
-    unpack(dst, tmp);
+    dst = src;
   }
 }
 

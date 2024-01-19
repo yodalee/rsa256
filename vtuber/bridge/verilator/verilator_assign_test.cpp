@@ -84,7 +84,55 @@ TEST(TestAssignPort, Write) {
   EXPECT_EQ(ver100.m_storage[3], 0x1u);
 };
 
-TEST(TestAssignPort, ReadArray){
+TEST(TestAssignPort, WritePrimitive) {
+  VL_IN8(ver5, 5, 0);
+  VL_IN16(ver10, 10, 0);
+  VL_IN(ver20, 20, 0);
+  VL_IN64(ver40, 40, 0);
+  uint64_t v;
+
+  v = 3;
+  write_port(ver5, v);
+  EXPECT_EQ(ver5, 3);
+
+  v = 1000;
+  write_port(ver10, v);
+  EXPECT_EQ(ver10, 1000);
+
+  v = 1000000;
+  write_port(ver20, v);
+  EXPECT_EQ(ver20, 1000000);
+
+  v = 0xab12345678llu;
+  write_port(ver40, v);
+  EXPECT_EQ(ver40, 0xab12345678u);
+};
+
+TEST(TestAssignPort, ReadPrimitive) {
+  VL_IN8(ver5, 5, 0);
+  VL_IN16(ver10, 10, 0);
+  VL_IN(ver20, 20, 0);
+  VL_IN64(ver40, 40, 0);
+  uint64_t v;
+  ver5 = 3;
+  ver10 = 1000;
+  ver20 = 1000000;
+  ver40 = 0xab12345678u;
+
+  read_port(v, ver5);
+  EXPECT_EQ(v, 3);
+
+  read_port(v, ver10);
+  EXPECT_EQ(v, 1000);
+
+  read_port(v, ver20);
+  EXPECT_EQ(v, 1000000);
+
+  read_port(v, ver40);
+  EXPECT_EQ(v, 0xab12345678llu);
+};
+
+TEST(TestAssignPort, ReadArray) {
   // source
   VL_INW(ver100, 100, 0, 4);
   ver100.m_storage[0] = 0x12345678u;
@@ -110,8 +158,7 @@ TEST(TestAssignPort, ReadArray){
   EXPECT_EQ(a25_2_2[0][0], 0x345678);
 };
 
-
-TEST(TestAssignPort, WriteArrayToNonWide){
+TEST(TestAssignPort, WriteArrayToNonWide) {
   typedef varray<vuint<15>, 4> A60;
   typedef varray<vuint<5>, 2, 2> A20;
   // source
@@ -133,14 +180,14 @@ TEST(TestAssignPort, WriteArrayToNonWide){
 
   write_port(ver60, a60);
   write_port(ver20, a20);
-  // python 
-  // arr = [bin(x)[2:][-15:].rjust(15,'0') for x in [0x0123, 0x4567, 0x89ab, 0xcdef]]
-  // hex(int("".join(reversed(arr)), 2))
+  // python
+  // arr = [bin(x)[2:][-15:].rjust(15,'0') for x in [0x0123, 0x4567, 0x89ab,
+  // 0xcdef]] hex(int("".join(reversed(arr)), 2))
   EXPECT_EQ(ver60, 0x9bde26ae2b38123);
   EXPECT_EQ(ver20, 0b01000001000001000001);
 };
 
-TEST(TestAssignPort, WriteArrayToWide){
+TEST(TestAssignPort, WriteArrayToWide) {
   // source
   varray<vuint<20>, 5> a20_5;
   varray<vuint<25>, 2, 2> a25_2_2;
