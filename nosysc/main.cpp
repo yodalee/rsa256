@@ -1,4 +1,4 @@
-#include "VDut/VDut.h"
+#include "VDut.h"
 #include "nosys.h"
 #include "verilated_fst_c.h"
 
