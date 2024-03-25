@@ -1,5 +1,7 @@
 #include "VDut.h"
-#include "nosys.h"
+#include "VRDriver.h"
+#include "VRMonitor.h"
+#include "nosysc.h"
 #include "verilated_fst_c.h"
 
 #include <functional>
@@ -7,50 +9,11 @@
 #include <iostream>
 #include <memory>
 #include <queue>
-#include <random>
 #include <type_traits>
 #include <utility>
 
 using namespace std;
 using namespace nosysc;
-
-// User code
-bernoulli_distribution dist(0.5);
-default_random_engine reng;
-
-// Driver and Monitor is reused
-struct Driver {
-  ValidReadyOutIf<unsigned> *o;
-  unsigned counter = 0;
-
-  void ClockedBy(Clock &clk) {
-    clk.AddIfDependency([this]() { always_comb(); }, {o});
-  }
-
-  void always_comb() {
-    cout << "Driver" << endl;
-    if (o->is_writeable() and dist(reng)) {
-      o->write(counter);
-      cout << "Driver write" << endl;
-      counter++;
-    }
-  }
-};
-
-struct Monitor {
-  ValidReadyInIf<unsigned> *i;
-
-  void ClockedBy(Clock &clk) {
-    clk.AddIfDependency([this]() { always_comb(); }, {i});
-  }
-
-  void always_comb() {
-    cout << "Monitor" << endl;
-    if (i->is_readable() and dist(reng)) {
-      cout << "Read " << i->read() << endl;
-    }
-  }
-};
 
 // V1: c-model
 struct Dut {
