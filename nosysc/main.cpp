@@ -1,5 +1,5 @@
 #include "VDut.h"
-#include "nosys.h"
+#include "nosysc.h"
 #include "verilated_fst_c.h"
 
 #include <functional>
