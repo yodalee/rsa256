@@ -42,6 +42,12 @@ add_executable(source_test
 add_executable(verilator_assign_port_test
 	bridge/verilator/verilator_assign_test.cpp
 )
+add_executable(accessor_test
+	bridge/verilator/accessor_test.cpp
+)
+add_library(VPortVariant)
+verilate(VPortVariant SOURCES PortVariant.sv)
+target_link_libraries(accessor_test PRIVATE VPortVariant)
 
 foreach(target_test IN ITEMS
 	abstract_random_test
@@ -50,6 +56,7 @@ foreach(target_test IN ITEMS
 	operation_test
 	dtype_test
 	source_test
+	accessor_test
 )
 	target_link_libraries(${target_test} PRIVATE GTest::gtest_main GTest::gtest glog yaml-cpp)
 	add_test(${target_test} ${target_test})
