@@ -28,10 +28,10 @@ struct Driver {
   }
 
   void always_comb() {
-    cout << "Driver" << endl;
+    DLOG(INFO) << "Driver comb";
     if (o->is_writeable() and dist(reng)) {
       o->write(counter);
-      cout << "Driver write" << endl;
+      LOG(INFO) << "Driver write: " << counter;
       counter++;
     }
   }
@@ -45,9 +45,10 @@ struct Monitor {
   }
 
   void always_comb() {
-    cout << "Monitor" << endl;
+    DLOG(INFO) << "Monitor Comb";
     if (i->is_readable() and dist(reng)) {
-      cout << "Read " << i->read() << endl;
+      unsigned d = i->read();
+      LOG(INFO) << "Monitor Read: " << d;
     }
   }
 };
@@ -105,7 +106,7 @@ public:
   }
 
   void always_comb() {
-    cout << "Dut" << endl;
+    DLOG(INFO) << "Dut Comb";
     vdut.clk = 1;
     vdut.eval();
 
@@ -155,7 +156,7 @@ int main() {
 
   clock.Initialize();
   for (unsigned i = 0; i < 100; ++i) {
-    cout << "cycle " << i << endl;
+    DLOG(INFO) << "Cycle: " << i;
     clock.Comb();
     clock.FF();
   }
