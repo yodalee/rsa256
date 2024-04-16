@@ -345,11 +345,18 @@ void ToHexTemplate() {
 
 	v8.v[0] = 0;
 	EXPECT_EQ(to_hex(v8), "0");
+	EXPECT_EQ(to_hex(v8, true), "00");
 
 	IntTmpl<13> v13;
 	v13.v[0] = 0x1a2a;
 	v13.ClearUnusedBits();
 	EXPECT_EQ(to_hex(v13), "1A2A");
+
+	// Test prefix zero
+	IntTmpl<16> v16;
+	v16.v[0] = 0xa2a;
+	EXPECT_EQ(to_hex(v16), "A2A");
+	EXPECT_EQ(to_hex(v16, true), "0A2A");
 
 	IntTmpl<66> v66;
 	v66.v[1] = 0x2;

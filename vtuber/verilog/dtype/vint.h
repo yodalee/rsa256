@@ -803,7 +803,7 @@ struct vint {
 	}
 
 	[[gnu::noinline]]
-	friend ::std::string to_hex(const vint &val) {
+	friend ::std::string to_hex(const vint &val, const bool fill = false) {
 		::std::string ret;
 		constexpr unsigned max_len = (num_bit+3) / 4;
 		constexpr unsigned msb_hex_pos = 4 * (max_len-1);
@@ -811,7 +811,7 @@ struct vint {
 		constexpr int msb_mask = (1<<num_bit_msb_hex) - 1;
 		ret.reserve(max_len);
 
-		bool met_nonzero = false;
+		bool met_nonzero = fill;
 		for (unsigned i = 0; i < 4*max_len; i += 4) {
 			const int cur_mask = i == 0 ? msb_mask : 0xf;
 			const int cur_hex = val.GetDtypeAtBitPos(msb_hex_pos - i) & cur_mask;
