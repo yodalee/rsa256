@@ -4,8 +4,10 @@
 
 #include <functional>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <queue>
 #include <random>
 #include <type_traits>
@@ -39,6 +41,9 @@ struct Driver {
 };
 
 struct Monitor {
+  using Callback = function<void(unsigned)>;
+  Monitor(Callback f) : receive(f) {}
+  Callback receive;
   ValidReadyInIf<unsigned> *i;
 
   void ClockedBy(Clock &clk) {
@@ -50,6 +55,7 @@ struct Monitor {
     if (i->is_readable() and dist(reng)) {
       unsigned d = i->read();
       LOG(INFO) << "Monitor Read: " << d;
+      receive(d);
     }
   }
 };
@@ -137,11 +143,12 @@ public:
   }
 };
 
-int main() {
+TEST(NosyscTest, PipelineTest) {
+  vector<unsigned> outs;
   Clock clock;
   Driver driver;
   DutWrapper dut;
-  Monitor monitor;
+  Monitor monitor([&](unsigned d) { outs.push_back(d); });
   ValidReady<unsigned, false> ch1;
   ValidReady<unsigned, false> ch2;
   driver.o = &ch1;
@@ -161,5 +168,8 @@ int main() {
     clock.Comb();
     clock.FF();
   }
-  return 0;
+
+  vector<unsigned> goldens(kLIMIT);
+  iota(goldens.begin(), goldens.end(), 0);
+  EXPECT_EQ(outs, goldens);
 }
