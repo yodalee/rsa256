@@ -18,6 +18,7 @@ using namespace nosysc;
 bernoulli_distribution dist(0.5);
 default_random_engine reng;
 
+static const int kLIMIT = 10;
 // Driver and Monitor is reused
 struct Driver {
   ValidReadyOutIf<unsigned> *o;
@@ -29,7 +30,7 @@ struct Driver {
 
   void always_comb() {
     DLOG(INFO) << "Driver comb";
-    if (o->is_writeable() and dist(reng)) {
+    if (counter < kLIMIT and o->is_writeable() and dist(reng)) {
       o->write(counter);
       LOG(INFO) << "Driver write: " << counter;
       counter++;
