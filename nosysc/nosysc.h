@@ -108,6 +108,11 @@ class ValidReady : public ValidReadyOutIf<Data>, public ValidReadyInIf<Data> {
   bool valid_r, valid_w, is_first;
 
 public:
+  ValidReady() {
+    valid_r = false;
+    valid_w = false;
+  }
+
   void ClockedBy(Clock &clk) {
     Channel::id = clk.nodes.size();
     clk.nodes.resize(clk.nodes.size() + 1);
