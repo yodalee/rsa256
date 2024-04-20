@@ -1,6 +1,8 @@
 #include "VPipelineInt.h"
+
 #include "nosysc.h"
 #include "verilated_fst_c.h"
+#include "vrdriver.h"
 
 #include <functional>
 #include <glog/logging.h>
@@ -19,26 +21,6 @@ using namespace nosysc;
 // User code
 bernoulli_distribution dist(0.5);
 default_random_engine reng;
-
-static const int kLIMIT = 10;
-// Driver and Monitor is reused
-struct Driver {
-  ValidReadyOutIf<unsigned> *o;
-  unsigned counter = 0;
-
-  void ClockedBy(Clock &clk) {
-    clk.AddIfDependency([this]() { always_comb(); }, {o});
-  }
-
-  void always_comb() {
-    DLOG(INFO) << "Driver comb";
-    if (counter < kLIMIT and o->is_writeable() and dist(reng)) {
-      o->write(counter);
-      LOG(INFO) << "Driver write: " << counter;
-      counter++;
-    }
-  }
-};
 
 struct Monitor {
   using Callback = function<void(unsigned)>;
@@ -146,7 +128,7 @@ public:
 TEST(NosyscTest, PipelineTest) {
   vector<unsigned> outs;
   Clock clock;
-  Driver driver;
+  VRDriver driver;
   DutWrapper dut;
   Monitor monitor([&](unsigned d) { outs.push_back(d); });
   ValidReady<unsigned, false> ch1;
