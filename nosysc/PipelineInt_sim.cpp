@@ -104,6 +104,37 @@ TEST(NosyscTest, PipelineTest) {
   vector<unsigned> outs;
   Clock clock;
   VRDriver driver;
+  Dut dut;
+  VRMonitor monitor([&](unsigned d) { outs.push_back(d); });
+  ValidReady<unsigned, false> ch1;
+  ValidReady<unsigned, false> ch2;
+  driver.o = &ch1;
+  dut.i = &ch1;
+  dut.o = &ch2;
+  monitor.i = &ch2;
+
+  ch1.ClockedBy(clock);
+  ch2.ClockedBy(clock);
+  monitor.ClockedBy(clock);
+  dut.ClockedBy(clock);
+  driver.ClockedBy(clock);
+
+  clock.Initialize();
+  for (unsigned i = 0; i < 100; ++i) {
+    DLOG(INFO) << "Cycle: " << i;
+    clock.Comb();
+    clock.FF();
+  }
+
+  vector<unsigned> goldens(kLIMIT);
+  iota(goldens.begin(), goldens.end(), 0);
+  EXPECT_EQ(outs, goldens);
+}
+
+TEST(NosyscTest, PipelineVerilogTest) {
+  vector<unsigned> outs;
+  Clock clock;
+  VRDriver driver;
   DutWrapper dut;
   VRMonitor monitor([&](unsigned d) { outs.push_back(d); });
   ValidReady<unsigned, false> ch1;
