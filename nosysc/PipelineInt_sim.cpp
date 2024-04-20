@@ -1,11 +1,13 @@
-#include "VDut.h"
+#include "VPipelineInt.h"
 #include "nosysc.h"
 #include "verilated_fst_c.h"
 
 #include <functional>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <queue>
 #include <random>
 #include <type_traits>
@@ -18,6 +20,7 @@ using namespace nosysc;
 bernoulli_distribution dist(0.5);
 default_random_engine reng;
 
+static const int kLIMIT = 10;
 // Driver and Monitor is reused
 struct Driver {
   ValidReadyOutIf<unsigned> *o;
@@ -28,16 +31,19 @@ struct Driver {
   }
 
   void always_comb() {
-    cout << "Driver" << endl;
-    if (o->is_writeable() and dist(reng)) {
+    DLOG(INFO) << "Driver comb";
+    if (counter < kLIMIT and o->is_writeable() and dist(reng)) {
       o->write(counter);
-      cout << "Driver write" << endl;
+      LOG(INFO) << "Driver write: " << counter;
       counter++;
     }
   }
 };
 
 struct Monitor {
+  using Callback = function<void(unsigned)>;
+  Monitor(Callback f) : receive(f) {}
+  Callback receive;
   ValidReadyInIf<unsigned> *i;
 
   void ClockedBy(Clock &clk) {
@@ -45,9 +51,11 @@ struct Monitor {
   }
 
   void always_comb() {
-    cout << "Monitor" << endl;
+    DLOG(INFO) << "Monitor Comb";
     if (i->is_readable() and dist(reng)) {
-      cout << "Read " << i->read() << endl;
+      unsigned d = i->read();
+      LOG(INFO) << "Monitor Read: " << d;
+      receive(d);
     }
   }
 };
@@ -72,7 +80,7 @@ struct Dut {
 class DutWrapper {
   VerilatedContext contextp;
   VerilatedFstC tfp;
-  VDut vdut;
+  VPipelineInt vdut;
   unsigned counter = 0;
 
 public:
@@ -105,7 +113,7 @@ public:
   }
 
   void always_comb() {
-    cout << "Dut" << endl;
+    DLOG(INFO) << "Dut Comb";
     vdut.clk = 1;
     vdut.eval();
 
@@ -135,11 +143,12 @@ public:
   }
 };
 
-int main() {
+TEST(NosyscTest, PipelineTest) {
+  vector<unsigned> outs;
   Clock clock;
   Driver driver;
   DutWrapper dut;
-  Monitor monitor;
+  Monitor monitor([&](unsigned d) { outs.push_back(d); });
   ValidReady<unsigned, false> ch1;
   ValidReady<unsigned, false> ch2;
   driver.o = &ch1;
@@ -155,9 +164,12 @@ int main() {
 
   clock.Initialize();
   for (unsigned i = 0; i < 100; ++i) {
-    cout << "cycle " << i << endl;
+    DLOG(INFO) << "Cycle: " << i;
     clock.Comb();
     clock.FF();
   }
-  return 0;
+
+  vector<unsigned> goldens(kLIMIT);
+  iota(goldens.begin(), goldens.end(), 0);
+  EXPECT_EQ(outs, goldens);
 }
