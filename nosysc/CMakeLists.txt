@@ -10,3 +10,6 @@ add_library(${LIB})
 verilate(${LIB} ${VERILATEOPT} PREFIX V${LIB} SOURCES ${LIB}.v)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LINKME} ${LIB})
+
+add_executable(Hierarchy_sim Hierarchy_sim.cpp)
+target_link_libraries(Hierarchy_sim ${LINKME})
