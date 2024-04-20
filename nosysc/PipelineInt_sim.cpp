@@ -1,4 +1,4 @@
-#include "VDut.h"
+#include "VPipelineInt.h"
 #include "nosysc.h"
 #include "verilated_fst_c.h"
 
@@ -80,7 +80,7 @@ struct Dut {
 class DutWrapper {
   VerilatedContext contextp;
   VerilatedFstC tfp;
-  VDut vdut;
+  VPipelineInt vdut;
   unsigned counter = 0;
 
 public:
