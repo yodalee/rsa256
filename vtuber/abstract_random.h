@@ -72,4 +72,9 @@ static inline BoolPattern* Bernoulli(float p) {
 	return new RandomBool(p);
 }
 
+static bool GetRandom(BoolPattern *rand) {
+  return not rand or rand->operator()();
+}
+
+
 }

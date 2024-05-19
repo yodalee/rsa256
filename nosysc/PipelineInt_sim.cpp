@@ -1,64 +1,21 @@
 #include "VPipelineInt.h"
+
 #include "nosysc.h"
 #include "verilated_fst_c.h"
+#include "vrdriver.h"
+#include "vrmonitor.h"
 
-#include <functional>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <numeric>
 #include <queue>
-#include <random>
 #include <type_traits>
 #include <utility>
 
 using namespace std;
 using namespace nosysc;
-
-// User code
-bernoulli_distribution dist(0.5);
-default_random_engine reng;
-
-static const int kLIMIT = 10;
-// Driver and Monitor is reused
-struct Driver {
-  ValidReadyOutIf<unsigned> *o;
-  unsigned counter = 0;
-
-  void ClockedBy(Clock &clk) {
-    clk.AddIfDependency([this]() { always_comb(); }, {o});
-  }
-
-  void always_comb() {
-    DLOG(INFO) << "Driver comb";
-    if (counter < kLIMIT and o->is_writeable() and dist(reng)) {
-      o->write(counter);
-      LOG(INFO) << "Driver write: " << counter;
-      counter++;
-    }
-  }
-};
-
-struct Monitor {
-  using Callback = function<void(unsigned)>;
-  Monitor(Callback f) : receive(f) {}
-  Callback receive;
-  ValidReadyInIf<unsigned> *i;
-
-  void ClockedBy(Clock &clk) {
-    clk.AddIfDependency([this]() { always_comb(); }, {i});
-  }
-
-  void always_comb() {
-    DLOG(INFO) << "Monitor Comb";
-    if (i->is_readable() and dist(reng)) {
-      unsigned d = i->read();
-      LOG(INFO) << "Monitor Read: " << d;
-      receive(d);
-    }
-  }
-};
 
 // V1: c-model
 struct Dut {
@@ -146,9 +103,9 @@ public:
 TEST(NosyscTest, PipelineTest) {
   vector<unsigned> outs;
   Clock clock;
-  Driver driver;
-  DutWrapper dut;
-  Monitor monitor([&](unsigned d) { outs.push_back(d); });
+  VRDriver driver;
+  Dut dut;
+  VRMonitor monitor([&](unsigned d) { outs.push_back(d); });
   ValidReady<unsigned, false> ch1;
   ValidReady<unsigned, false> ch2;
   driver.o = &ch1;
@@ -164,6 +121,70 @@ TEST(NosyscTest, PipelineTest) {
 
   clock.Initialize();
   for (unsigned i = 0; i < 100; ++i) {
+    DLOG(INFO) << "Cycle: " << i;
+    clock.Comb();
+    clock.FF();
+  }
+
+  vector<unsigned> goldens(kLIMIT);
+  iota(goldens.begin(), goldens.end(), 0);
+  EXPECT_EQ(outs, goldens);
+}
+
+TEST(NosyscTest, PipelineVerilogTest) {
+  vector<unsigned> outs;
+  Clock clock;
+  VRDriver driver;
+  DutWrapper dut;
+  VRMonitor monitor([&](unsigned d) { outs.push_back(d); });
+  ValidReady<unsigned, false> ch1;
+  ValidReady<unsigned, false> ch2;
+  driver.o = &ch1;
+  dut.i = &ch1;
+  dut.o = &ch2;
+  monitor.i = &ch2;
+
+  ch1.ClockedBy(clock);
+  ch2.ClockedBy(clock);
+  monitor.ClockedBy(clock);
+  dut.ClockedBy(clock);
+  driver.ClockedBy(clock);
+
+  clock.Initialize();
+  for (unsigned i = 0; i < 100; ++i) {
+    DLOG(INFO) << "Cycle: " << i;
+    clock.Comb();
+    clock.FF();
+  }
+
+  vector<unsigned> goldens(kLIMIT);
+  iota(goldens.begin(), goldens.end(), 0);
+  EXPECT_EQ(outs, goldens);
+}
+
+TEST(NosyscTest, RandPipelineTest) {
+  vector<unsigned> outs;
+  Clock clock;
+  VRDriver driver;
+  DutWrapper dut;
+  VRMonitor monitor([&](unsigned d) { outs.push_back(d); });
+  ValidReady<unsigned, false> ch1;
+  ValidReady<unsigned, false> ch2;
+  driver.o = &ch1;
+  dut.i = &ch1;
+  dut.o = &ch2;
+  monitor.i = &ch2;
+
+  ch1.ClockedBy(clock);
+  ch2.ClockedBy(clock);
+  monitor.ClockedBy(clock);
+  dut.ClockedBy(clock);
+  driver.ClockedBy(clock);
+  driver.SetRandomValidPolicy(random_factory::OneEvery(5));
+  monitor.SetRandomValidPolicy(random_factory::OneEvery(10));
+
+  clock.Initialize();
+  for (unsigned i = 0; i < 150; ++i) {
     DLOG(INFO) << "Cycle: " << i;
     clock.Comb();
     clock.FF();
